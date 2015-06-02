@@ -1,0 +1,356 @@
+Code.require_file "test_helper.exs", __DIR__
+
+defmodule HL7.Codec.Test do
+  use ExUnit.Case
+  import HL7.Codec, only: [decode_field: 2, decode_field: 3,
+                           decode_components: 2, decode_components: 3,
+                           decode_subcomponents: 2, decode_subcomponents: 3,
+                           decode_value: 2]
+
+  @separators HL7.Codec.separators()
+
+
+  # Decoding tests
+  test "Decode single binary subcomponent" do
+    assert decode_subcomponents("S1", @separators) === "S1"
+  end
+
+  test "Decode single empty subcomponent" do
+    assert decode_subcomponents("", @separators) === ""
+  end
+
+  test "Decode single null subcomponent" do
+    assert decode_subcomponents("\"\"", @separators) === nil
+  end
+
+  test "Decode multiple subcomponents" do
+    assert decode_subcomponents("&\"\"&S3&S4", @separators) === {"", nil, "S3", "S4"}
+    assert decode_subcomponents("S1&&\"\"&S4", @separators) === {"S1", "", nil, "S4"}
+    assert decode_subcomponents("S1&S2&&\"\"", @separators) === {"S1", "S2", "", nil}
+    assert decode_subcomponents("\"\"&S2&S3&", @separators, true) === {nil, "S2", "S3"}
+    assert decode_subcomponents("\"\"&S2&S3&", @separators, false) === {nil, "S2", "S3", ""}
+  end
+
+  test "Decode single binary component" do
+    assert decode_components("C1", @separators) === "C1"
+  end
+
+  test "Decode single empty component" do
+    assert decode_components("", @separators) === ""
+  end
+
+  test "Decode single null component" do
+    assert decode_components("\"\"", @separators) === nil
+  end
+
+  test "Decode multiple components" do
+    assert decode_components("^\"\"^C3^C4", @separators) === {"", nil, "C3", "C4"}
+    assert decode_components("C1^^\"\"^C4", @separators) === {"C1", "", nil, "C4"}
+    assert decode_components("C1^C2^^\"\"", @separators) === {"C1", "C2", "", nil}
+    assert decode_components("\"\"^C2^C3^", @separators, true) === {nil, "C2", "C3"}
+    assert decode_components("\"\"^C2^C3^", @separators, false) === {nil, "C2", "C3", ""}
+  end
+
+  test "Decode single component with subcomponents" do
+    assert decode_components("S1&S2&S3", @separators) === {{"S1", "S2", "S3"}}
+    assert decode_components("&S2&S3", @separators) === {{"", "S2", "S3"}}
+    assert decode_components("S1&S2&\"\"", @separators) === {{"S1", "S2", nil}}
+    assert decode_components("&S2&S3&", @separators, true) === {{"", "S2", "S3"}}
+    assert decode_components("&S2&S3&", @separators, false) === {{"", "S2", "S3", ""}}
+  end
+
+  test "Decode multiple components with subcomponents" do
+    assert decode_components("^S1&S2&\"\"^C3^C4", @separators) === {"", {"S1", "S2", nil}, "C3", "C4"}
+    assert decode_components("S1&S2^C2^S3&S4", @separators) === {{"S1", "S2"}, "C2", {"S3", "S4"}}
+    assert decode_components("C1^&&^\"\"^C4", @separators, true) === {"C1", "", nil, "C4"}
+    assert decode_components("C1^&&^\"\"^C4", @separators, false) === {"C1", {"", "", ""}, nil, "C4"}
+  end
+
+  test "Decode single binary field" do
+    assert decode_field("F1", @separators) === "F1"
+  end
+
+  test "Decode single empty field" do
+    assert decode_field("", @separators) === ""
+  end
+
+  test "Decode single null field" do
+    assert decode_field("\"\"", @separators) === nil
+  end
+
+  test "Decode repeated fields" do
+    assert decode_field("F1~F2", @separators) === ["F1", "F2"]
+    assert decode_field("\"\"~F1~F2~", @separators) === [nil, "F1", "F2"]
+    assert decode_field("F1~~~F2", @separators) === ["F1", "", "", "F2"]
+    assert decode_field("F1~F2~\"\"~~", @separators) === ["F1", "F2", nil]
+  end
+
+  test "Decode field with multiple components" do
+    assert decode_field("^\"\"^C3^C4", @separators) === {"", nil, "C3", "C4"}
+    assert decode_field("C1^^\"\"^C4", @separators) === {"C1", "", nil, "C4"}
+    assert decode_field("C1^C2^^\"\"", @separators) === {"C1", "C2", "", nil}
+    assert decode_field("\"\"^C2^C3^", @separators) === {nil, "C2", "C3"}
+    assert decode_field("504599^223344&&IIN^", @separators, true) === {"504599", {"223344", "", "IIN"}}
+    assert decode_field("504599^223344&&IIN^", @separators, false) === {"504599", {"223344", "", "IIN"}, ""}
+  end
+
+  test "Decode repeated fields with multiple components" do
+    assert decode_field("^\"\"^C3^C4~F1", @separators) === [{"", nil, "C3", "C4"}, "F1"]
+    assert decode_field("C1^C2~C3^^\"\"^C4", @separators) === [{"C1", "C2"}, {"C3", "", nil, "C4"}]
+    assert decode_field("C1^C2^^\"\"~", @separators) === {"C1", "C2", "", nil}
+    assert decode_field("\"\"~\"\"^C2^C3^", @separators) === [nil, {nil, "C2", "C3"}]
+  end
+
+  test "Decode repeated fields with multiple components and subcomponents" do
+    assert decode_field("^\"\"^C3^C4~S1&S2&S3", @separators) === [{"", nil, "C3", "C4"}, {{"S1", "S2", "S3"}}]
+    assert decode_field("C1^C2~S1&S2^C3^^\"\"^C4", @separators) === [{"C1", "C2"}, {{"S1", "S2"}, "C3", "", nil, "C4"}]
+    assert decode_field("S1&S2~C1^C2^^\"\"~", @separators) === [{{"S1", "S2"}}, {"C1", "C2", "", nil}]
+    assert decode_field("\"\"~\"\"^S1&S2^C3^", @separators) === [nil, {nil, {"S1", "S2"}, "C3"}]
+  end
+
+  test "Decode null value" do
+    assert decode_value("\"\"", :string) === nil
+    assert decode_value("\"\"", :integer) === nil
+    assert decode_value("\"\"", :float) === nil
+    assert decode_value("\"\"", :date) === nil
+    assert decode_value("\"\"", :datetime) === nil
+    assert decode_value("\"\"", :datetime_compact) === nil
+  end
+
+  test "Decode empty value" do
+    assert decode_value("", :string) === ""
+    assert decode_value("", :integer) === ""
+    assert decode_value("", :float) === ""
+    assert decode_value("", :date) === ""
+    assert decode_value("", :datetime) === ""
+    assert decode_value("", :datetime_compact) === ""
+  end
+
+  test "Decode string value" do
+    assert decode_value("ABC", :string) === "ABC"
+    assert decode_value("1.0", :string) === "1.0"
+  end
+
+  test "Decode integer value" do
+    assert decode_value("100", :integer) === 100
+    assert_raise ArgumentError, fn -> decode_value("100.0", :integer) end
+    assert_raise ArgumentError, fn -> decode_value("ABC", :integer) end
+  end
+
+  test "Decode float value" do
+    assert decode_value("100.0", :float) === 100.0
+    assert decode_value("100", :float) === 100.0
+    assert_raise ArgumentError, fn -> decode_value("ABC", :float) end
+  end
+
+  test "Decode date value" do
+    assert decode_value("20120823", :date) === {2012, 8, 23}
+    assert_raise ArgumentError, fn -> decode_value("20121323", :date) end
+    assert_raise ArgumentError, fn -> decode_value("20130832", :date) end
+    assert_raise ArgumentError, fn -> decode_value("20130229", :date) end
+    assert_raise ArgumentError, fn -> decode_value("20120823103211", :date) end
+    assert_raise ArgumentError, fn -> decode_value("ABC", :date) end
+  end
+
+  test "Decode datetime value" do
+    assert decode_value("20120823103211", :datetime) === {{2012, 8, 23}, {10, 32, 11}}
+    assert decode_value("201208231032", :datetime) === {{2012, 8, 23}, {10, 32, 0}}
+    assert_raise ArgumentError, fn -> decode_value("20120823253211", :datetime) end
+    assert_raise ArgumentError, fn -> decode_value("20120823106311", :datetime) end
+    assert_raise ArgumentError, fn -> decode_value("20120823103270", :datetime) end
+    assert_raise ArgumentError, fn -> decode_value("ABC", :datetime) end
+  end
+
+  test "Decode compact datetime value" do
+    assert decode_value("201208231032", :datetime_compact) === {{2012, 8, 23}, {10, 32, 0}}
+    assert decode_value("20120823103211", :datetime_compact) === {{2012, 8, 23}, {10, 32, 0}}
+    assert_raise ArgumentError, fn -> decode_value("201208232532", :datetime_compact) end
+    assert_raise ArgumentError, fn -> decode_value("201208231063", :datetime_compact) end
+    assert_raise ArgumentError, fn -> decode_value("ABC", :datetime_compact) end
+  end
+
+  # Convenience functions used to simplify encoding tests
+  def encode_field(value, separators), do:
+    IO.iodata_to_binary(HL7.Codec.encode_field(value, separators))
+
+  def encode_field(value, separators, options), do:
+    IO.iodata_to_binary(HL7.Codec.encode_field(value, separators, options))
+
+  def encode_components(value, separators), do:
+    IO.iodata_to_binary(HL7.Codec.encode_components(value, separators))
+
+  def encode_components(value, separators, options), do:
+    IO.iodata_to_binary(HL7.Codec.encode_components(value, separators, options))
+
+  def encode_subcomponents(value, separators), do:
+    IO.iodata_to_binary(HL7.Codec.encode_subcomponents(value, separators))
+
+  def encode_subcomponents(value, separators, options), do:
+    IO.iodata_to_binary(HL7.Codec.encode_subcomponents(value, separators, options))
+
+  def encode_value(value, type), do:
+    IO.iodata_to_binary(HL7.Codec.encode_value(value, type))
+
+  # Encoding tests
+  test "Encode single binary subcomponent" do
+    assert encode_subcomponents("S1", @separators) === "S1"
+  end
+
+  test "Encode single empty subcomponent" do
+    assert encode_subcomponents("", @separators) === ""
+  end
+
+  test "Encode single null subcomponent" do
+    assert encode_subcomponents(nil, @separators) === "\"\""
+  end
+
+  test "Encode multiple subcomponents" do
+    assert encode_subcomponents({"", nil, "S3", "S4"}, @separators) === "&\"\"&S3&S4"
+    assert encode_subcomponents({"S1", "", nil, "S4"}, @separators) === "S1&&\"\"&S4"
+    assert encode_subcomponents({"S1", "S2", "", nil}, @separators) === "S1&S2&&\"\""
+    assert encode_subcomponents({nil, "S2", "S3", ""}, @separators) === "\"\"&S2&S3"
+  end
+
+  test "Encode single binary component" do
+    assert encode_components("C1", @separators) === "C1"
+  end
+
+  test "Encode single empty component" do
+    assert encode_components("", @separators) === ""
+  end
+
+  test "Encode single null component" do
+    assert encode_components(nil, @separators) === "\"\""
+  end
+
+  test "Encode multiple components" do
+    assert encode_components({"", nil, "C3", "C4"}, @separators) === "^\"\"^C3^C4"
+    assert encode_components({"C1", "", nil, "C4"}, @separators) === "C1^^\"\"^C4"
+    assert encode_components({"C1", "C2", "", nil}, @separators) === "C1^C2^^\"\""
+    assert encode_components({nil, "C2", "C3", ""}, @separators) === "\"\"^C2^C3"
+  end
+
+  test "Encode single component with subcomponents" do
+    assert encode_components({{"S1", "S2", "S3"}}, @separators) === "S1&S2&S3"
+    assert encode_components({{"", "S2", "S3"}}, @separators) === "&S2&S3"
+    assert encode_components({{"", "S2", "S3", ""}}, @separators) === "&S2&S3"
+    assert encode_components({{"S1", "S2", nil}}, @separators) === "S1&S2&\"\""
+  end
+
+  test "Encode multiple components with subcomponents" do
+    assert encode_components({"", {"S1", "S2", nil}, "C3", "C4"}, @separators) === "^S1&S2&\"\"^C3^C4"
+    assert encode_components({{"S1", "S2"}, "C2", {"S3", "S4"}}, @separators) === "S1&S2^C2^S3&S4"
+    assert encode_components({"C1", {"", "", ""}, nil, "C4"}, @separators, true) === "C1^^\"\"^C4"
+    assert encode_components({"C1", {"", "", ""}, nil, "C4"}, @separators, false) === "C1^&&^\"\"^C4"
+  end
+
+  test "Encode single binary field" do
+    assert encode_field("F1", @separators) === "F1"
+  end
+
+  test "Encode single empty field" do
+    assert encode_field("", @separators) === ""
+  end
+
+  test "Encode single null field" do
+    assert encode_field(nil, @separators) === "\"\""
+  end
+
+  test "Encode repeated fields" do
+    assert encode_field(["F1", "F2"], @separators) === "F1~F2"
+    assert encode_field([nil, "F1", "F2", ""], @separators, true) === "\"\"~F1~F2"
+    assert encode_field([nil, "F1", "F2", ""], @separators, false) === "\"\"~F1~F2~"
+    assert encode_field(["F1", "", "", "F2"], @separators) === "F1~~~F2"
+    assert encode_field(["F1", "F2", nil, "", ""], @separators, true) === "F1~F2~\"\""
+    assert encode_field(["F1", "F2", nil, "", ""], @separators, false) === "F1~F2~\"\"~~"
+  end
+
+  test "Encode field with multiple components" do
+    assert encode_field({"", nil, "C3", "C4"}, @separators) === "^\"\"^C3^C4"
+    assert encode_field({"C1", "", nil, "C4"}, @separators) === "C1^^\"\"^C4"
+    assert encode_field({"C1", "C2", "", nil}, @separators) === "C1^C2^^\"\""
+    assert encode_field({nil, "C2", "C3", ""}, @separators, true) === "\"\"^C2^C3"
+    assert encode_field({nil, "C2", "C3", ""}, @separators, false) === "\"\"^C2^C3^"
+    assert encode_field({"NAME", "", "", "", "", "", "", "", {"", "", "", "", "", ""},
+                        {"", ""}, ""}, @separators, true) == "NAME"
+    assert encode_field({"NAME", "", "", "", "", "", "", "", {"", "", "", "", "", ""},
+                        {"", ""}, ""}, @separators, false) == "NAME^^^^^^^^&&&&&^&^"
+  end
+
+  test "Encode repeated fields with multiple components" do
+    assert encode_field([{"", nil, "C3", "C4"}, "F1"], @separators) === "^\"\"^C3^C4~F1"
+    assert encode_field([{"C1", "C2"}, {"C3", "", nil, "C4"}], @separators) === "C1^C2~C3^^\"\"^C4"
+    assert encode_field({"C1", "C2", "", nil}, @separators) === "C1^C2^^\"\""
+    assert encode_field([nil, {nil, "C2", "C3", ""}], @separators) === "\"\"~\"\"^C2^C3"
+  end
+
+  test "Encode repeated fields with multiple components and subcomponents" do
+    assert encode_field([{"", nil, "C3", "C4"}, {{"S1", "S2", "S3"}}], @separators) === "^\"\"^C3^C4~S1&S2&S3"
+    assert encode_field([{"C1", "C2"}, {{"S1", "S2"}, "C3", "", nil, "C4"}], @separators) === "C1^C2~S1&S2^C3^^\"\"^C4"
+    assert encode_field([{{"S1", "S2"}}, {"C1", "C2", "", nil}], @separators) === "S1&S2~C1^C2^^\"\""
+    assert encode_field([nil, {nil, {"S1", "S2"}, "C3", ""}], @separators, true) === "\"\"~\"\"^S1&S2^C3"
+    assert encode_field([nil, {nil, {"S1", "S2"}, "C3", ""}], @separators, false) === "\"\"~\"\"^S1&S2^C3^"
+  end
+
+  test "Encode null value" do
+    assert encode_value(nil, :string) === "\"\""
+    assert encode_value(nil, :integer) === "\"\""
+    assert encode_value(nil, :float) === "\"\""
+    assert encode_value(nil, :date) === "\"\""
+    assert encode_value(nil, :datetime) === "\"\""
+    assert encode_value(nil, :datetime_compact) === "\"\""
+  end
+
+  test "Encode empty value" do
+    assert encode_value("", :string) === ""
+    assert encode_value("", :integer) === ""
+    assert encode_value("", :float) === ""
+    assert encode_value("", :date) === ""
+    assert encode_value("", :datetime) === ""
+    assert encode_value("", :datetime_compact) === ""
+  end
+
+  test "Encode string value" do
+    assert encode_value("ABC", :string) === "ABC"
+    assert encode_value("1.0", :string) === "1.0"
+  end
+
+  test "Encode integer value" do
+    assert encode_value(100, :integer) === "100"
+    assert_raise ArgumentError, fn -> encode_value(100.0, :integer) end
+    assert_raise ArgumentError, fn -> encode_value("ABC", :integer) end
+  end
+
+  test "Encode float value" do
+    assert encode_value(100.0, :float) === "100.0"
+    assert_raise ArgumentError, fn -> encode_value(100, :float) end
+    assert_raise ArgumentError, fn -> encode_value("ABC", :float) end
+  end
+
+  test "Encode date value" do
+    assert encode_value({2012, 8, 23}, :date) === "20120823"
+    assert_raise ArgumentError, fn -> encode_value({2012, 13, 23}, :date) end
+    assert_raise ArgumentError, fn -> encode_value({2012, 8, 32}, :date) end
+    assert_raise ArgumentError, fn -> encode_value({2013, 2, 29}, :date) end
+    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 32, 11}}, :date) end
+    assert_raise ArgumentError, fn -> encode_value("ABC", :date) end
+  end
+
+  test "Encode datetime value" do
+    assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :datetime) === "20120823103211"
+    assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime) === "20120823103200"
+    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {25, 32, 11}}, :datetime) end
+    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 63, 11}}, :datetime) end
+    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 32, 70}}, :datetime) end
+    assert_raise ArgumentError, fn -> encode_value("ABC", :datetime) end
+  end
+
+  test "Encode compact datetime value" do
+    assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :datetime_compact) === "201208231032"
+    assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime_compact) === "201208231032"
+    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {25, 32, 0}}, :datetime_compact) end
+    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 63, 0}}, :datetime_compact) end
+    assert_raise ArgumentError, fn -> encode_value("ABC", :datetime_compact) end
+  end
+
+end

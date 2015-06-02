@@ -1,0 +1,36 @@
+defmodule HL7 do
+  @type message    :: HL7.Message.t
+  @type segment    :: HL7.Segment.t
+  @type segment_id :: HL7.Type.segment_id
+  @type sequence   :: HL7.Type.sequence
+  @type field      :: HL7.Type.field
+  @type item_type  :: HL7.Type.item_type
+  @type value_type :: HL7.Type.value_type
+  @type value      :: HL7.Type.value
+
+  @spec read(buffer :: binary, [HL7.Reader.option]) :: HL7.Message.read_ret
+  def read(buffer, options \\ []), do:
+    HL7.Message.read(HL7.Reader.new(options), buffer)
+	
+  @spec write(message, [HL7.Writer.option]) :: iodata
+  def write(message, options \\ []), do:
+    HL7.Message.write(HL7.Writer.new(options), message)
+
+  @spec segment_id(segment) :: segment_id
+  defdelegate segment_id(segment), to: HL7.Segment, as: :id
+
+  @spec segment(message, segment_id) :: segment | nil
+  defdelegate segment(message, segment_id), to: HL7.Message
+
+  @spec segment(message, segment_id, repetition :: non_neg_integer) :: segment | nil
+  defdelegate segment(message, segment_id, repetition), to: HL7.Message
+
+  @spec paired_segments(message, [segment_id]) :: [segment]
+  defdelegate paired_segments(message, segment_ids), to: HL7.Message
+
+  @spec paired_segments(message, [segment_id], repetition :: non_neg_integer) :: [segment]
+  defdelegate paired_segments(message, segment_ids, repetition), to: HL7.Message
+
+  @spec segment_count(message, segment_id) :: non_neg_integer
+  defdelegate segment_count(message, segment_id), to: HL7.Message
+end
