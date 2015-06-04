@@ -9,7 +9,7 @@ defmodule HL7.Lexer do
 
   alias HL7.Lexer
 
-  @type option     :: {:format, :stdio | :wire}
+  @type option     :: {:input_format, :text | :wire}
   @type state      :: :read_segment_id | :read_delimiters | :read_separator | :read_characters
   @type token      :: {:separator, HL7.Type.item_type} |
                       {:literal, binary} |
@@ -29,7 +29,7 @@ defmodule HL7.Lexer do
       state: :read_segment_id,
       separators: HL7.Codec.separators(),
       escape_char: ?\\,
-      terminator: segment_terminator(Keyword.get(options, :format, :wire)),
+      terminator: segment_terminator(Keyword.get(options, :input_format, :wire)),
       next_tokens: []
    }
   end
@@ -164,10 +164,10 @@ defmodule HL7.Lexer do
     :incomplete
   end
 
-  defp segment_terminator(format) do
-      case format do
-      :stdio -> ?\n
-      _      -> ?\r
+  defp segment_terminator(input_format) do
+      case input_format do
+        :text -> ?\n
+        _     -> ?\r
     end
   end
 

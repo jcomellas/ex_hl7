@@ -34,7 +34,7 @@ defmodule HL7.Reader do
       {:ok, {reader, token, rest}} = HL7.Reader.read(reader, rest); {reader.segment_id, reader.sequence, token}
 
       {:ok, msg} = HL7.read(buffer)
-      buf2 = HL7.write(msg, format: :stdio)
+      buf2 = HL7.write(msg, input_format: :text)
       IO.puts(buf2)
   """
   alias HL7.Reader

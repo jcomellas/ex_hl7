@@ -2,11 +2,11 @@ defmodule HL7.Writer do
   @moduledoc """
   Writer for the HL7 protocol that converts a message into its wire format.
   """
-  defstruct state: :start, separators: nil, trim: true, format: :wire, buffer: []
+  defstruct state: :start, separators: nil, trim: true, output_format: :wire, buffer: []
 
   alias HL7.Writer
 
-  @type option         :: {:separators, binary} | {:trim, boolean} | {:format, :wire | :stdio}
+  @type option         :: {:separators, binary} | {:trim, boolean} | {:output_format, :wire | :text}
 
   @opaque state        :: :normal | :field_separator | :encoding_chars
   @opaque t            :: %Writer{state: state, separators: binary, trim: boolean, buffer: iodata}
@@ -15,8 +15,8 @@ defmodule HL7.Writer do
   def new(options \\ []) do
     separators = Keyword.get(options, :separators, HL7.Codec.separators())
     trim = Keyword.get(options, :trim, true)
-    format = Keyword.get(options, :format, :wire)
-    %Writer{state: :start, separators: separators, trim: trim, format: format, buffer: []}
+    output_format = Keyword.get(options, :output_format, :wire)
+    %Writer{state: :start, separators: separators, trim: trim, output_format: output_format, buffer: []}
   end
 
   @spec buffer(t) :: iodata
@@ -38,11 +38,11 @@ defmodule HL7.Writer do
     %Writer{writer | buffer: [segment_id | buffer]}
 
   @spec end_segment(t, HL7.Type.segment_id) :: t
-  def end_segment(%Writer{buffer: buffer, separators: separators, trim: trim, format: format} = writer,
-                  _segment_id) do
-    eos = case format do
-            :stdio   -> ?\n
-            _        -> ?\r
+  def end_segment(%Writer{buffer: buffer, separators: separators, trim: trim,
+                          output_format: output_format} = writer, _segment_id) do
+    eos = case output_format do
+            :text -> ?\n
+            _     -> ?\r
           end
     %Writer{writer | buffer: [eos | maybe_trim_buffer(buffer, separators, trim)]}
   end
