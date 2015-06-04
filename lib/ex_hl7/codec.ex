@@ -349,6 +349,108 @@ defmodule HL7.Codec do
   defp pad_integer(value, length), do:
     String.rjust(Integer.to_string(value), length, ?0)
 
+
+  @doc """
+  Escape a string that may contain separators using the HL7 escaping rules.
+
+  ## Arguments
+
+  * `value`: a string to escape; it may or may not contain separator
+    characters.
+
+  * `separators`: a binary containing the item separators to be used when
+    generating the message as returned by `HL7.Codec.compile_separators/1`.
+    Defaults to `HL7.Codec.separators`.
+
+  * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\`.
+
+  ## Examples
+
+      iex> "ABCDEF" = HL7.Codec.escape("ABCDEF")
+      iex> "ABC\\\\|\\\\DEF\\\\|\\\\GHI" = HL7.Codec.escape("ABC|DEF|GHI", separators: HL7.Codec.separators(), escape_char: ?\\\\)
+
+  """
+  def escape(value, separators \\ @separators, escape_char \\ ?\\)
+   when is_binary(value) and is_binary(separators) and is_integer(escape_char) do
+    escape_no_copy(value, separators, escape_char, byte_size(value), 0)
+  end
+
+  defp escape_no_copy(value, separators, escape_char, size, index) when index < size do
+    # As strings that need to be escaped are fairly rare, we try to avoid
+    # generating unnecessary garbage by not copying the characters in the
+    # string unless the string has to be escaped.
+    <<head :: binary-size(index), char, rest :: binary>> = value
+    case match_separator?(char, separators) do
+      {:match, _item_type} ->
+        acc = <<head :: binary, escape_char, char, escape_char>>
+        escape_copy(rest, separators, escape_char, acc)
+      :nomatch ->
+        escape_no_copy(value, separators, escape_char, size, index + 1)
+    end
+  end
+  defp escape_no_copy(value, _separators, _escape_char, _size, _index) do
+    value
+  end
+
+  defp escape_copy(<<char, rest :: binary>>, separators, escape_char, acc) do
+    acc = case match_separator?(char, separators) do
+            {:match, _item_type} -> <<acc :: binary, escape_char, char, escape_char>>
+            :nomatch             -> <<acc :: binary, char>>
+          end
+    escape_copy(rest, separators, escape_char, acc)
+  end
+  defp escape_copy(<<>>, _separators, _escape_char, acc) do
+    acc
+  end
+
+  @doc """
+  Convert an escaped string into its original value.
+
+  ## Arguments
+
+  * `value`: a string to unescape; it may or may not contain escaped characters.
+
+  * `escape_char`: character that was used as escape delimiter. Defaults to `?\\\\`.
+
+  ## Examples
+
+      iex> "ABCDEF" = HL7.unescape("ABCDEF")
+      iex> "ABC|DEF|GHI" = HL7.Codec.unescape("ABC\\\\|\\\\DEF\\\\|\\\\GHI", ?\\\\)
+
+  """
+  def unescape(value, escape_char \\ ?\\)
+   when is_binary(value) and is_integer(escape_char) do
+    unescape_no_copy(value, escape_char, byte_size(value), 0)
+  end
+
+  defp unescape_no_copy(value, escape_char, size, index) when index < size do
+    # As strings that need to be unescaped are fairly rare, we try to avoid
+    # generating unnecessary garbage by not copying the characters in the
+    # string unless the string has to be unescaped.
+    case value do
+      <<head :: binary-size(index), ^escape_char, char, ^escape_char, rest :: binary>> ->
+        acc = <<head :: binary, char>>
+        unescape_copy(rest, escape_char, acc)
+      _ ->
+        unescape_no_copy(value, escape_char, size, index + 1)
+    end
+  end
+  defp unescape_no_copy(value, _escape_char, _size, _index) do
+    value
+  end
+
+  defp unescape_copy(value, escape_char, acc) do
+    case value do
+      <<^escape_char, char, ^escape_char, rest :: binary>> ->
+        unescape_copy(rest, escape_char, <<acc :: binary, char>>)
+      <<char, rest :: binary>> ->
+        unescape_copy(rest, escape_char, <<acc :: binary, char>>)
+      <<>> ->
+        acc
+    end
+  end
+
+
   defp split_options(true),  do: [:global, :trim]
   defp split_options(false), do: [:global]
 

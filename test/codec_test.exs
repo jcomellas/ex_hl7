@@ -353,4 +353,24 @@ defmodule HL7.Codec.Test do
     assert_raise ArgumentError, fn -> encode_value("ABC", :datetime_compact) end
   end
 
+  test "Escape value" do
+    str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%*()_+_={}[]:;\"'<>?,./"
+    assert escape(str, @separators, ?\\) === str
+    assert escape("ABC|DEF|GHI", @separators, ?\\) === "ABC\\|\\DEF\\|\\GHI"
+    assert escape("ABC^DEF^", @separators, ?\\) === "ABC\\^\\DEF\\^\\"
+    assert escape("&DEF&GHI", @separators, ?\\) === "\\&\\DEF\\&\\GHI"
+    assert escape("~ABC~DEF~", @separators, ?\\) === "\\~\\ABC\\~\\DEF\\~\\"
+    assert escape("|ABC^DEF&GHI~", @separators, ?\\) === "\\|\\ABC\\^\\DEF\\&\\GHI\\~\\"
+  end
+
+  test "Unescape value" do
+    str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%*()_+_={}[]:;\"'<>?,./"
+    assert unescape(str, ?\\) === str
+    assert unescape("ABC\\|\\DEF\\|\\GHI", ?\\) === "ABC|DEF|GHI"
+    assert unescape("ABC\\^\\DEF\\^\\", ?\\) === "ABC^DEF^"
+    assert unescape("\\&\\DEF\\&\\GHI", ?\\) === "&DEF&GHI"
+    assert unescape("\\~\\ABC\\~\\DEF\\~\\", ?\\) === "~ABC~DEF~"
+    assert unescape("\\|\\ABC\\^\\DEF\\&\\GHI\\~\\", ?\\) === "|ABC^DEF&GHI~"
+  end
+
 end
