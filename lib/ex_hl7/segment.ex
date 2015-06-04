@@ -37,7 +37,10 @@ defmodule HL7.Segment do
 
     segment "DG1" do
       field :set_id,                     seq:  1, type: :integer,  length:  4
+      field :coding_method,              seq:  2, type: :string,   length:  2
       field :diagnosis,                  seq:  3, type: CE,        length: 64
+      field :description,                seq:  4, type: :string,   length: 40
+      field :diagnosis_datetime,         seq:  5, type: :datetime, length: 40
       field :diagnosis_type,             seq:  6, type: :string,   length:  2
     end
   end
@@ -183,6 +186,7 @@ defmodule HL7.Segment do
   defmodule PRD do
     @moduledoc "11.6.3 PRD - provider data segment"
     alias HL7.Composite.CE
+    alias HL7.Composite.XAD
     alias HL7.Composite.XPN
     alias HL7.Composite.PL
     alias HL7.Composite.CM_PRD
@@ -190,7 +194,8 @@ defmodule HL7.Segment do
     segment "PRD" do
       field :role,                       seq:  1, type: CE,        length:  44
       field :name,                       seq:  2, type: XPN,       length:  71
-      field :address,                    seq:  3, type: PL,        length: 121
+      field :address,                    seq:  3, type: XAD,       length: 121
+      field :location,                   seq:  4, type: PL,        length: 121
       field :id,                         seq:  7, type: CM_PRD,    length: 121
     end
   end
