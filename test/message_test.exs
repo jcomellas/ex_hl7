@@ -211,6 +211,8 @@ defmodule HL7.Message.Test do
       "NTE|1|||\r"
     reader = HL7.Reader.new(input_format: :wire, trim: true)
     {:ok, msg} = HL7.Message.read(reader, buf)
+    # Check the number of segment
+    assert HL7.Message.segment_count(msg, "AUT") === 3
     # Try to retrieve segments that are not present
     assert nil === HL7.Message.segment(msg, "PV1")
     assert nil === HL7.Message.segment(msg, "XXX")

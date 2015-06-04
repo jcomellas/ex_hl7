@@ -64,15 +64,21 @@ defmodule HL7.Message do
   end
 
   @spec segment_count(t, HL7.Type.segment_id) :: non_neg_integer
-  def segment_count(segments, segment_id) when is_list(segments), do:
-    _segment_count(segments, segment_id, 0)
+  def segment_count(segments, segment_id)
+   when is_list(segments) and is_binary(segment_id), do:
+    segment_count(segments, segment_id, 0)
 
-  defp _segment_count([{segment_id, _fields} | tail], segment_id, count), do:
-    _segment_count(tail, segment_id, count + 1)
-  defp _segment_count([_segment | tail], segment_id, count), do:
-    _segment_count(tail, segment_id, count)
-  defp _segment_count([], _segment_id, count), do:
+  defp segment_count([segment | tail], segment_id, count) do
+    count = case HL7.Segment.id(segment) do
+              ^segment_id -> count + 1
+              _           -> count
+            end
+    segment_count(tail, segment_id, count)
+  end
+  defp segment_count([], _segment_id, count) do
     count
+  end
+
 
 
   @doc """
