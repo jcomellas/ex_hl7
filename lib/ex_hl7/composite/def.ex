@@ -116,7 +116,7 @@ defmodule HL7.Composite.Def do
     end
   end
 
-  @doc "Check that a component definition is correct"
+  @doc "Checks that a component definition is correct"
   @spec check_component!(name :: atom, type :: atom, default :: any, composite :: atom,
                          components :: [{name :: atom, type :: atom}]) :: boolean | no_return
   def check_component!(name, type, default, composite, components) do
@@ -128,7 +128,7 @@ defmodule HL7.Composite.Def do
     end
   end
 
-  @doc "Check that the type of a component inside a composite field is valid"
+  @doc "Checks that the type of a component inside a composite field is valid"
   def check_type!(name, type) do
     unless check_type?(type) do
       raise ArgumentError, "invalid type #{inspect type} on component `#{inspect name}`"
@@ -150,7 +150,7 @@ defmodule HL7.Composite.Def do
   def composite_type?(module), do:
     is_atom(module) and Code.ensure_compiled?(module) and function_exported?(module, :valid?, 1)
 
-  @doc "Check that the default value assigned to a component inside a composite field is valid"
+  @doc "Checks that the default value assigned to a component inside a composite field is valid"
   def check_default!(name, type, default) do
     if check_default?(type, default) do
       true
@@ -197,8 +197,7 @@ defmodule HL7.Composite.Def do
 
 
   @doc """
-  Function used to create the map corresponding to the underlying struct in a
-  composite field.
+  Creates the map corresponding to the underlying struct in a composite field.
   """
   @spec decode_composite(map, descriptor :: [{name :: atom, type :: atom}], binary | tuple) :: map
   def decode_composite(map, descriptor, tuple) when is_tuple(tuple), do:
@@ -222,8 +221,11 @@ defmodule HL7.Composite.Def do
     end
   end
 
-
-  @spec encode_composite(composite :: any, descriptor :: [{name :: atom, type :: atom}]) :: any
+  @doc """
+  Converts the struct holding the composite field data into the tuple format
+  accepted by the functions in `HL7.Writer`.
+  """
+  @spec encode_composite(composite :: map, descriptor :: [{name :: atom, type :: atom}]) :: HL7.Type.field
   def encode_composite(composite, descriptor), do:
     encode_composite(composite, descriptor, [])
 
@@ -243,10 +245,9 @@ defmodule HL7.Composite.Def do
   end
 
 
-
   @doc """
-  Function that converts a composite field into an iolist suitable to send over
-  a socket or write to a file.
+  Converts a composite field into an iolist suitable to send over a socket or
+  write to a file.
   """
   @spec to_iodata(map, [{name :: atom, type :: atom}], [option]) :: iodata
   def to_iodata(map, descriptor, options) do
