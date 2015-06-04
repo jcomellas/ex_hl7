@@ -232,7 +232,7 @@ defmodule HL7.Message.Test do
     assert pr1.procedure.id === "90.46.20"
     assert pr1.procedure.text === "GADOLINEO EN AMBULATORIO."
     # Retrieve paired segments from message with explicit position
-    segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 0)
+    segments = HL7.Message.grouped_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 0)
     assert length(segments) === 4
     [pr1, obx, aut, zau] = segments
     assert HL7.segment_id(pr1) === "PR1"
@@ -243,7 +243,7 @@ defmodule HL7.Message.Test do
     assert aut.requested_treatments === 1
     assert HL7.segment_id(zau) === "ZAU"
     assert zau.authorization_status.id === "B004"
-    segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 1)
+    segments = HL7.Message.grouped_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 1)
     assert length(segments) === 4
     [pr1, obx, aut, zau] = segments
     assert HL7.segment_id(pr1) === "PR1"
@@ -255,9 +255,9 @@ defmodule HL7.Message.Test do
     assert HL7.segment_id(zau) === "ZAU"
     assert zau.authorization_status.id === "B004"
     # Try to retrieve inexistent paired segments
-    assert [] === HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 2)
+    assert [] === HL7.Message.grouped_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 2)
     # Retrieve partial paired segments
-    segments = HL7.Message.paired_segments(msg, ["PR1", "AUT"], 1)
+    segments = HL7.Message.grouped_segments(msg, ["PR1", "AUT"], 1)
     assert length(segments) === 1
     [pr1] = segments
     assert HL7.segment_id(pr1) === "PR1"

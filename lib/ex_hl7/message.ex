@@ -8,7 +8,6 @@ defmodule HL7.Message do
   alias HL7.Reader
   alias HL7.Writer
 
-  @type option     :: {:format, :stdio | :wire}
   @type t          :: [HL7.Segment.t]
   @type read_ret   :: {:ok, t} |
                       {:incomplete, {(binary -> read_ret), binary}} |
@@ -25,26 +24,26 @@ defmodule HL7.Message do
     end
   end
 
-  @spec paired_segments(t, [HL7.Type.segment_id], repetition :: non_neg_integer) :: [HL7.Segment.t]
-  def paired_segments(message, segment_ids, repetition \\ 0)
+  @spec grouped_segments(t, [HL7.Type.segment_id], repetition :: non_neg_integer) :: [HL7.Segment.t]
+  def grouped_segments(message, segment_ids, repetition \\ 0)
 
-  def paired_segments(message, [segment_id | tail2], repetition) do
+  def grouped_segments(message, [segment_id | tail2], repetition) do
     case segment_tail(message, segment_id, repetition) do
-      {segment, tail1} -> _paired_segments(tail1, tail2, [segment])
+      {segment, tail1} -> _grouped_segments(tail1, tail2, [segment])
       nil              -> []
     end
   end
-  def paired_segments(_message, [], _repetition) do
+  def grouped_segments(_message, [], _repetition) do
     []
   end
 
-  defp _paired_segments([segment | tail1], [segment_id | tail2], acc) do
+  defp _grouped_segments([segment | tail1], [segment_id | tail2], acc) do
     case HL7.Segment.id(segment) do
-      ^segment_id -> _paired_segments(tail1, tail2, [segment | acc])
+      ^segment_id -> _grouped_segments(tail1, tail2, [segment | acc])
       _           -> Enum.reverse(acc)
     end
   end
-  defp _paired_segments(_message, _segment_ids, acc) do
+  defp _grouped_segments(_message, _segment_ids, acc) do
     Enum.reverse(acc)
   end
 
