@@ -1,14 +1,17 @@
 defmodule HL7 do
-  @type message    :: HL7.Message.t
-  @type segment    :: HL7.Segment.t
-  @type segment_id :: HL7.Type.segment_id
-  @type sequence   :: HL7.Type.sequence
-  @type field      :: HL7.Type.field
-  @type item_type  :: HL7.Type.item_type
-  @type value_type :: HL7.Type.value_type
-  @type value      :: HL7.Type.value
-
-  @spec read(buffer :: binary, [HL7.Reader.option]) :: HL7.Message.read_ret
+  @type message        :: HL7.Message.t
+  @type segment        :: HL7.Segment.t
+  @type segment_id     :: HL7.Type.segment_id
+  @type sequence       :: HL7.Type.sequence
+  @type field          :: HL7.Type.field
+  @type item_type      :: HL7.Type.item_type
+  @type value_type     :: HL7.Type.value_type
+  @type value          :: HL7.Type.value
+  @type read_option    :: HL7.Reader.option
+  @type write_option   :: HL7.Writer.option
+  @type read_ret       :: {:ok, HL7.Message.t} |
+                          {:incomplete, {(binary -> read_ret), rest :: binary}} |
+                          {:error, reason :: any}
   def read(buffer, options \\ []), do:
     HL7.Message.read(HL7.Reader.new(options), buffer)
 	
