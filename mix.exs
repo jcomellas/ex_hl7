@@ -5,8 +5,10 @@ defmodule HL7.Mixfile do
     [app: :ex_hl7,
      version: "0.1.0",
      elixir: "~> 1.0",
+     description: "HL7 Parser for Elixir",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     package: package,
      deps: deps]
   end
 
@@ -28,5 +30,14 @@ defmodule HL7.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     []
+  end
+
+  defp package() do
+    [# These are the default files included in the package
+     files: ["lib", "test", "mix.exs", "README*", "LICENSE*"],
+     contributors: ["Juan Jose Comellas"],
+     licenses: ["Apache 2.0"],
+     links: %{"GitHub" => "https://github.com/jcomellas/ex_hl7",
+              "Docs" => "http://jcomellas.github.io/ex_hl7/"}]
   end
 end
