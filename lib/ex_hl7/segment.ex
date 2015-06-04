@@ -4,12 +4,11 @@ defmodule HL7.Segment do
   @type t :: map
 
   @spec id(t) :: HL7.Type.segment_id
-  def id(segment) when is_map(segment), do:
-    Map.get(segment, :__segment__)
+  def id(segment) when is_map(segment), do: Map.get(segment, :__segment__)
+  def id(_segment), do: nil
 
   @spec module(HL7.Type.segment_id) :: module
-  def module(id) when is_binary(id), do:
-    Module.concat([HL7.Segment, id])
+  def module(id) when is_binary(id), do: Module.concat([HL7.Segment, id])
 
 
   defmodule AUT do
