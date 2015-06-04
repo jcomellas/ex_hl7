@@ -117,7 +117,7 @@ defmodule HL7.Lexer do
           lexer = %Lexer{lexer | state: :read_segment_id}
           {:token, {lexer, {:separator, :segment}, rest}}
         else
-          {:error, {:bad_separator, char}}
+          {:error, {:bad_separator, <<char>>}}
         end
     end
   end
@@ -130,13 +130,18 @@ defmodule HL7.Lexer do
    when buffer !== <<>> do
     case find_characters(buffer, separators, terminator, <<>>) do
       {:ok, {value, item_type, rest}} ->
-        # Set the lexer to the state to be used once all the buffered tokens are retrieved.
-        state = case item_type do
-                  :segment -> :read_segment_id
-                  _        -> :read_characters
-                end
-        lexer = %Lexer{lexer | state: state, next_tokens: [{:separator, item_type}]}
-        {:token, {lexer, {:value, value}, rest}}
+        # Check that the contents of the field we just found are printable
+        if ASCII.printable?(value) do
+          # Set the lexer to the state to be used once all the buffered tokens are retrieved.
+          state = case item_type do
+                    :segment -> :read_segment_id
+                    _        -> :read_characters
+                  end
+          lexer = %Lexer{lexer | state: state, next_tokens: [{:separator, item_type}]}
+          {:token, {lexer, {:value, value}, rest}}
+        else
+          {:error, {:bad_field, value}}
+        end
       :incomplete ->
         {:incomplete, {lexer, buffer}}
       {:error, _} = error ->
