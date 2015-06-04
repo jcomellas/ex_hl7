@@ -190,11 +190,11 @@ defmodule HL7 do
 
   ## Examples
 
-      iex> [pr1, aut] = HL7.grouped_segments(message, ["PR1", "AUT"])
+      iex> [pr1, aut] = HL7.paired_segments(message, ["PR1", "AUT"])
 
   """
-  @spec grouped_segments(message, [segment_id]) :: [segment]
-  defdelegate grouped_segments(message, segment_ids), to: HL7.Message
+  @spec paired_segments(message, [segment_id]) :: [segment]
+  defdelegate paired_segments(message, segment_ids), to: HL7.Message
 
   @doc """
   Return the nth (0-based) grouping of segments with the specified segment IDs.
@@ -217,14 +217,14 @@ defmodule HL7 do
 
   ## Examples
 
-      iex> [pr1, aut] = HL7.grouped_segments(message, ["PR1", "AUT"], 0)
-      iex> [pr1, aut] = HL7.grouped_segments(message, ["PR1", "AUT"], 1)
-      iex> [] = HL7.grouped_segments(message, ["PR1", "AUT"], 1)
-      iex> [aut] = HL7.grouped_segments(message, ["AUT", "PR1"], 1)
+      iex> [pr1, aut] = HL7.paired_segments(message, ["PR1", "AUT"], 0)
+      iex> [pr1, aut] = HL7.paired_segments(message, ["PR1", "AUT"], 1)
+      iex> [] = HL7.paired_segments(message, ["PR1", "AUT"], 1)
+      iex> [aut] = HL7.paired_segments(message, ["AUT", "PR1"], 1)
 
   """
-  @spec grouped_segments(message, [segment_id], repetition :: non_neg_integer) :: [segment]
-  defdelegate grouped_segments(message, segment_ids, repetition), to: HL7.Message
+  @spec paired_segments(message, [segment_id], repetition :: non_neg_integer) :: [segment]
+  defdelegate paired_segments(message, segment_ids, repetition), to: HL7.Message
 
   @doc """
   Return the number of segments with a specified segment ID in an HL7 message.
