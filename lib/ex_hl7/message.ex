@@ -75,6 +75,51 @@ defmodule HL7.Message do
     count
 
 
+  @doc """
+  Reads a binary containing an HL7 message converting it to a list of segments.
+
+  ## Arguments
+
+    * `reader`: a `HL7.Reader.t` that will hold the state of the HL7 parser.
+
+    * `buffer`: a binary containing the HL7 message to be parsed (partial
+      messages are allowed).
+
+  ## Return value
+
+    * `{:ok, HL7.Message.t}` if the buffer could be parsed successfully, then
+      a message will be returned. This is actually a list of `HL7.Segment.t`
+      structs (check the [segment.ex](lib/ex_hl7/segment.ex) file to see the
+      list of included segment definitions).
+
+    * `{:incomplete, {(binary -> read_ret), rest :: binary}}`: if the message
+      in the string is not a complete HL7 message, then a function will be
+      returned together with the part of the message that could not be parsed.
+      You should acquire the remaining part of the message and concatenate it
+      to the `rest` of the previous buffer. Finally, you have to call the
+      function that was returned passing it the concatenated string.
+
+    * `{:error, reason :: any}` if the contents of the buffer were malformed
+      and could not be parsed correctly.
+
+  ## Examples
+
+  Given an HL7 message like the following bound to the `buffer` variable:
+
+      "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\\r" <>
+      "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\\r" <>
+      "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\\r" <>
+      "PR1|1||903401^^99DH\\r" <>
+      "AUT||112233||||||1|0\\r" <>
+      "PR1|2||904620^^99DH\\r" <>
+      "AUT||112233||||||1|0\\r"
+
+  You could read the message in the following way:
+
+      iex> reader = HL7.Reader.new(input_format: :wire, trim: true)
+      iex> {:ok, message} = HL7.Message.read(reader, buffer)
+
+  """
   @spec read(HL7.Reader.t, buffer :: binary) :: read_ret
   def read(reader, buffer), do:
     read(reader, buffer, [])
@@ -122,7 +167,36 @@ defmodule HL7.Message do
     end
   end
 
+  @doc """
+  Writes a list of HL7 segments into an iolist.
 
+  ## Arguments
+
+    * `writer`: an `HL7.Writer.t` holding the state of the writer.
+
+    * `message`: a list of HL7 segments to be written into the string.
+
+  ## Return value
+
+  iolist containing the message in the selected output format.
+
+  ## Examples
+
+  Given the `message` parsed in the `HL7.Message.read/2` example you could do:
+
+      iex> writer = HL7.Writer.new(output_format: :text, trim: true)
+      iex> buffer = HL7.Message.write(writer, message)
+      iex> IO.puts(buffer)
+
+      MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG
+      PRD|PS~4600^^HL70454||^^^B||||30123456789^CU
+      PID|0||1234567890ABC^^^&112233&IIN^HC||unknown
+      PR1|1||903401^^99DH
+      AUT||112233||||||1|0
+      PR1|2||904620^^99DH
+      AUT||112233||||||1|0
+
+  """
   @spec write(HL7.Writer.t, t) :: iodata
   def write(writer, message) do
     writer
