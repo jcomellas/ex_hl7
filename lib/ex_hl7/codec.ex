@@ -172,7 +172,13 @@ defmodule HL7.Codec do
 
   def decode_value(@null_value, _type), do:
     nil
-  def decode_value(value, type) when type === :string or value === "", do:
+  def decode_value(value, type)
+   when type === :string or
+        (value === "" and type === :string or type === :integer or
+         type === :float or type === :date or type === :datetime or
+         type === :datetime_compact), do:
+    # Empty fields have to be passed to the composite field module
+    # to insert the corresponding struct in the corresponding field.
     value
   def decode_value(value, :integer), do:
     :erlang.binary_to_integer(value)
