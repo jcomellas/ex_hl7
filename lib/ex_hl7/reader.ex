@@ -94,8 +94,8 @@ defmodule HL7.Reader do
         {:complete, %Reader{reader | lexer: lexer}}
       {:incomplete, {lexer, buffer}} ->
         {:incomplete, {%Reader{reader | lexer: lexer}, buffer}}
-      {:error, _reason} = error ->
-        error
+      {:error, {reason, data}} ->
+        {:error, {reason, [segment_id: reader.segment_id, sequence: reader.sequence, value: data]}}
     end
   end
 
