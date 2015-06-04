@@ -5,7 +5,7 @@ defmodule HL7.Codec.Test do
   import HL7.Codec, only: [decode_field: 2, decode_field: 3,
                            decode_components: 2, decode_components: 3,
                            decode_subcomponents: 2, decode_subcomponents: 3,
-                           decode_value: 2]
+                           decode_value: 2, escape: 3, unescape: 2]
 
   @separators HL7.Codec.separators()
 
@@ -145,16 +145,18 @@ defmodule HL7.Codec.Test do
 
   test "Decode date value" do
     assert decode_value("20120823", :date) === {2012, 8, 23}
+    assert decode_value("20120823103211", :date) === {2012, 8, 23}
+    assert decode_value("201208231032", :date) === {2012, 8, 23}
     assert_raise ArgumentError, fn -> decode_value("20121323", :date) end
     assert_raise ArgumentError, fn -> decode_value("20130832", :date) end
     assert_raise ArgumentError, fn -> decode_value("20130229", :date) end
-    assert_raise ArgumentError, fn -> decode_value("20120823103211", :date) end
     assert_raise ArgumentError, fn -> decode_value("ABC", :date) end
   end
 
   test "Decode datetime value" do
     assert decode_value("20120823103211", :datetime) === {{2012, 8, 23}, {10, 32, 11}}
     assert decode_value("201208231032", :datetime) === {{2012, 8, 23}, {10, 32, 0}}
+    assert decode_value("20120823", :datetime) === {{2012, 8, 23}, {0, 0, 0}}
     assert_raise ArgumentError, fn -> decode_value("20120823253211", :datetime) end
     assert_raise ArgumentError, fn -> decode_value("20120823106311", :datetime) end
     assert_raise ArgumentError, fn -> decode_value("20120823103270", :datetime) end
@@ -163,7 +165,7 @@ defmodule HL7.Codec.Test do
 
   test "Decode compact datetime value" do
     assert decode_value("201208231032", :datetime_compact) === {{2012, 8, 23}, {10, 32, 0}}
-    assert decode_value("20120823103211", :datetime_compact) === {{2012, 8, 23}, {10, 32, 0}}
+    assert decode_value("20120823103211", :datetime_compact) === {{2012, 8, 23}, {10, 32, 11}}
     assert_raise ArgumentError, fn -> decode_value("201208232532", :datetime_compact) end
     assert_raise ArgumentError, fn -> decode_value("201208231063", :datetime_compact) end
     assert_raise ArgumentError, fn -> decode_value("ABC", :datetime_compact) end
@@ -329,16 +331,17 @@ defmodule HL7.Codec.Test do
 
   test "Encode date value" do
     assert encode_value({2012, 8, 23}, :date) === "20120823"
+    assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :date) === "20120823"
     assert_raise ArgumentError, fn -> encode_value({2012, 13, 23}, :date) end
     assert_raise ArgumentError, fn -> encode_value({2012, 8, 32}, :date) end
     assert_raise ArgumentError, fn -> encode_value({2013, 2, 29}, :date) end
-    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 32, 11}}, :date) end
     assert_raise ArgumentError, fn -> encode_value("ABC", :date) end
   end
 
   test "Encode datetime value" do
     assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :datetime) === "20120823103211"
     assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime) === "20120823103200"
+    assert encode_value({2012, 8, 23}, :datetime) === "20120823000000"
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {25, 32, 11}}, :datetime) end
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 63, 11}}, :datetime) end
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 32, 70}}, :datetime) end
@@ -348,6 +351,7 @@ defmodule HL7.Codec.Test do
   test "Encode compact datetime value" do
     assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :datetime_compact) === "201208231032"
     assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime_compact) === "201208231032"
+    assert encode_value({2012, 8, 23}, :datetime_compact) === "201208230000"
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {25, 32, 0}}, :datetime_compact) end
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 63, 0}}, :datetime_compact) end
     assert_raise ArgumentError, fn -> encode_value("ABC", :datetime_compact) end

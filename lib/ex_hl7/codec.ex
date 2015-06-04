@@ -49,9 +49,9 @@ defmodule HL7.Codec do
   format. These are:
 
     * `|`: field separator
-    * `~`: repetition separator
     * `^`: component separator
     * `&`: subcomponent separator
+    * `~`: repetition separator
 
   To use custom separators in a message use `HL7.Codec.compile_separators/1`
   and pass the returned value as argument to the encoding functions.
@@ -181,13 +181,13 @@ defmodule HL7.Codec do
   def decode_value(value, :date), do:
     binary_to_date(value)
   def decode_value(value, :datetime), do:
-    binary_to_datetime(value, precision: :seconds)
+    binary_to_datetime(value)
   def decode_value(value, :datetime_compact), do:
-    binary_to_datetime(value, precision: :minutes)
+    binary_to_datetime(value)
   def decode_value(_value, _type), do:
     :nomatch
 
-  defp binary_to_date(<<y :: binary-size(4), m :: binary-size(2), d :: binary-size(2)>> = value) do
+  defp binary_to_date(<<y :: binary-size(4), m :: binary-size(2), d :: binary-size(2), _rest :: binary>> = value) do
     year = :erlang.binary_to_integer(y)
     month = :erlang.binary_to_integer(m)
     day = :erlang.binary_to_integer(d)
@@ -202,33 +202,36 @@ defmodule HL7.Codec do
     raise ArgumentError, "invalid date `#{value}`"
   end
 
-  defp binary_to_datetime(<<y :: binary-size(4), m :: binary-size(2), d :: binary-size(2),
-                            h :: binary-size(2), mm :: binary-size(2), s :: binary>> = value,
-                          precision: precision) do
-    year = :erlang.binary_to_integer(y)
-    month = :erlang.binary_to_integer(m)
-    day = :erlang.binary_to_integer(d)
-    hour = :erlang.binary_to_integer(h)
-    min = :erlang.binary_to_integer(mm)
-    sec = case precision do
-            :seconds when s !== "" ->
-              :erlang.binary_to_integer(s)
-            :seconds ->
-              # Accept datetimes without a value for the seconds
-              0
-            :minutes ->
-              0
-            _ ->
-              raise ArgumentError, "invalid precision `#{precision}` for datetime `#{value}`"
-          end
-    datetime = {{year, month, day}, {hour, min, sec}}
-    if valid_datetime?(datetime) do
-      datetime
-    else
-      raise ArgumentError, "invalid datetime `#{value}`"
+  defp binary_to_datetime(<<yyyymmdd :: binary-size(8), rest :: binary>> = value) do
+    date = binary_to_date(yyyymmdd)
+    case rest do
+      <<h :: binary-size(2), mm :: binary-size(2), s :: binary>> = value ->
+        hour = :erlang.binary_to_integer(h)
+        min = :erlang.binary_to_integer(mm)
+        sec = binary_to_seconds(s)
+        time = {hour, min, sec}
+        if valid_time?(time) do
+          {date, time}
+        else
+          raise ArgumentError, "invalid datetime `#{value}`"
+        end
+      "" ->
+        {date, {0, 0, 0}}
+      _ ->
+        raise ArgumentError, "invalid datetime `#{value}`"
     end
   end
-  defp binary_to_datetime(value, _options) do
+  defp binary_to_datetime(value) do
+    raise ArgumentError, "invalid datetime `#{value}`"
+  end
+
+  defp binary_to_seconds(<<_ :: binary-size(2)>> = value) do
+    :erlang.binary_to_integer(value)
+  end
+  defp binary_to_seconds("") do
+    0
+  end
+  defp binary_to_seconds(value) do
     raise ArgumentError, "invalid datetime `#{value}`"
   end
 
@@ -318,6 +321,9 @@ defmodule HL7.Codec do
       raise ArgumentError, "invalid date `#{inspect date}`"
     end
   end
+  def format_date({{_year, _month, _day} = date, _time}) do
+    format_date(date)
+  end
   def format_date(date) do
     raise ArgumentError, "invalid date `#{inspect date}`"
   end
@@ -341,6 +347,9 @@ defmodule HL7.Codec do
     else
       raise ArgumentError, "invalid datetime `#{inspect datetime}`"
     end
+  end
+  def format_datetime({_year, _month, _day} = date, options) do
+    format_datetime({date, {0, 0, 0}}, options)
   end
   def format_datetime(datetime, _options) do
     raise ArgumentError, "invalid datetime `#{inspect datetime}`"
@@ -478,6 +487,9 @@ defmodule HL7.Codec do
   defp trim_item(data, _separator), do:
     data
 
+  defp valid_datetime?({date, time}), do:
+    valid_date?(date) and valid_time?(time)
+
   defp valid_date?({year, month, day})
    when is_integer(year) and is_integer(month) and is_integer(day) do
     (month >= 1 and month <= 12) and
@@ -487,14 +499,13 @@ defmodule HL7.Codec do
     false
   end
 
-  defp valid_datetime?({date, {hour, min, sec}})
+  defp valid_time?({hour, min, sec})
    when is_integer(hour) and is_integer(min) and is_integer(sec) do
-    valid_date?(date) and
     (hour >= 0 and hour < 24) and
     (min >= 0 and min < 60) and
     (sec >= 0 and sec < 60)
   end
-  defp valid_datetime?(_datetime) do
+  defp valid_time?(_time) do
     false
   end
 
