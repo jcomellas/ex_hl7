@@ -32,6 +32,8 @@ defmodule ASCII do
   (Latin 1) characters.
   """
   @spec printable?(binary) :: boolean
+  def printable?(""), do:
+    true
   def printable?(value), do:
     is?(value, fn char -> (char >= 0x20 and char <= 0x7e) or (char >= 0xa0 and char <= 0xff) end)
 
