@@ -46,7 +46,7 @@ defmodule Authorizer do
             message_datetime: :calendar.universal_time(),
             # RPA^I08
             message_type: %CM_MSH{msh.message_type | id: "RPA"},
-            # Kids, don't do this at home
+            # Kids, don't try this at home
             message_control_id: Base.encode32(:crypto.rand_bytes(5)),
             accept_ack_type: "ER",
             application_ack_type: "ER"
