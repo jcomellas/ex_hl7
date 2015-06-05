@@ -51,29 +51,29 @@ defmodule HL7.Message.Test do
     assert trim === IO.iodata_to_binary(gen)
   end
 
-  test "Read trimmed request in wire format and write it untrimmed in stdio format" do
-    trim =
-      "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
-      "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\r" <>
-      "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\r" <>
-      "PR1|1||903401^^99DH\r" <>
-      "AUT||112233||||||1|0\r" <>
-      "PR1|2||904620^^99DH\r" <>
-      "AUT||112233||||||1|0\r"
-    full =
-      """
-      MSH|^~\\&|CLIENTHL7^^|CLI01020304^^|SERVHL7^^|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG|
-      PRD|PS^^^^^~4600^^HL70454^^^||^^^B&&^^^^^||||30123456789^CU^
-      PID|0||1234567890ABC^^^&112233&IIN^HC^&&^^||unknown^^^^^^^^&&&&&^&^
-      PR1|1||903401^^99DH^^^|||
-      AUT||112233^^^^^||||||1|0|
-      PR1|2||904620^^99DH^^^|||
-      AUT||112233^^^^^||||||1|0|
-      """
-    {:ok, msg} = HL7.read(trim, input_format: :wire, trim: true)
-    gen = HL7.write(msg, output_format: :text, trim: false)
-    assert full === IO.iodata_to_binary(gen)
-  end
+  # test "Read trimmed request in wire format and write it untrimmed in stdio format" do
+  #   trim =
+  #     "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
+  #     "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\r" <>
+  #     "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\r" <>
+  #     "PR1|1||903401^^99DH\r" <>
+  #     "AUT||112233||||||1|0\r" <>
+  #     "PR1|2||904620^^99DH\r" <>
+  #     "AUT||112233||||||1|0\r"
+  #   full =
+  #     """
+  #     MSH|^~\\&|CLIENTHL7^^|CLI01020304^^|SERVHL7^^|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG|
+  #     PRD|PS^^^^^~4600^^HL70454^^^||^^^B&&^^^^^||||30123456789^CU^
+  #     PID|0||1234567890ABC^^^&112233&IIN^HC^&&^^||unknown^^^^^^^^&&&&&^&^
+  #     PR1|1||903401^^99DH^^^|||
+  #     AUT||112233^^^^^||||||1|0|
+  #     PR1|2||904620^^99DH^^^|||
+  #     AUT||112233^^^^^||||||1|0|
+  #     """
+  #   {:ok, msg} = HL7.read(trim, input_format: :wire, trim: true)
+  #   gen = HL7.write(msg, output_format: :text, trim: false)
+  #   assert full === IO.iodata_to_binary(gen)
+  # end
 
   test "Read/write complete trimmed response in wire format" do
     orig =
