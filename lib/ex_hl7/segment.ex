@@ -16,7 +16,7 @@ defmodule HL7.Segment do
     alias HL7.Composite.CE
     alias HL7.Composite.CP
     alias HL7.Composite.EI
-    
+
     segment "AUT" do
       field :plan,                       seq:  1, type: CE,        length: 32
       field :company,                    seq:  2, type: CE,        length: 58
@@ -24,7 +24,7 @@ defmodule HL7.Segment do
       field :effective_date,             seq:  4, type: :datetime, length: 14
       field :expiration_date,            seq:  5, type: :datetime, length: 14
       field :authorization,              seq:  6, type: EI,        length: 20
-      field :reimbursement_limit,        seq:  7, type: CP,        length: 25  
+      field :reimbursement_limit,        seq:  7, type: CP,        length: 25
       field :requested_treatments,       seq:  8, type: :integer,  length:  2
       field :authorized_treatments,      seq:  9, type: :integer,  length:  2
       field :process_date,               seq: 10, type: :date,     length:  8
@@ -149,12 +149,12 @@ defmodule HL7.Segment do
     segment "OBX" do
       field :set_id,                     seq:  1, type: :integer,  length:  4
       field :value_type,                 seq:  2, type: :string,   length: 10
-      field :observation_id,             seq:  3, type: CE,        length: 24     
+      field :observation_id,             seq:  3, type: CE,        length: 24
       field :observation_sub_id,         seq:  4, type: :string,   length: 20
-      field :observation_value,          seq:  5, type: CE,        length: 24     
+      field :observation_value,          seq:  5, type: CE,        length: 24
       field :observation_status,         seq: 11, type: :string,   length:  1
     end
-  end     
+  end
 
   defmodule PID do
     @moduledoc "3.4.2 PID - patient identification segment"

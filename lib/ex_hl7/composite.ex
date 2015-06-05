@@ -68,7 +68,7 @@ defmodule HL7.Composite do
 
   defmodule CM_MSH do
     @moduledoc """
-    2.16.9.9 MSH-9 Message type (CM) 00009 
+    2.16.9.9 MSH-9 Message type (CM) 00009
 
     Components: <message type (ID)> ^ <trigger event (ID)> ^ <message structure (ID)>
     """
@@ -241,7 +241,7 @@ defmodule HL7.Composite do
     *Note*: This data type contains several location identifiers that should be
     thought of in the following order from the most general to the most
     specific: facility, building, floor, point of care, room, bed.
-  
+
     Additional data about any location defined by these components can be added
     in the following components: person location type, location description and
     location status.
@@ -333,7 +333,7 @@ defmodule HL7.Composite do
       component :census_tract,                 type: :string
       component :adrress_representation,       type: :string
       component :address_validity,             type: DR,       default: %DR{}
-    end    
+    end
   end
 
   defmodule XCN do
