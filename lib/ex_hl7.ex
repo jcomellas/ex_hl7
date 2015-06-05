@@ -305,7 +305,7 @@ defmodule HL7 do
       iex> "ABC\\\\|\\\\DEF\\\\|\\\\GHI" = HL7.escape("ABC|DEF|GHI", separators: HL7.Codec.separators(), escape_char: ?\\\\)
 
   """
-  @spec escape(binary, options :: Keyword.t)
+  @spec escape(binary, options :: Keyword.t) :: binary
   def escape(value, options \\ []) do
     separators = Keyword.get(options, :separators, HL7.Codec.separators())
     escape_char = Keyword.get(options, :escape_char, ?\\)
@@ -328,7 +328,7 @@ defmodule HL7 do
       iex> "ABC|DEF|GHI" = HL7.unescape("ABC\\\\|\\\\DEF\\\\|\\\\GHI", escape_char: ?\\\\)
 
   """
-  @spec unescape(binary, options :: Keyword.t)
+  @spec unescape(binary, options :: Keyword.t) :: binary
   def unescape(value, options \\ []) do
     escape_char = Keyword.get(options, :escape_char, ?\\)
     HL7.Codec.unescape(value, escape_char)
