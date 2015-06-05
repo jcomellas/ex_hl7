@@ -14,12 +14,6 @@ defmodule HL7.Message do
                       {:error, reason :: any}
 
 
-  @spec at(t, index :: integer) :: HL7.Segment.t | nil
-  defdelegate at(message, index), to: Enum
-
-  @spec at(t, index :: integer, HL7.Segment.t | nil) :: HL7.Segment.t | nil
-  defdelegate at(message, index, default), to: Enum
-
   @spec segment(t, HL7.Type.segment_id, HL7.Type.repetition) :: HL7.Segment.t
   def segment(message, segment_id, repetition \\ 0)
 
@@ -85,9 +79,6 @@ defmodule HL7.Message do
     count
   end
 
-  @spec delete_at(t, index :: integer) :: t
-  defdelegate delete_at(message, index), to: Enum
-
   @spec delete(t, HL7.Type.segment_id, HL7.Type.repetition) :: t
   def delete(message, segment_id, repetition \\ 0) do
     case split_at_segment(message, segment_id, repetition, []) do
@@ -98,39 +89,47 @@ defmodule HL7.Message do
     end
   end
 
-  @spec insert_at(t, index :: integer, HL7.Segment.t) :: t
-  defdelegate insert_at(message, index, segment), to: Enum
-
-  @spec insert_before(t, HL7.Type.segment_id, HL7.Segment.t) :: t
+  @spec insert_before(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
   def insert_before(message, segment_id, segment), do:
     insert_before(message, segment_id, 0, segment)
 
-  @spec insert_before(t, HL7.Type.segment_id, HL7.Type.repetition, HL7.Segment.t) :: t
-  def insert_before(message, segment_id, repetition, segment) do
+  @spec insert_before(t, HL7.Type.segment_id, HL7.Type.repetition,
+                      HL7.Segment.t | [HL7.Segment.t]) :: t
+  def insert_before(message, segment_id, repetition, new_segments)
+   when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
+        is_list(new_segments) do
     case split_at_segment(message, segment_id, repetition, []) do
-      {segment_before, tail, acc} ->
-        Enum.reverse(acc, [segment, segment_before | tail])
+      {segment, tail, acc} ->
+        Enum.reverse(acc, new_segments ++ [segment | tail])
       _acc ->
         message
     end
   end
+  def insert_before(message, segment_id, repetition, new_segment)
+   when is_map(new_segment) do
+    insert_before(message, segment_id, repetition, [new_segment])
+  end
 
-  @spec insert_after(t, HL7.Type.segment_id, HL7.Segment.t) :: t
+  @spec insert_after(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
   def insert_after(message, segment_id, segment), do:
     insert_after(message, segment_id, 0, segment)
 
-  @spec insert_after(t, HL7.Type.segment_id, HL7.Type.repetition, HL7.Segment.t) :: t
-  def insert_after(message, segment_id, repetition, segment) do
+  @spec insert_after(t, HL7.Type.segment_id, HL7.Type.repetition,
+                     HL7.Segment.t | [HL7.Segment.t]) :: t
+  def insert_after(message, segment_id, repetition, new_segments)
+   when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
+        is_list(new_segments) do
     case split_at_segment(message, segment_id, repetition, []) do
-      {segment_before, tail, acc} ->
-        Enum.reverse(acc, [segment_before, segment | tail])
+      {segment, tail, acc} ->
+        Enum.reverse(acc, [segment | (new_segments ++ tail)])
       _acc ->
         message
     end
   end
-
-  @spec replace_at(t, index :: integer, HL7.Segment.t) :: t
-  defdelegate replace_at(message, index, segment), to: Enum
+  def insert_after(message, segment_id, repetition, new_segment)
+   when is_map(new_segment) do
+    insert_after(message, segment_id, repetition, [new_segment])
+  end
 
   @spec replace(t, HL7.Type.segment_id, HL7.Segment.t) :: t
   def replace(message, segment_id, segment), do:

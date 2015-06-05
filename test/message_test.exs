@@ -216,13 +216,6 @@ defmodule HL7.Message.Test do
     # Try to retrieve segments that are not present
     assert nil === HL7.Message.segment(msg, "PV1")
     assert nil === HL7.Message.segment(msg, "XXX")
-    # Retrieve segment in a given index
-    msa = HL7.at(msg, 1)
-    assert HL7.segment_id(msa) === "MSA"
-    assert msa.ack_code === "AA"
-    nte = HL7.at(msg, -1)
-    assert HL7.segment_id(nte) === "NTE"
-    assert nte.set_id === 1
     # Retrieve segment from message with implicit position
     aut = HL7.Message.segment(msg, "AUT")
     assert aut !== nil
