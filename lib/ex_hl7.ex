@@ -134,6 +134,28 @@ defmodule HL7 do
   defdelegate segment_id(segment), to: HL7.Segment, as: :id
 
   @doc """
+  Retrieve the segment at the given index (0-based)
+
+  ## Return value
+
+  Returns the segment at the given `index` (0-based) or `nil` if the segment
+  is not present or the index is out of bounds.
+  """
+  @spec at(message, index :: integer) :: segment | nil
+  defdelegate at(message, index), to: HL7.Message
+
+  @doc """
+  Retrieve the segment at the given index (0-based)
+
+  ## Return value
+
+  Returns the segment at the given `index` (0-based) or `default` if the segment
+  is not present or the index is out of bounds.
+  """
+  @spec at(message, index :: integer, segment | nil) :: segment | nil
+  defdelegate at(message, index, default), to: HL7.Message
+
+  @doc """
   Return the first repetition of a segment within a message.
 
   ## Return value
@@ -238,6 +260,39 @@ defmodule HL7 do
   """
   @spec segment_count(message, segment_id) :: non_neg_integer
   defdelegate segment_count(message, segment_id), to: HL7.Message
+
+  @spec delete_at(message, index :: integer) :: message
+  defdelegate delete_at(message, index), to: HL7.Message
+
+  @spec delete(message, segment_id) :: message
+  defdelegate delete(message, segment_id), to: HL7.Message
+
+  @spec delete(message, segment_id, repetition) :: message
+  defdelegate delete(message, segment_id, repetition), to: HL7.Message
+
+  @spec insert_at(message, index :: integer, segment) :: message
+  defdelegate insert_at(message, index, segment), to: HL7.Message
+
+  @spec insert_before(message, segment_id, segment) :: message
+  defdelegate insert_before(message, segment_id, segment), to: HL7.Message
+
+  @spec insert_before(message, segment_id, repetition, segment) :: message
+  defdelegate insert_before(message, segment_id, repetition, segment), to: HL7.Message
+
+  @spec insert_after(message, segment_id, segment) :: message
+  defdelegate insert_after(message, segment_id, segment), to: HL7.Message
+
+  @spec insert_after(message, segment_id, repetition, segment) :: message
+  defdelegate insert_after(message, segment_id, repetition, segment), to: HL7.Message
+
+  @spec replace_at(message, index :: integer, segment) :: message
+  defdelegate replace_at(message, index, segment), to: HL7.Message
+
+  @spec replace(message, segment_id, segment) :: message
+  defdelegate replace(message, segment_id, segment), to: HL7.Message
+
+  @spec replace(message, segment_id, repetition, segment) :: message
+  defdelegate replace(message, segment_id, repetition, segment), to: HL7.Message
 
   @doc """
   Escape a string that may contain separators using the HL7 escaping rules.

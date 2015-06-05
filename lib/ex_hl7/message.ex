@@ -14,11 +14,17 @@ defmodule HL7.Message do
                       {:error, reason :: any}
 
 
-  @spec segment(t, HL7.Type.segment_id, repetition :: non_neg_integer) :: HL7.Segment.t
+  @spec at(t, index :: integer) :: HL7.Segment.t | nil
+  defdelegate at(message, index), to: Enum
+
+  @spec at(t, index :: integer, HL7.Segment.t | nil) :: HL7.Segment.t | nil
+  defdelegate at(message, index, default), to: Enum
+
+  @spec segment(t, HL7.Type.segment_id, HL7.Type.repetition) :: HL7.Segment.t
   def segment(message, segment_id, repetition \\ 0)
 
   def segment(message, segment_id, repetition) do
-    case segment_tail(message, segment_id, repetition) do
+    case tail_at_segment(message, segment_id, repetition) do
       {segment, _tail} -> segment
       nil              -> nil
     end
@@ -28,7 +34,7 @@ defmodule HL7.Message do
   def paired_segments(message, segment_ids, repetition \\ 0)
 
   def paired_segments(message, [segment_id | tail2], repetition) do
-    case segment_tail(message, segment_id, repetition) do
+    case tail_at_segment(message, segment_id, repetition) do
       {segment, tail1} -> _paired_segments(tail1, tail2, [segment])
       nil              -> []
     end
@@ -47,19 +53,19 @@ defmodule HL7.Message do
     Enum.reverse(acc)
   end
 
-  defp segment_tail([segment | tail], segment_id, repetition) do
+  defp tail_at_segment([segment | tail], segment_id, repetition) do
     case HL7.Segment.id(segment) do
       ^segment_id ->
         if repetition === 0 do
           {segment, tail}
         else
-          segment_tail(tail, segment_id, repetition - 1)
+          tail_at_segment(tail, segment_id, repetition - 1)
         end
       _ ->
-        segment_tail(tail, segment_id, repetition)
+        tail_at_segment(tail, segment_id, repetition)
     end
   end
-  defp segment_tail([], _segment_id, _repetition) do
+  defp tail_at_segment([], _segment_id, _repetition) do
     nil
   end
 
@@ -79,7 +85,82 @@ defmodule HL7.Message do
     count
   end
 
+  @spec delete_at(t, index :: integer) :: t
+  defdelegate delete_at(message, index), to: Enum
 
+  @spec delete(t, HL7.Type.segment_id, HL7.Type.repetition) :: t
+  def delete(message, segment_id, repetition \\ 0) do
+    case split_at_segment(message, segment_id, repetition, []) do
+      {_segment, tail, acc} ->
+        Enum.reverse(acc, tail)
+      _acc ->
+        message
+    end
+  end
+
+  @spec insert_at(t, index :: integer, HL7.Segment.t) :: t
+  defdelegate insert_at(message, index, segment), to: Enum
+
+  @spec insert_before(t, HL7.Type.segment_id, HL7.Segment.t) :: t
+  def insert_before(message, segment_id, segment), do:
+    insert_before(message, segment_id, 0, segment)
+
+  @spec insert_before(t, HL7.Type.segment_id, HL7.Type.repetition, HL7.Segment.t) :: t
+  def insert_before(message, segment_id, repetition, segment) do
+    case split_at_segment(message, segment_id, repetition, []) do
+      {segment_before, tail, acc} ->
+        Enum.reverse(acc, [segment, segment_before | tail])
+      _acc ->
+        message
+    end
+  end
+
+  @spec insert_after(t, HL7.Type.segment_id, HL7.Segment.t) :: t
+  def insert_after(message, segment_id, segment), do:
+    insert_after(message, segment_id, 0, segment)
+
+  @spec insert_after(t, HL7.Type.segment_id, HL7.Type.repetition, HL7.Segment.t) :: t
+  def insert_after(message, segment_id, repetition, segment) do
+    case split_at_segment(message, segment_id, repetition, []) do
+      {segment_before, tail, acc} ->
+        Enum.reverse(acc, [segment_before, segment | tail])
+      _acc ->
+        message
+    end
+  end
+
+  @spec replace_at(t, index :: integer, HL7.Segment.t) :: t
+  defdelegate replace_at(message, index, segment), to: Enum
+
+  @spec replace(t, HL7.Type.segment_id, HL7.Segment.t) :: t
+  def replace(message, segment_id, segment), do:
+    replace(message, segment_id, 0, segment)
+
+  @spec replace(t, HL7.Type.segment_id, HL7.Type.repetition, HL7.Segment.t) :: t
+  def replace(message, segment_id, repetition, segment) do
+    case split_at_segment(message, segment_id, repetition, []) do
+      {_segment_before, tail, acc} ->
+        Enum.reverse(acc, [segment | tail])
+      _acc ->
+        message
+    end
+  end
+
+  defp split_at_segment([segment | tail], segment_id, repetition, acc) do
+    case HL7.Segment.id(segment) do
+      ^segment_id ->
+        if repetition === 0 do
+          {segment, tail, acc}
+        else
+          split_at_segment(tail, segment_id, repetition - 1, [segment | acc])
+        end
+      _ ->
+        split_at_segment(tail, segment_id, repetition, [segment | acc])
+    end
+  end
+  defp split_at_segment([], _segment_id, _repetition, acc) do
+    acc
+  end
 
   @doc """
   Reads a binary containing an HL7 message converting it to a list of segments.

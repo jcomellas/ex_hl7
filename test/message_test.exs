@@ -216,6 +216,13 @@ defmodule HL7.Message.Test do
     # Try to retrieve segments that are not present
     assert nil === HL7.Message.segment(msg, "PV1")
     assert nil === HL7.Message.segment(msg, "XXX")
+    # Retrieve segment in a given index
+    msa = HL7.at(msg, 1)
+    assert HL7.segment_id(msa) === "MSA"
+    assert msa.ack_code === "AA"
+    nte = HL7.at(msg, -1)
+    assert HL7.segment_id(nte) === "NTE"
+    assert nte.set_id === 1
     # Retrieve segment from message with implicit position
     aut = HL7.Message.segment(msg, "AUT")
     assert aut !== nil
@@ -264,5 +271,36 @@ defmodule HL7.Message.Test do
     [pr1] = segments
     assert HL7.segment_id(pr1) === "PR1"
     assert pr1.set_id === 2
+  end
+
+  test "Delete/Insert segments into a message" do
+    # alias HL7.Segment.OBX
+    # alias HL7.Segment.AUT
+    # alias HL7.Segment.ZAU
+    buf =
+      "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
+      "MSA|AA|00XX20120201101155\r" <>
+      "AUT|4^Cart. 4|112233||20120201094256||4928307\r" <>
+      "ZAU||4928307|B001^AUTORIZADA\r" <>
+      "PRD|PS~46.00^Radiologia General|Prestador Radiologico^|^^^B||||30123456789^CU\r" <>
+      "PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P\r" <>
+      "IN1|1|4^Cart. 4|112233\r" <>
+      "ZIN|Y|EXNT^EXENTO|01002^Contraste a cargo del prestador~01004^Mat. Rad. a cargo del prestador\r" <>
+      "PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH||\r" <>
+      "OBX|1||||||||||F\r" <>
+      "AUT||112233||||||1|1\r" <>
+      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
+      "PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH||\r" <>
+      "OBX|2||||||||||F\r" <>
+      "AUT||112233||||||1|1\r" <>
+      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
+      "NTE|1|||\r"
+    {:ok, msg} = HL7.read(buf, input_format: :wire, trim: true)
+    pr1 = HL7.segment(msg, "PR1", 0)
+    msg = HL7.delete(msg, "OBX", 0)
+    assert [pr1] === HL7.paired_segments(msg, ["PR1", "OBX"], 0)
+    pr1 = HL7.segment(msg, "PR1", 1)
+    msg = HL7.delete(msg, "OBX", 0)
+    assert [pr1] === HL7.paired_segments(msg, ["PR1", "OBX"], 1)
   end
 end
