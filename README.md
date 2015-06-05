@@ -33,7 +33,7 @@ defmodule Authorizer do
   end
 
   def authorize(msg, "RQA", "I08") do
-    msh = HL7.get(msg, "MSH")
+    msh = HL7.segment(msg, "MSH")
     msh = %MSH{msh |
             sending_application: msh.receiving_application,
             sending_facility: msh.receiving_facility,
