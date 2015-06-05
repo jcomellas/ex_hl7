@@ -108,7 +108,7 @@ defmodule HL7.Lexer do
 
   def read_separator(%Lexer{separators: separators, terminator: terminator} = lexer,
                      <<char, rest :: binary>>) do
-    case HL7.Codec.match_separator?(char, separators) do
+    case HL7.Codec.match_separator(char, separators) do
       {:match, :field} ->
         lexer = %Lexer{lexer | state: :read_characters}
         {:token, {lexer, {:separator, :field}, rest}}
@@ -154,7 +154,7 @@ defmodule HL7.Lexer do
 
 
   defp find_characters(<<char, rest :: binary>>, separators, terminator, acc) do
-    case HL7.Codec.match_separator?(char, separators) do
+    case HL7.Codec.match_separator(char, separators) do
       {:match, :field} ->
         {:ok, {acc, :field, rest}}
       _ ->

@@ -79,15 +79,15 @@ defmodule HL7.Codec do
   def separator(:subcomponent, <<_, _, char, _>>), do: char
   def separator(:repetition,   <<_, _, _, char>>), do: char
 
-  def match_separator?(char, <<char, _, _, _>>), do:
+  def match_separator(char, <<char, _, _, _>>), do:
     {:match, :field}
-  def match_separator?(char, <<_, char, _, _>>), do:
+  def match_separator(char, <<_, char, _, _>>), do:
     {:match, :component}
-  def match_separator?(char, <<_, _, char, _>>), do:
+  def match_separator(char, <<_, _, char, _>>), do:
     {:match, :subcomponent}
-  def match_separator?(char, <<_, _, _, char>>), do:
+  def match_separator(char, <<_, _, _, char>>), do:
     {:match, :repetition}
-  def match_separator?(_char, _separators), do:
+  def match_separator(_char, _separators), do:
     :nomatch
 
   @doc "Decode a binary holding an HL7 field into its canonical representation."
@@ -395,7 +395,7 @@ defmodule HL7.Codec do
     # generating unnecessary garbage by not copying the characters in the
     # string unless the string has to be escaped.
     <<head :: binary-size(index), char, rest :: binary>> = value
-    case match_separator?(char, separators) do
+    case match_separator(char, separators) do
       {:match, _item_type} ->
         acc = <<head :: binary, escape_char, char, escape_char>>
         escape_copy(rest, separators, escape_char, acc)
@@ -408,7 +408,7 @@ defmodule HL7.Codec do
   end
 
   defp escape_copy(<<char, rest :: binary>>, separators, escape_char, acc) do
-    acc = case match_separator?(char, separators) do
+    acc = case match_separator(char, separators) do
             {:match, _item_type} -> <<acc :: binary, escape_char, char, escape_char>>
             :nomatch             -> <<acc :: binary, char>>
           end

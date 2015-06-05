@@ -67,7 +67,7 @@ defmodule HL7.Writer do
   defp maybe_trim_buffer(buffer, _separators, false), do: buffer
 
   defp trim_buffer([char | tail] = buffer, separators) when is_integer(char) do
-    case HL7.Codec.match_separator?(char, separators) do
+    case HL7.Codec.match_separator(char, separators) do
       {:match, _item_type} -> trim_buffer(tail, separators)
       :nomatch             -> buffer
     end
