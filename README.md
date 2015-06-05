@@ -32,8 +32,12 @@ defmodule Authorizer do
     authorize(req, message_type.id, message_type.trigger_event)
   end
 
-  def authorize(msg, "RQA", "I08") do
-    msh = HL7.segment(msg, "MSH")
+  def authorize(req, "RQA", "I08") do
+    msh = HL7.segment(req, "MSH")
+    msa = %MSA{
+            ack_code: "AA",
+            message_control_id: msh.message_control_id
+          }
     msh = %MSH{msh |
             sending_application: msh.receiving_application,
             sending_facility: msh.receiving_facility,
@@ -43,13 +47,9 @@ defmodule Authorizer do
             # RPA^I08
             message_type: %CM_MSH{msh.message_type | id: "RPA"},
             # Kids, don't do this at home
-            message_control_id: Base.encode64(:crypto.rand_bytes(6)),
+            message_control_id: Base.encode32(:crypto.rand_bytes(5)),
             accept_ack_type: "ER",
             application_ack_type: "ER"
-          }
-    msa = %MSA{
-            ack_code: "AA",
-            message_control_id: msh.message_control_id
           }
     aut = %AUT{
             plan: %CE{id: "PPO"},
@@ -61,9 +61,9 @@ defmodule Authorizer do
             reimbursement_limit: %CP{price: %MO{quantity: 175.0, denomination: "USD"}},
             requested_treatments: 1
           }
-    msg = HL7.replace(msg, "MSH", msh)
-    msg = HL7.insert_after(msg, "MSH", msa)
-    HL7.insert_after(msg, "PR1", 0, aut)
+    res = HL7.replace(req, "MSH", msh)
+    res = HL7.insert_after(res, "MSH", msa)
+    HL7.insert_after(res, "PR1", 0, aut)
   end
 
   def patient(pid) do
@@ -117,16 +117,6 @@ req |> Enum.filter(&(HL7.segment_id(&1) === "PRD")) |> providers |> IO.puts
 # Create an authorized response and print it
 req |> authorize |> HL7.write(output_format: :text, trim: true) |> IO.puts
 
-# MSH|^~\\&|MSC|EWHIN|BLAKEMD|EWHIN|19940110154812||RPA^I08|MSC2112|P|2.4|||ER|ER
-# MSA|AA|BLAKEM7888
-# PRD|RP|BLAKE^BEVERLY^^^DR^MD|N. 12828 NEWPORT HIGHWAY^^MEAD^WA^99021| ^^^BLAKEMD&EWHIN^^^^^BLAKE MEDICAL CENTER|BLAKEM7899
-# PRD|RT|WSIC||^^^MSC&EWHIN^^^^^WASHINGTON STATE INSURANCE COMPANY
-# PID|||402941703^9^M10||BROWN^CARY^JOE||19600301||||||||||||402941703
-# IN1|1|PPO|WA02|WSIC (WA State Code)|11223 FOURTH STREET^^MEAD^WA^99021^USA|ANN MILLER|(509)333-1234|987654321||||19901101||||BROWN^CARY^JOE|1|19600309|N. 12345 SOME STREET^^MEAD^WA^99021^USA|||||||||||||||||402941703||||||01|M
-# DG1|1|I9|569.0|RECTAL POLYP|19940106103500|0
-# PR1|1|C4|45378|Colonoscopy|19940110105309|00
-# AUT|PPO|WA02|WSIC (WA State Code)|19940110|19940510|123456789|175.0&USD|1
-
 ```
 
 ## Requirements
@@ -156,14 +146,10 @@ end
 
 Only a small subset of the HL7 segments and composite fields are included in the project. You can always roll your own definitions in your project, but if you feel your changes would help others, please fork the repository, add whatever you need and send a pull-request.
 
-## Reading Messages
+## Messages
 
-## Writing Messages
+## Segments
 
-## Retrieving Segments
+## Composite Fields
 
-## Using Segments
-
-## Using Composite Fields
-
-## Limitations
+## Caveats
