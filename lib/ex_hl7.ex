@@ -7,6 +7,7 @@ defmodule HL7 do
   @type item_type      :: HL7.Type.item_type
   @type value_type     :: HL7.Type.value_type
   @type value          :: HL7.Type.value
+  @type repetition     :: HL7.Type.repetition
   @type read_option    :: HL7.Reader.option
   @type write_option   :: HL7.Writer.option
   @type read_ret       :: {:ok, HL7.Message.t} |
@@ -166,7 +167,7 @@ defmodule HL7 do
       iex> 2 = pr1.set_id
 
   """
-  @spec segment(message, segment_id, repetition :: non_neg_integer) :: segment | nil
+  @spec segment(message, segment_id, repetition) :: segment | nil
   defdelegate segment(message, segment_id, repetition), to: HL7.Message
 
   @doc """
@@ -223,7 +224,7 @@ defmodule HL7 do
       iex> [aut] = HL7.paired_segments(message, ["AUT", "PR1"], 1)
 
   """
-  @spec paired_segments(message, [segment_id], repetition :: non_neg_integer) :: [segment]
+  @spec paired_segments(message, [segment_id], repetition) :: [segment]
   defdelegate paired_segments(message, segment_ids, repetition), to: HL7.Message
 
   @doc """

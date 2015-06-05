@@ -24,7 +24,7 @@ defmodule HL7.Message do
     end
   end
 
-  @spec paired_segments(t, [HL7.Type.segment_id], repetition :: non_neg_integer) :: [HL7.Segment.t]
+  @spec paired_segments(t, [HL7.Type.segment_id], HL7.Type.repetition) :: [HL7.Segment.t]
   def paired_segments(message, segment_ids, repetition \\ 0)
 
   def paired_segments(message, [segment_id | tail2], repetition) do

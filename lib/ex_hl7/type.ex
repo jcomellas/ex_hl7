@@ -7,4 +7,5 @@ defmodule HL7.Type do
   @type field          :: binary | component | [binary] | [component]
   @type value_type     :: :string | :integer | :float | :date | :datetime | :datetime_compact
   @type value          :: binary | integer | float | :calendar.date | :calendar.datetime
+  @type repetition     :: non_neg_integer
 end
