@@ -266,10 +266,9 @@ defmodule HL7.Message.Test do
     assert pr1.set_id === 2
   end
 
-  test "Delete/Insert segments into a message" do
-    # alias HL7.Segment.OBX
-    # alias HL7.Segment.AUT
-    # alias HL7.Segment.ZAU
+  test "Delete/Insert/Replace segments into a message" do
+    alias HL7.Segment.OBX
+    alias HL7.Segment.NTE
     buf =
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
@@ -289,11 +288,20 @@ defmodule HL7.Message.Test do
       "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "NTE|1|||\r"
     {:ok, msg} = HL7.read(buf, input_format: :wire, trim: true)
-    pr1 = HL7.segment(msg, "PR1", 0)
+    assert HL7.segment(msg, "OBX", 1) !== nil
+    assert HL7.segment(msg, "OBX", 0) !== nil
+    msg = HL7.delete(msg, "OBX", 1)
     msg = HL7.delete(msg, "OBX", 0)
-    assert [pr1] === HL7.paired_segments(msg, ["PR1", "OBX"], 0)
-    pr1 = HL7.segment(msg, "PR1", 1)
-    msg = HL7.delete(msg, "OBX", 0)
-    assert [pr1] === HL7.paired_segments(msg, ["PR1", "OBX"], 1)
+    assert HL7.segment(msg, "OBX") === nil
+    msg = HL7.insert_after(msg, "PR1", 0, %OBX{set_id: 1, observation_status: "F"})    
+    assert HL7.segment(msg, "OBX", 0) !== nil
+    msg = HL7.insert_before(msg, "AUT", 2, %OBX{set_id: 2, observation_status: "F"})    
+    assert HL7.segment(msg, "OBX", 1) !== nil
+    assert length(HL7.paired_segments(msg, ["PR1", "OBX"], 0)) === 2
+    assert length(HL7.paired_segments(msg, ["PR1", "OBX"], 1)) === 2
+    msg = HL7.replace(msg, "NTE", 0, [%NTE{set_id: 1, comment: "First"},
+                                      %NTE{set_id: 2, comment: "Second"}])
+    assert HL7.segment(msg, "NTE", 0).comment === "First"
+    assert HL7.segment(msg, "NTE", 1).comment === "Second"
   end
 end
