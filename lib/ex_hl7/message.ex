@@ -131,18 +131,25 @@ defmodule HL7.Message do
     insert_after(message, segment_id, repetition, [new_segment])
   end
 
-  @spec replace(t, HL7.Type.segment_id, HL7.Segment.t) :: t
+  @spec replace(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
   def replace(message, segment_id, segment), do:
     replace(message, segment_id, 0, segment)
 
-  @spec replace(t, HL7.Type.segment_id, HL7.Type.repetition, HL7.Segment.t) :: t
-  def replace(message, segment_id, repetition, segment) do
+  @spec replace(t, HL7.Type.segment_id, HL7.Type.repetition,
+                HL7.Segment.t | [HL7.Segment.t]) :: t
+  def replace(message, segment_id, repetition, new_segments)
+   when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
+        is_list(new_segments) do
     case split_at_segment(message, segment_id, repetition, []) do
-      {_segment_before, tail, acc} ->
-        Enum.reverse(acc, [segment | tail])
+      {_segment, tail, acc} ->
+        Enum.reverse(acc, new_segments ++ tail)
       _acc ->
         message
     end
+  end
+  def replace(message, segment_id, repetition, new_segment)
+   when is_map(new_segment) do
+    replace(message, segment_id, repetition, [new_segment])
   end
 
   defp split_at_segment([segment | tail], segment_id, repetition, acc) do
