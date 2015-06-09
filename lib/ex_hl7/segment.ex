@@ -42,6 +42,9 @@ defmodule HL7.Segment do
       field :description,                seq:  4, type: :string,   length: 40
       field :diagnosis_datetime,         seq:  5, type: :datetime, length: 40
       field :diagnosis_type,             seq:  6, type: :string,   length:  2
+      field :category,                   seq:  7, type: CE,        length: 250
+      field :related_group,              seq:  8, type: CE,        length: 250
+      field :approval_indicator,         seq:  9, type: :string,   length: 1
     end
   end
 
