@@ -495,8 +495,11 @@ defmodule HL7 do
 
   * `value`: a string to unescape; it may or may not contain escaped characters.
 
-  * `options`: keyword list with the unescape options; these are:
-    * `escape_char`: character that was used as escape delimiter. Defaults to `?\\\\`.
+  * `options`: keyword list with the escape options; these are:
+    * `separators`: a binary containing the item separators to be used when
+      generating the message as returned by `HL7.Codec.compile_separators/1`.
+      Defaults to `HL7.Codec.separators`.
+    * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\`.
 
   ## Examples
 
@@ -506,8 +509,9 @@ defmodule HL7 do
   """
   @spec unescape(binary, options :: Keyword.t) :: binary
   def unescape(value, options \\ []) do
+    separators = Keyword.get(options, :separators, HL7.Codec.separators())
     escape_char = Keyword.get(options, :escape_char, ?\\)
-    HL7.Codec.unescape(value, escape_char)
+    HL7.Codec.unescape(value, separators, escape_char)
   end
 
 end
