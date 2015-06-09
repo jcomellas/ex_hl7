@@ -132,28 +132,6 @@ defmodule HL7 do
   defdelegate segment_id(segment), to: HL7.Segment, as: :id
 
   @doc """
-  Retrieve the segment at the given index (0-based)
-
-  ## Return value
-
-  Returns the segment at the given `index` (0-based) or `nil` if the segment
-  is not present or the index is out of bounds.
-  """
-  @spec at(message, index :: integer) :: segment | nil
-  defdelegate at(message, index), to: HL7.Message
-
-  @doc """
-  Retrieve the segment at the given index (0-based)
-
-  ## Return value
-
-  Returns the segment at the given `index` (0-based) or `default` if the segment
-  is not present or the index is out of bounds.
-  """
-  @spec at(message, index :: integer, segment | nil) :: segment | nil
-  defdelegate at(message, index, default), to: HL7.Message
-
-  @doc """
   Return the first repetition of a segment within a message.
 
   ## Return value
