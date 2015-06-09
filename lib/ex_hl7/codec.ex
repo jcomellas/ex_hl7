@@ -382,7 +382,7 @@ defmodule HL7.Codec do
   ## Examples
 
       iex> "ABCDEF" = HL7.Codec.escape("ABCDEF")
-      iex> "ABC\\\\|\\\\DEF\\\\|\\\\GHI" = HL7.Codec.escape("ABC|DEF|GHI", separators: HL7.Codec.separators(), escape_char: ?\\\\)
+      iex> "ABC\\\\F\\\\DEF\\\\S\\\\GHI" = HL7.Codec.escape("ABC|DEF^GHI", separators: HL7.Codec.separators(), escape_char: ?\\\\)
 
   """
   def escape(value, separators \\ @separators, escape_char \\ ?\\)
@@ -396,8 +396,11 @@ defmodule HL7.Codec do
     # string unless the string has to be escaped.
     <<head :: binary-size(index), char, rest :: binary>> = value
     case match_separator(char, separators) do
-      {:match, _item_type} ->
-        acc = <<head :: binary, escape_char, char, escape_char>>
+      {:match, item_type} ->
+        acc = escape_acc(item_type, escape_char, head)
+        escape_copy(rest, separators, escape_char, acc)
+      :nomatch when char === escape_char ->
+        acc = escape_acc(:escape, escape_char, head)
         escape_copy(rest, separators, escape_char, acc)
       :nomatch ->
         escape_no_copy(value, separators, escape_char, size, index + 1)
@@ -409,14 +412,26 @@ defmodule HL7.Codec do
 
   defp escape_copy(<<char, rest :: binary>>, separators, escape_char, acc) do
     acc = case match_separator(char, separators) do
-            {:match, _item_type} -> <<acc :: binary, escape_char, char, escape_char>>
-            :nomatch             -> <<acc :: binary, char>>
+            {:match, item_type}                -> escape_acc(item_type, escape_char, acc)
+            :nomatch when char === escape_char -> escape_acc(:escape, escape_char, acc)
+            :nomatch                           -> <<acc :: binary, char>>
           end
     escape_copy(rest, separators, escape_char, acc)
   end
   defp escape_copy(<<>>, _separators, _escape_char, acc) do
     acc
   end
+
+  defp escape_acc(item_type, escape_char, acc) do
+    char = escape_delimiter_type(item_type)
+    <<acc :: binary, escape_char, char, escape_char>>
+  end
+
+  defp escape_delimiter_type(:field),        do: ?F
+  defp escape_delimiter_type(:component),    do: ?S
+  defp escape_delimiter_type(:subcomponent), do: ?T
+  defp escape_delimiter_type(:repetition),   do: ?R
+  defp escape_delimiter_type(:escape),       do: ?E
 
   @doc """
   Convert an escaped string into its original value.
@@ -430,41 +445,52 @@ defmodule HL7.Codec do
   ## Examples
 
       iex> "ABCDEF" = HL7.unescape("ABCDEF")
-      iex> "ABC|DEF|GHI" = HL7.Codec.unescape("ABC\\\\|\\\\DEF\\\\|\\\\GHI", ?\\\\)
+      iex> "ABC|DEF|GHI" = HL7.Codec.unescape("ABC\\\\F\\\\DEF\\\\F\\\\GHI", ?\\\\)
 
   """
-  def unescape(value, escape_char \\ ?\\)
-   when is_binary(value) and is_integer(escape_char) do
-    unescape_no_copy(value, escape_char, byte_size(value), 0)
+  def unescape(value, separators \\ @separators, escape_char \\ ?\\)
+   when is_binary(value) and is_binary(separators) and is_integer(escape_char) do
+    unescape_no_copy(value, separators, escape_char, byte_size(value), 0)
   end
 
-  defp unescape_no_copy(value, escape_char, size, index) when index < size do
+  defp unescape_no_copy(value, separators, escape_char, size, index) when index < size do
     # As strings that need to be unescaped are fairly rare, we try to avoid
     # generating unnecessary garbage by not copying the characters in the
     # string unless the string has to be unescaped.
     case value do
       <<head :: binary-size(index), ^escape_char, char, ^escape_char, rest :: binary>> ->
-        acc = <<head :: binary, char>>
-        unescape_copy(rest, escape_char, acc)
+        char = unescape_delimiter(char, separators, escape_char)
+        unescape_copy(rest, separators, escape_char, <<head :: binary, char>>)
       _ ->
-        unescape_no_copy(value, escape_char, size, index + 1)
+        unescape_no_copy(value, separators, escape_char, size, index + 1)
     end
   end
-  defp unescape_no_copy(value, _escape_char, _size, _index) do
+  defp unescape_no_copy(value, _separators, _escape_char, _size, _index) do
     value
   end
 
-  defp unescape_copy(value, escape_char, acc) do
+  defp unescape_copy(value, separators, escape_char, acc) do
     case value do
       <<^escape_char, char, ^escape_char, rest :: binary>> ->
-        unescape_copy(rest, escape_char, <<acc :: binary, char>>)
+        char = unescape_delimiter(char, separators, escape_char)
+        unescape_copy(rest, separators, escape_char, <<acc :: binary, char>>)
       <<char, rest :: binary>> ->
-        unescape_copy(rest, escape_char, <<acc :: binary, char>>)
+        unescape_copy(rest, separators, escape_char, <<acc :: binary, char>>)
       <<>> ->
         acc
     end
   end
 
+  defp unescape_delimiter(?F, separators, _escape_char), do:
+    separator(:field, separators)
+  defp unescape_delimiter(?S, separators, _escape_char), do:
+    separator(:component, separators)
+  defp unescape_delimiter(?T, separators, _escape_char), do:
+    separator(:subcomponent, separators)
+  defp unescape_delimiter(?R, separators, _escape_char), do:
+    separator(:repetition, separators)
+  defp unescape_delimiter(?E, _separators, escape_char), do:
+    escape_char
 
   defp split_options(true),  do: [:global, :trim]
   defp split_options(false), do: [:global]

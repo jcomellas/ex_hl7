@@ -5,7 +5,7 @@ defmodule HL7.Codec.Test do
   import HL7.Codec, only: [decode_field: 2, decode_field: 3,
                            decode_components: 2, decode_components: 3,
                            decode_subcomponents: 2, decode_subcomponents: 3,
-                           decode_value: 2, escape: 3, unescape: 2]
+                           decode_value: 2, escape: 3, unescape: 3]
 
   @separators HL7.Codec.separators()
 
@@ -360,21 +360,23 @@ defmodule HL7.Codec.Test do
   test "Escape value" do
     str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%*()_+_={}[]:;\"'<>?,./"
     assert escape(str, @separators, ?\\) === str
-    assert escape("ABC|DEF|GHI", @separators, ?\\) === "ABC\\|\\DEF\\|\\GHI"
-    assert escape("ABC^DEF^", @separators, ?\\) === "ABC\\^\\DEF\\^\\"
-    assert escape("&DEF&GHI", @separators, ?\\) === "\\&\\DEF\\&\\GHI"
-    assert escape("~ABC~DEF~", @separators, ?\\) === "\\~\\ABC\\~\\DEF\\~\\"
-    assert escape("|ABC^DEF&GHI~", @separators, ?\\) === "\\|\\ABC\\^\\DEF\\&\\GHI\\~\\"
+    assert escape("ABC\\DEF\\GHI", @separators, ?\\) === "ABC\\E\\DEF\\E\\GHI"
+    assert escape("ABC|DEF|GHI", @separators, ?\\) === "ABC\\F\\DEF\\F\\GHI"
+    assert escape("ABC^DEF^", @separators, ?\\) === "ABC\\S\\DEF\\S\\"
+    assert escape("&DEF&GHI", @separators, ?\\) === "\\T\\DEF\\T\\GHI"
+    assert escape("~ABC~DEF~", @separators, ?\\) === "\\R\\ABC\\R\\DEF\\R\\"
+    assert escape("|ABC^DEF&GHI~", @separators, ?\\) === "\\F\\ABC\\S\\DEF\\T\\GHI\\R\\"
   end
 
   test "Unescape value" do
     str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%*()_+_={}[]:;\"'<>?,./"
-    assert unescape(str, ?\\) === str
-    assert unescape("ABC\\|\\DEF\\|\\GHI", ?\\) === "ABC|DEF|GHI"
-    assert unescape("ABC\\^\\DEF\\^\\", ?\\) === "ABC^DEF^"
-    assert unescape("\\&\\DEF\\&\\GHI", ?\\) === "&DEF&GHI"
-    assert unescape("\\~\\ABC\\~\\DEF\\~\\", ?\\) === "~ABC~DEF~"
-    assert unescape("\\|\\ABC\\^\\DEF\\&\\GHI\\~\\", ?\\) === "|ABC^DEF&GHI~"
+    assert unescape(str, @separators, ?\\) === str
+    assert unescape("ABC\\E\\DEF\\E\\GHI", @separators, ?\\) === "ABC\\DEF\\GHI"
+    assert unescape("ABC\\F\\DEF\\F\\GHI", @separators, ?\\) === "ABC|DEF|GHI"
+    assert unescape("ABC\\S\\DEF\\S\\", @separators, ?\\) === "ABC^DEF^"
+    assert unescape("\\T\\DEF\\T\\GHI", @separators, ?\\) === "&DEF&GHI"
+    assert unescape("\\R\\ABC\\R\\DEF\\R\\", @separators, ?\\) === "~ABC~DEF~"
+    assert unescape("\\F\\ABC\\S\\DEF\\T\\GHI\\R\\JKL\\E\\MNO", @separators, ?\\) === "|ABC^DEF&GHI~JKL\\MNO"
   end
 
 end
