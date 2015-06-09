@@ -217,9 +217,15 @@ defmodule HL7.Segment do
       field :referring_doctor,           seq:  8, type: XCN,       length: 94
       field :hospital_service,           seq: 10, type: :string,   length: 99
       field :readmission_indicator,      seq: 13, type: :string,   length:  2
+      field :bad_debt_transfer_amount,   seq: 32, type: :float,    length: 12
+      field :bad_debt_recovery_amount,   seq: 33, type: :float,    length: 12
       field :discharge_diposition,       seq: 36, type: :string,   length:  3
       field :admit_datetime,             seq: 44, type: :datetime, length: 12
       field :discharge_datetime,         seq: 45, type: :datetime, length: 12
+      field :current_patient_balance,    seq: 46, type: :float,    length: 12
+      field :total_charges,              seq: 47, type: :float,    length: 12
+      field :total_adjustments,          seq: 48, type: :float,    length: 12
+      field :total_payments,             seq: 49, type: :float,    length: 12
       field :visit_indicator,            seq: 51, type: :string,   length:  1
     end
   end
