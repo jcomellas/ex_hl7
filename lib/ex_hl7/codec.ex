@@ -185,15 +185,15 @@ defmodule HL7.Codec do
   def decode_value(value, :float), do:
     elem(Float.parse(value), 0)
   def decode_value(value, :date), do:
-    binary_to_date(value)
+    binary_to_date!(value)
   def decode_value(value, :datetime), do:
-    binary_to_datetime(value)
+    binary_to_datetime!(value)
   def decode_value(value, :datetime_compact), do:
-    binary_to_datetime(value)
+    binary_to_datetime!(value)
   def decode_value(_value, _type), do:
     :nomatch
 
-  defp binary_to_date(<<y :: binary-size(4), m :: binary-size(2), d :: binary-size(2), _rest :: binary>> = value) do
+  defp binary_to_date!(<<y :: binary-size(4), m :: binary-size(2), d :: binary-size(2), _rest :: binary>> = value) do
     year = :erlang.binary_to_integer(y)
     month = :erlang.binary_to_integer(m)
     day = :erlang.binary_to_integer(d)
@@ -204,17 +204,17 @@ defmodule HL7.Codec do
       raise ArgumentError, "invalid date `#{value}`"
     end
   end
-  defp binary_to_date(value) do
+  defp binary_to_date!(value) do
     raise ArgumentError, "invalid date `#{value}`"
   end
 
-  defp binary_to_datetime(<<yyyymmdd :: binary-size(8), rest :: binary>> = value) do
-    date = binary_to_date(yyyymmdd)
+  defp binary_to_datetime!(<<yyyymmdd :: binary-size(8), rest :: binary>> = value) do
+    date = binary_to_date!(yyyymmdd)
     case rest do
       <<h :: binary-size(2), mm :: binary-size(2), s :: binary>> = value ->
         hour = :erlang.binary_to_integer(h)
         min = :erlang.binary_to_integer(mm)
-        sec = binary_to_seconds(s)
+        sec = binary_to_seconds!(s)
         time = {hour, min, sec}
         if valid_time?(time) do
           {date, time}
@@ -227,17 +227,17 @@ defmodule HL7.Codec do
         raise ArgumentError, "invalid datetime `#{value}`"
     end
   end
-  defp binary_to_datetime(value) do
+  defp binary_to_datetime!(value) do
     raise ArgumentError, "invalid datetime `#{value}`"
   end
 
-  defp binary_to_seconds(<<_ :: binary-size(2)>> = value) do
+  defp binary_to_seconds!(<<_ :: binary-size(2)>> = value) do
     :erlang.binary_to_integer(value)
   end
-  defp binary_to_seconds("") do
+  defp binary_to_seconds!("") do
     0
   end
-  defp binary_to_seconds(value) do
+  defp binary_to_seconds!(value) do
     raise ArgumentError, "invalid datetime `#{value}`"
   end
 
