@@ -105,6 +105,7 @@ defmodule HL7.Segment do
     segment "MSA" do
       field :ack_code,                   seq:  1, type: :string,   length:  2
       field :message_control_id,         seq:  2, type: :string,   length: 20
+      field :text_message,               seq:  3, type: :string,   length: 80
       field :error_condition,            seq:  6, type: CE,        length: 51
     end
   end
