@@ -78,7 +78,6 @@ defmodule HL7.Lexer do
     {:incomplete, {lexer, buffer}}
   end
 
-
   def read_delimiters(lexer, <<delimiters :: binary-size(5), rest :: binary>>) do
     if ASCII.printable?(delimiters) and not ASCII.alphanumeric?(delimiters) do
       # The MSH segment must be handled as a special case because the 5
@@ -105,7 +104,6 @@ defmodule HL7.Lexer do
     {:incomplete, {lexer, buffer}}
   end
 
-
   def read_separator(%Lexer{separators: separators, terminator: terminator} = lexer,
                      <<char, rest :: binary>>) do
     case HL7.Codec.match_separator(char, separators) do
@@ -125,10 +123,9 @@ defmodule HL7.Lexer do
     {:incomplete, {lexer, buffer}}
   end
 
-
   def read_characters(%Lexer{separators: separators, terminator: terminator} = lexer, buffer)
    when buffer !== <<>> do
-    case find_characters(buffer, separators, terminator, <<>>) do
+    case find_characters(buffer, HL7.Codec.separator(:field, separators), terminator, <<>>) do
       {:ok, {value, item_type, rest}} ->
         # Check that the contents of the field we just found are printable
         if ASCII.printable?(value) do
@@ -152,20 +149,17 @@ defmodule HL7.Lexer do
     {:incomplete, {lexer, buffer}}
   end
 
-
-  defp find_characters(<<char, rest :: binary>>, separators, terminator, acc) do
-    case HL7.Codec.match_separator(char, separators) do
-      {:match, :field} ->
+  defp find_characters(<<char, rest :: binary>>, field_separator, terminator, acc) do
+    case char do
+      ^field_separator ->
         {:ok, {acc, :field, rest}}
+      ^terminator ->
+        {:ok, {acc, :segment, rest}}
       _ ->
-        if char === terminator do
-          {:ok, {acc, :segment, rest}}
-        else
-          find_characters(rest, separators, terminator, <<acc :: binary, char>>)
-        end
+        find_characters(rest, field_separator, terminator, <<acc :: binary, char>>)
     end
   end
-  defp find_characters(<<>>, _separators, _terminator, _acc) do
+  defp find_characters(<<>>, _field_separator, _terminator, _acc) do
     :incomplete
   end
 
@@ -175,5 +169,4 @@ defmodule HL7.Lexer do
         _     -> ?\r
     end
   end
-
 end
