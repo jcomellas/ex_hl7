@@ -117,14 +117,14 @@ defmodule HL7.Composite.Def do
   end
 
   @doc "Checks that a component definition is correct"
-  @spec check_component!(name :: atom, type :: atom, default :: any, composite :: atom,
-                         components :: [{name :: atom, type :: atom}]) :: boolean | no_return
-  def check_component!(name, type, default, composite, components) do
+  @spec check_component!(name :: atom, type :: atom, default :: any, module :: atom,
+                         components :: [{name :: atom, type :: atom}]) :: nil | no_return
+  def check_component!(name, type, default, module, components) do
     check_type!(name, type)
     check_default!(name, type, default)
 
     unless List.keyfind(components, name, 0) === nil do
-      raise ArgumentError, "component #{inspect name} is already set on composite `#{composite}`"
+      raise ArgumentError, "component #{inspect name} is already set on composite `#{module}`"
     end
   end
 
@@ -252,11 +252,11 @@ defmodule HL7.Composite.Def do
   @spec to_iodata(map, [{name :: atom, type :: atom}], [option]) :: iodata
   def to_iodata(map, descriptor, options) do
     field = encode_composite(map, descriptor)
-    separators = case Keyword.get(:separators, options) do
+    separators = case Keyword.get(options, :separators) do
                    nil        -> HL7.Codec.separators()
                    separators -> separators
                  end
-    trim = Keyword.get(:trime, true)
+    trim = Keyword.get(options, :trim, true)
     HL7.Codec.encode_field(field, separators, trim)
   end
 end

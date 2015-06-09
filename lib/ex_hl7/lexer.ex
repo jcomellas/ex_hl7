@@ -11,7 +11,7 @@ defmodule HL7.Lexer do
 
   @type option     :: {:input_format, :text | :wire}
   @type state      :: :read_segment_id | :read_delimiters | :read_separator | :read_characters
-  @type token      :: {:separator, HL7.Type.item_type} |
+  @type token      :: {:separator, HL7.Type.item_type | :segment} |
                       {:literal, binary} |
                       {:value, binary}
   @type t          :: %Lexer{
@@ -141,8 +141,6 @@ defmodule HL7.Lexer do
         end
       :incomplete ->
         {:incomplete, {lexer, buffer}}
-      {:error, _} = error ->
-        error
     end
   end
   def read_characters(lexer, <<>> = buffer) do
