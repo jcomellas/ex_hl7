@@ -176,6 +176,48 @@ defmodule HL7.Message do
     * `reader`: a `HL7.Reader.t` that will hold the state of the HL7 parser.
 
     * `buffer`: a binary containing the HL7 message to be parsed (partial
+      messages will raise an `HL7.ReadError` exception).
+
+  ## Return value
+
+  Returns the parsed message (i.e. list of segments) or raises an
+  `HL7.ReadError` exception in case of error.
+
+  ## Examples
+
+  Given an HL7 message like the following bound to the `buffer` variable:
+
+      "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\\r" <>
+      "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\\r" <>
+      "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\\r" <>
+      "PR1|1||903401^^99DH\\r" <>
+      "AUT||112233||||||1|0\\r" <>
+      "PR1|2||904620^^99DH\\r" <>
+      "AUT||112233||||||1|0\\r"
+
+  You could read the message in the following way:
+
+      iex> reader = HL7.Reader.new(input_format: :wire, trim: true)
+      iex> message = HL7.Message.read!(reader, buffer)
+
+  """
+  @spec read!(HL7.Reader.t, buffer :: binary) :: t
+  def read!(reader, buffer) do
+    case read(reader, buffer) do
+      {:ok, message}           -> message
+      {:incomplete, _function} -> raise HL7.ReadError, :incomplete
+      {:error, reason}         -> raise HL7.ReadError, reason
+    end
+  end
+
+  @doc """
+  Reads a binary containing an HL7 message converting it to a list of segments.
+
+  ## Arguments
+
+    * `reader`: a `HL7.Reader.t` that will hold the state of the HL7 parser.
+
+    * `buffer`: a binary containing the HL7 message to be parsed (partial
       messages are allowed).
 
   ## Return value

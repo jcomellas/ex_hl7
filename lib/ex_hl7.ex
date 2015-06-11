@@ -34,6 +34,50 @@ defmodule HL7 do
 
   ## Return values
 
+  Returns the parsed message (i.e. list of segments) or raises an
+  `HL7.ReadError` exception in case of error.
+
+  ## Examples
+
+  Given an HL7 message like the following bound to the `buffer` variable:
+
+      "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\\r" <>
+      "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\\r" <>
+      "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\\r" <>
+      "PR1|1||903401^^99DH\\r" <>
+      "AUT||112233||||||1|0\\r" <>
+      "PR1|2||904620^^99DH\\r" <>
+      "AUT||112233||||||1|0\\r"
+
+  You could read the message in the following way:
+
+      iex> message = HL7.read!(buffer, input_format: :wire, trim: true)
+
+  """
+  @spec read!(buffer :: binary, [HL7.read_option]) :: HL7.message
+  def read!(buffer, options \\ []), do:
+    HL7.Message.read!(HL7.Reader.new(options), buffer)
+
+  @doc """
+  Reads a binary containing an HL7 message converting it to a list of segments.
+
+  ## Arguments
+
+  * `buffer`: a binary containing the HL7 message to be parsed (partial
+    messages are allowed).
+
+  * `options`: keyword list with the read options; these are:
+    * `input_format`: the format the message in the `buffer` is in; it can be
+      either `:wire` for the normal HL7 wire format with carriage-returns as
+      segment terminators or `:text` for a format that replaces segment
+      terminators with line feeds to easily output messages to a console or
+      text file.
+    * `trim`: boolean that when set to `true` causes the fields to be
+      shortened to their optimal layout, removing trailing empty items (see
+      `HL7.Codec` for an explanation of this).
+
+  ## Return values
+
   * `{:ok, HL7.message}` if the buffer could be parsed successfully, then
     a message will be returned. This is actually a list of `HL7.segment`
     structs (check the [segment.ex](lib/ex_hl7/segment.ex) file to see the
