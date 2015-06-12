@@ -168,7 +168,7 @@ defmodule HL7.Composite.Def do
     is_float(default)
   def check_default?(:date, date), do:
     is_date(date)
-  def check_default?(:datetime, datetime) do:
+  def check_default?(:datetime, datetime), do:
     is_datetime(datetime)
   def check_default?(type, default) when is_atom(type), do:
     apply(type, :valid?, [default])
