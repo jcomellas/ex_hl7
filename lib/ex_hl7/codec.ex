@@ -8,7 +8,7 @@ defmodule HL7.Codec do
   `trim` to `true`, some trailing optional items and separators will be omitted
   from the decoded or encoded result, as we can see in the following example:
 
-      import HL7.Item
+      import HL7.Codec
 
       decode_field("504599^223344&&IIN&^~", separators(), trim: true)
 
@@ -38,7 +38,7 @@ defmodule HL7.Codec do
 
   To resolve the ambiguity in the HL7 syntax, the code decoding and encoding
   HL7 segments using the functions in this module must be aware of this issue
-  and deal with it accordingly when performing lookups or comparisons,
+  and deal with it accordingly when performing lookups or comparisons.
   """
 
   @separators "|^&~"
