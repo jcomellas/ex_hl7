@@ -146,10 +146,149 @@ end
 
 Only a small subset of the HL7 segments and composite fields are included in the project. You can always roll your own definitions in your project, but if you feel your changes would help others, please fork the repository, add whatever you need and send a pull-request.
 
-## Messages
+## Encoding Rules
 
-## Segments
+An HL7 message in its v2.x wire-format is actually a collection of concatenated segments, each terminated by a carriage-return (0x13) character. Each segment is a collection of fields separated by a custom separator character (`|` by default). Depending on the type of the field, each field can have multiple optional repetitions (separated by `~` by default), can be made out of multiple components (separated by `^` by default) where each of them can also have subcomponents (separated by `&` by default).
+
+This structure maps nicely to a k-ary tree. For example, given the following segment:
+
+    OBX|1|CE|88304&ANT|1|T57000^GALLBLADDER^SNM\r 
+
+We could represent it as the following subtree within a message:
+
+```
+                                     /
+segment                            OBX
+                                    |
+fields        [1]--[2]--------[3]---+------[4]------------[5]
+              /     |          |            |               \
+             1     "CE"        |           "1"               |
+                               |                             |
+components                    [0]                [0]--------[1]-------[2]
+                               |                 /           |          \
+                               |             "T57000"  "GALLBLADDER"   "SNM"
+                               |
+subcomponents             [0]--+--[1]
+                          /         \
+                       "8830"      "ANT"
+```
+
+*Note*: The indexes used for the fields are 1-based because this value is actually the sequence number assigned by HL7 to identify the field, whereas the indexes used for components and subcomponents are 0-based because this is the convention in Elixir.
+
+The input and output of the high level functions used to read or write a message (e.g. `HL7.read/2`, `HL7.write/2`) is affected by boolean argument named `trim`. This value changes the input and output from the lower level functions of the parser. If set to `true`, some trailing optional items and separators will be omitted from the decoded or encoded message.
+
+For example, a field that was originally read as:
+
+    504599^223344&&IIN&^~
+
+Would be written in the following way when `trim` is set `true`:
+
+    504599^223344&&IIN
+
+Both representations are correct, given that HL7 allows trailing items that are empty to be omitted.
+
+## Single Value Fields
+
+HL7 supports many types of single value (scalar, non-composite) fields. This parser maps all of them (including those that are identifiers in a table) to a few data types:
+
+  * `nil`: the null value from HL7 (`"\"\""`).
+  * `:string`: text value with no conversion performed on it. If the text contains characters that may overlap any message delimiter, it should be modified following the HL7 escaping rules (see `HL7.escape/2` and `HL7.unescape/2`).
+  * `:integer`: integer number
+  * `:float`: floating-point number with a dot (`.`) as decimal point; its text representation can be that of an integer (i.e. with no decimal point).
+  * `:date`: date in the `YYYYMMDD` format that is represented as a `:calendar.date` tuple.
+  * `:datetime`: date/time in the `YYYYMMDD[hhmm[ss]]` format represented as a `:calendar.datetime` tuple. If the time is not present, it will be represented by a `{0, 0, 0}` tuple.
+
+*Note*: there is no support for the full HL7 date/time format yet, as there is no standard way to represent times with subsecond precision and timezones in Elixir.
 
 ## Composite Fields
 
-## Caveats
+HL7 supports many types of composite fields and not all of them are included in this project, so to simplify their use there are some macros that help you easily define new ones.
+
+This parser exposes composite fields as structs and, given the following definition from the HL7 standard:
+
+    2.9.3 CE - coded element
+
+    <identifier (ST)> ^ <text (ST)> ^ <name of coding system (IS)> ^
+    <alternate identifier (ST)> ^ <alternate text (ST)> ^
+    <name of alternate coding system (IS)>
+
+They can be defined in the following way:
+
+```elixir
+use HL7.Composite.Def
+
+defmodule HL7.Composite.CE do
+  composite do
+    component :id,                type: :string
+    component :text,              type: :string
+    component :coding_system,     type: :string
+    component :alt_id,            type: :string
+    component :alt_text,          type: :string
+    component :alt_coding_system, type: :string
+  end
+end
+```
+This composite will be exposed as the following struct:
+
+```elixir
+defstruct :id, :text, :coding_system, :alt_id, :alt_text, :alt_coding_system
+```
+
+Each component has a name represented by an atom and the following properties:
+
+  * `type`: atom corresponding to the data type of the value (see [single value fields](#single-value-fields)) or to a composite field's module name (e.g. `HL7.Composite.CE`).
+  * `default`: optional default value; if not defined, the empty string (`""`)
+will be used.
+
+Composite fields can also be nested, and you can do it in the following way:
+
+```elixir
+use HL7.Composite.Def
+
+defmodule HL7.Composite.CQ do
+  composite do
+    component :quantity,          type: :integer
+    component :units,             type: CE,       default: %CE{}
+  end
+end
+```
+
+## Segments
+
+As with composite fields, not all HL7 segments are provided with the project, so there is also a set of macros that help define new segments.
+
+Segments are also exposed as structs and can be defined in this way:
+
+```elixir
+use HL7.Segment.Def
+
+defmodule OBX do
+  alias HL7.Composite.CE
+
+  segment "OBX" do
+    field :set_id,             seq:  1, type: :integer,  length:  4
+    field :value_type,         seq:  2, type: :string,   length: 10
+    field :observation_id,     seq:  3, type: CE,        length: 24
+    field :observation_sub_id, seq:  4, type: :string,   length: 20
+    field :observation_value,  seq:  5, type: CE,        length: 24
+    field :observation_status, seq: 11, type: :string,   length:  1
+  end
+end
+```
+This segment will be exposed as the following struct:
+
+```elixir
+defstruct :set_id, :value_type, :observation_id, :observation_sub_id,
+          :observation_value, :observation_status
+```
+
+
+Each field has a name represented by an atom and has the following properties:
+
+  * `seq`: sequence (1-based index) of the field in the segment.
+  * `type`: atom corresponding to the data type of the value (see [single value fields](#single-value-fields)) or to a composite field's module name (e.g. `HL7.Composite.CE`).
+  * `length`: maximum length of the serialized field.
+
+Note that not all of the fields need to be defined in a segment. Segments can be "sparse" and the fields can be defined in an order that is not their sequence order. This means that if a segment containing an undefined field is parsed, that field will be lost when writing/serializing the segment back to its wire-format.
+
+## Messages
