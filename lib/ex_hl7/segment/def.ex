@@ -57,12 +57,10 @@ defmodule HL7.Segment.Def do
     * `:integer`
     * `:float`
     * `:date`: a field containing a date as a `{year, month, day}` that is
-      serialized using the YYYYMMDD format (must be of `length` 8).
+      serialized using the YYYYMMDD format.
     * `:datetime`: a field containing a date/time tuple (i.e.
       `{{year, month, day}, {hour, min, sec}}`) that is serialized using the
-      *YYYYMMDDhhmmss* format (must be of `length` 14).
-    * `:datetime_compact`: equivalent to the `:datetime` type, but serialized
-      using the *YYYYMMDDhhmm* format (must be of `length` 12).
+      *YYYYMMDD[hhmm[ss]] format.
     * an atom corresponding to a composite field's module name. The module must
       have been built using the macros from the `HL7.Composite.Def` module or
       following the behaviour of an `HL7.Composite`. There are some sample

@@ -50,12 +50,10 @@ defmodule HL7.Composite.Def do
     * `:integer`
     * `:float`
     * `:date`: a field containing a date as a `{year, month, day}` that is
-      serialized using the YYYYMMDD format (must be of `length` 8).
+      serialized using the YYYYMMDD format.
     * `:datetime`: a field containing a date/time tuple (i.e.
       `{{year, month, day}, {hour, min, sec}}`) that is serialized using the
-      *YYYYMMDDhhmmss* format (must be of `length` 14).
-    * `:datetime_compact`: equivalent to the `:datetime` type, but serialized
-      using the *YYYYMMDDhhmm* format (must be of `length` 12).
+      *YYYYMMDD[hhmm[ss]]* format.
     * an atom corresponding to a composite field's module name. The module must
       have been built using the macros from the `HL7.Composite.Def` module or
       following the behaviour of an `HL7.Composite`. There are some sample
@@ -138,7 +136,7 @@ defmodule HL7.Composite.Def do
   def check_type?(type) do
     cond do
       type === :string or type === :integer or type === :float or
-      type === :date or type === :datetime or type === :datetime_compact ->
+      type === :date or type === :datetime ->
         true
       composite_type?(type) ->
         true
@@ -170,7 +168,7 @@ defmodule HL7.Composite.Def do
     is_float(default)
   def check_default?(:date, date), do:
     is_date(date)
-  def check_default?(type, datetime) when type === :datetime or type === :datetime_compact, do:
+  def check_default?(:datetime, datetime) do:
     is_datetime(datetime)
   def check_default?(type, default) when is_atom(type), do:
     apply(type, :valid?, [default])
