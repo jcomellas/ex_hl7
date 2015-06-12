@@ -176,7 +176,7 @@ defmodule HL7.Codec do
    when type === :string or
         (value === "" and 
           (type === :string or type === :integer or type === :float or
-           type === :date or type === :datetime or type === :datetime_compact)), do:
+           type === :date or type === :datetime)), do:
     # Empty fields have to be passed to the composite field module
     # to insert the corresponding struct in the corresponding field.
     value
@@ -187,8 +187,6 @@ defmodule HL7.Codec do
   def decode_value(value, :date), do:
     binary_to_date!(value)
   def decode_value(value, :datetime), do:
-    binary_to_datetime!(value)
-  def decode_value(value, :datetime_compact), do:
     binary_to_datetime!(value)
   def decode_value(_value, _type), do:
     :nomatch
@@ -311,9 +309,7 @@ defmodule HL7.Codec do
   def encode_value(value, :date), do:
     format_date(value)
   def encode_value(value, :datetime), do:
-    format_datetime(value, precision: :seconds)
-  def encode_value(value, :datetime_compact), do:
-    format_datetime(value, precision: :minutes)
+    format_datetime(value)
   def encode_value(_value, _type), do:
     :nomatch
 
@@ -334,30 +330,27 @@ defmodule HL7.Codec do
     raise ArgumentError, "invalid date `#{inspect date}`"
   end
 
-  def format_datetime({{year, month, day}, {hour, min, sec}} = datetime, precision: precision) do
+  def format_datetime({{year, month, day}, {hour, min, sec}} = datetime) do
     if valid_datetime?(datetime) do
       y  = pad_integer(year, 4)
       m  = pad_integer(month, 2)
       d  = pad_integer(day, 2)
       h  = pad_integer(hour, 2)
       mm = pad_integer(min, 2)
-      case precision do
-        :seconds ->
-          s = pad_integer(sec, 2)
-          <<y :: binary, m :: binary, d :: binary, h :: binary, mm :: binary, s :: binary>>
-        :minutes ->
-          <<y :: binary, m :: binary, d :: binary, h :: binary, mm :: binary>>
-        _ ->
-          raise ArgumentError, "invalid precision `#{precision}` for datetime `#{inspect datetime}`"
+      if sec === 0 do
+        <<y :: binary, m :: binary, d :: binary, h :: binary, mm :: binary>>
+      else
+        s = pad_integer(sec, 2)
+        <<y :: binary, m :: binary, d :: binary, h :: binary, mm :: binary, s :: binary>>
       end
     else
       raise ArgumentError, "invalid datetime `#{inspect datetime}`"
     end
   end
-  def format_datetime({_year, _month, _day} = date, options) do
-    format_datetime({date, {0, 0, 0}}, options)
+  def format_datetime({_year, _month, _day} = date) do
+    format_datetime({date, {0, 0, 0}})
   end
-  def format_datetime(datetime, _options) do
+  def format_datetime(datetime) do
     raise ArgumentError, "invalid datetime `#{inspect datetime}`"
   end
 

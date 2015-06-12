@@ -114,7 +114,6 @@ defmodule HL7.Codec.Test do
     assert decode_value("\"\"", :float) === nil
     assert decode_value("\"\"", :date) === nil
     assert decode_value("\"\"", :datetime) === nil
-    assert decode_value("\"\"", :datetime_compact) === nil
   end
 
   test "Decode empty value" do
@@ -123,7 +122,6 @@ defmodule HL7.Codec.Test do
     assert decode_value("", :float) === ""
     assert decode_value("", :date) === ""
     assert decode_value("", :datetime) === ""
-    assert decode_value("", :datetime_compact) === ""
   end
 
   test "Decode string value" do
@@ -161,14 +159,6 @@ defmodule HL7.Codec.Test do
     assert_raise ArgumentError, fn -> decode_value("20120823106311", :datetime) end
     assert_raise ArgumentError, fn -> decode_value("20120823103270", :datetime) end
     assert_raise ArgumentError, fn -> decode_value("ABC", :datetime) end
-  end
-
-  test "Decode compact datetime value" do
-    assert decode_value("201208231032", :datetime_compact) === {{2012, 8, 23}, {10, 32, 0}}
-    assert decode_value("20120823103211", :datetime_compact) === {{2012, 8, 23}, {10, 32, 11}}
-    assert_raise ArgumentError, fn -> decode_value("201208232532", :datetime_compact) end
-    assert_raise ArgumentError, fn -> decode_value("201208231063", :datetime_compact) end
-    assert_raise ArgumentError, fn -> decode_value("ABC", :datetime_compact) end
   end
 
   # Convenience functions used to simplify encoding tests
@@ -300,7 +290,6 @@ defmodule HL7.Codec.Test do
     assert encode_value(nil, :float) === "\"\""
     assert encode_value(nil, :date) === "\"\""
     assert encode_value(nil, :datetime) === "\"\""
-    assert encode_value(nil, :datetime_compact) === "\"\""
   end
 
   test "Encode empty value" do
@@ -309,7 +298,6 @@ defmodule HL7.Codec.Test do
     assert encode_value("", :float) === ""
     assert encode_value("", :date) === ""
     assert encode_value("", :datetime) === ""
-    assert encode_value("", :datetime_compact) === ""
   end
 
   test "Encode string value" do
@@ -340,21 +328,12 @@ defmodule HL7.Codec.Test do
 
   test "Encode datetime value" do
     assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :datetime) === "20120823103211"
-    assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime) === "20120823103200"
-    assert encode_value({2012, 8, 23}, :datetime) === "20120823000000"
+    assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime) === "201208231032"
+    assert encode_value({2012, 8, 23}, :datetime) === "201208230000"
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {25, 32, 11}}, :datetime) end
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 63, 11}}, :datetime) end
     assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 32, 70}}, :datetime) end
     assert_raise ArgumentError, fn -> encode_value("ABC", :datetime) end
-  end
-
-  test "Encode compact datetime value" do
-    assert encode_value({{2012, 8, 23}, {10, 32, 11}}, :datetime_compact) === "201208231032"
-    assert encode_value({{2012, 8, 23}, {10, 32, 0}}, :datetime_compact) === "201208231032"
-    assert encode_value({2012, 8, 23}, :datetime_compact) === "201208230000"
-    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {25, 32, 0}}, :datetime_compact) end
-    assert_raise ArgumentError, fn -> encode_value({{2012, 8, 23}, {10, 63, 0}}, :datetime_compact) end
-    assert_raise ArgumentError, fn -> encode_value("ABC", :datetime_compact) end
   end
 
   test "Escape value" do
