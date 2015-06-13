@@ -152,26 +152,26 @@ An HL7 message in its v2.x wire-format is actually a collection of concatenated 
 
 This structure maps nicely to a k-ary tree. For example, given the following segment:
 
-    OBX|1|CE|88304&ANT|1|T57000^GALLBLADDER^SNM\r 
+    OBX|1|CE|71020&IMP|1|.61^RUL^ACR~.212^Bronchopneumonia^ACR\r
 
 We could represent it as the following subtree within a message:
 
 ```
-                                     /
 segment                            OBX
                                     |
 fields        [1]--[2]--------[3]---+------[4]------------[5]
               /     |          |            |               \
              1     "CE"        |           "1"               |
                                |                             |
-components                    [0]                [0]--------[1]-------[2]
-                               |                 /           |          \
-                               |             "T57000"  "GALLBLADDER"   "SNM"
-                               |
+components                    [0]                [0]--------[1]---------[2]
+                               |                 /           |            \
+                               |               0.61        "RUL"         "ACR"
+                               |              0.212  "Bronchopneumonia"  "ACR"
 subcomponents             [0]--+--[1]
                           /         \
-                       "8830"      "ANT"
+                      "71020"      "IMP"
 ```
+The field on sequence 5 contains two repetitions of a composite field.
 
 *Note*: The indexes used for the fields are 1-based because this value is actually the sequence number assigned by HL7 to identify the field, whereas the indexes used for components and subcomponents are 0-based because this is the convention in Elixir.
 
