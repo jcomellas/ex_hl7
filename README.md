@@ -292,3 +292,73 @@ Each field has a name represented by an atom and has the following properties:
 Note that not all of the fields need to be defined in a segment. Segments can be "sparse" and the fields can be defined in an order that is not their sequence order. This means that if a segment containing an undefined field is parsed, that field will be lost when writing/serializing the segment back to its wire-format.
 
 ## Messages
+
+A parsed HL7 message is represented as a list of segment structs, so you can use the functions from the `Enum` and `List` modules to retrieve data or modify them.
+
+The `HL7` module has several functions that can be used with messages. The examples below assume that the following HL7 message is being used:
+
+```elixir
+buffer =
+  "MSH|^~\\&|BLAKEMD|EWHIN|MSC|EWHIN|19940110105307||RQA^I08|BLAKEM7898|P|2.4|||NE|AL\r" <>
+  "PRD|RP|BLAKE^BEVERLY^^^DR^MD|N. 12828 NEWPORT HIGHWAY^^MEAD^WA^99021| ^^^BLAKEMD&EWHIN^^^^^BLAKE MEDICAL CENTER|BLAKEM7899\r" <>
+  "PRD|RT|WSIC||^^^MSC&EWHIN^^^^^WASHINGTON STATE INSURANCE COMPANY\r" <>
+  "PID|||402941703^9^M10||BROWN^CARY^JOE||19600309||||||||||||402941703\r" <>
+  "IN1|1|PPO|WA02|WSIC (WA State Code)|11223 FOURTH STREET^^MEAD^WA^99021^USA|ANN MILLER|509)333-1234|987654321||||19901101||||BROWN^CARY^JOE|1|19600309|N. 12345 SOME STREET^^MEAD^WA^99021^USA|||||||||||||||||402941703||||||01|M\r" <>
+  "DG1|1|I9|569.0|RECTAL POLYP|19940106103500|0\r" <>
+  "PR1|1|C4|45378|Colonoscopy|19940110105309|00\r"
+```
+
+You can read/parse a message from a binary in the following way:
+
+```elixir
+{:ok, message} = HL7.read(buffer)
+```
+
+Retrieve a specific repetition of a segment:
+
+```elixir
+alias HL7.Segment.PRD
+
+%PRD{role: role} = prd = HL7.segment(message, "PRD", 1)
+"PRD" = HL7.segment_id(prd)
+"RT" = role.id
+```
+Insert segments:
+
+```elixir
+alias HL7.Segment.PR1
+alias HL7.Segment.AUT
+
+pr1 = HL7.segment(message, "PR1")
+aut = %AUT{plan: %CE{id: "PPO"}, company: %CE{id: "WA02"},
+           effective_date: {1994, 1, 10},
+           expiration_date: {1994, 05, 10},
+           authorization: %EI{id: "123456789"}}
+message = HL7.insert_before(message, "PR1", 0, [pr1, aut])
+message = HL7.insert_after(message, "PR1", 1, aut)
+```
+
+Replace segments:
+
+```elixir
+message = HL7.replace(message, "PR1", 0, %PR1{pr1 | set_id: 2})
+```
+
+Delete messages:
+
+```elixir
+message = HL7.delete(message, "PR1", 1)
+message = HL7.delete(message, "AUT", 1)
+```
+
+Write a message into the HL7 wire format:
+
+```elixir
+iobuf = HL7.write(message, output_format: :wire, trim: true)
+```
+
+Write a message as text to standard output:
+
+```elixir
+IO.puts(HL7.write(message, output_format: :text, trim: true))
+```
