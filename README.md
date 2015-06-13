@@ -181,7 +181,7 @@ For example, a field that was originally read as:
 
     504599^223344&&IIN&^~
 
-Would be written in the following way when `trim` is set `true`:
+Would be written in the following way when `trim` is set to `true`:
 
     504599^223344&&IIN
 
