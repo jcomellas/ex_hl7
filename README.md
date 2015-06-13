@@ -344,7 +344,7 @@ Replace segments:
 message = HL7.replace(message, "PR1", 0, %PR1{pr1 | set_id: 2})
 ```
 
-Delete messages:
+Delete segments:
 
 ```elixir
 message = HL7.delete(message, "PR1", 1)
