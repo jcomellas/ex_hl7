@@ -2,8 +2,6 @@ defmodule HL7.Segment.Def do
   @moduledoc "Macros and functions used to define HL7 segments"
   require HL7.Composite
 
-  # @type option :: {:separator, byte} | {:trim, boolean}
-
   @doc false
   defmacro __using__(_) do
     quote do
@@ -177,7 +175,6 @@ defmodule HL7.Segment.Def do
         end
     end
   end
-
 
   @spec build_descriptor([{name :: atom, seq :: pos_integer, type :: atom, length :: pos_integer}]) :: tuple
   def build_descriptor([_ | _] = fields) do
