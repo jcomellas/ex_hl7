@@ -1,7 +1,6 @@
 defmodule HL7.Segment.Def do
   @moduledoc "Macros and functions used to define HL7 segments"
   require HL7.Composite
-  require Logger
 
   # @type option :: {:separator, byte} | {:trim, boolean}
 
@@ -72,7 +71,7 @@ defmodule HL7.Segment.Def do
     length = Keyword.get(options, :length)
     default = Keyword.get(options, :default, "")
 
-    result = quote bind_quoted: [name: name, seq: seq, type: type, default: default,
+    quote bind_quoted: [name: name, seq: seq, type: type, default: default,
                                  length: length, caller_module: __CALLER__.module] do
       check_field!(name, seq, type, default, length,
                    Module.get_attribute(caller_module, :segment_id),
@@ -81,8 +80,6 @@ defmodule HL7.Segment.Def do
       @fields {name, seq, type, length}
       @struct_fields {name, default}
     end
-    # IO.puts "field: #{Macro.to_string(result)}"
-    result
   end
 
   defmacro __before_compile__(_env) do
@@ -91,7 +88,7 @@ defmodule HL7.Segment.Def do
     descriptor = build_descriptor(Module.get_attribute(segment_module, :fields))
     struct_fields = Module.get_attribute(segment_module, :struct_fields)
 
-    result = quote do
+    quote do
       defstruct unquote([{:__segment__, segment_id} | struct_fields]
                         |> Enum.reverse
                         |> Macro.escape)
@@ -107,6 +104,7 @@ defmodule HL7.Segment.Def do
       def id(), do:
         unquote(segment_id)
 
+      @spec descriptor() :: HL7.Segment.descriptor
       def descriptor(), do:
         unquote(Macro.escape(descriptor))
 
@@ -124,15 +122,12 @@ defmodule HL7.Segment.Def do
 
       @spec get_field(t, HL7.Type.sequence) :: HL7.Type.field
       def get_field(segment, sequence) when is_integer(sequence), do:
-        get_field(segment, descriptor(), sequence)
+        HL7.Segment.get_field(segment, descriptor(), sequence)
 
       @spec put_field(t, HL7.Type.sequence, HL7.Type.field) :: t
       def put_field(segment, sequence, value) when is_integer(sequence), do:
-        put_field(segment, descriptor(), sequence, value)
-
+        HL7.Segment.put_field(segment, descriptor(), sequence, value)
     end
-    # IO.puts "__before_compile__: #{Macro.to_string(result)}"
-    result
   end
 
   def check_field!(name, seq, type, default, length, segment_id, acc) do
@@ -216,55 +211,4 @@ defmodule HL7.Segment.Def do
     # IO.puts("descriptor: #{inspect acc}\n")
     List.to_tuple(acc)
   end
-
-  @spec get_field(map, descriptor :: tuple, HL7.Type.sequence) :: HL7.Type.field
-  def get_field(segment, descriptor, seq) when seq <= tuple_size(descriptor) do
-    case :erlang.element(seq, descriptor) do
-      {name, _seq, type, _length} ->
-        field = Map.get(segment, name)
-        if is_list(field) do
-          Enum.map(field, &HL7.Composite.Def.encode_maybe_composite_value(&1, type))
-        else
-          HL7.Composite.Def.encode_maybe_composite_value(field, type)
-        end
-      nil ->
-        ""
-    end
-  end
-  def get_field(_segment, _descriptor, _seq) do
-    Logger.warn("Retrieving field with out-of-bounds sequence #{_seq} from " <>
-                "HL7 segment #{inspect Map.get(_segment, :__segment__)}")
-    ""
-  end
-
-  # TODO: add support for repetitions
-  @spec put_field(map, descriptor :: tuple, HL7.Type.sequence, HL7.Type.field) :: map
-  def put_field(segment, descriptor, seq, value) when seq <= tuple_size(descriptor) do
-    case :erlang.element(seq, descriptor) do
-      {name, _seq, type, _length} ->
-        field = if is_list(value) do
-                  # Convert each of the repetitions of the field
-                  Enum.map(value, &HL7.Composite.Def.decode_maybe_composite_value(&1, type))
-                else
-                  HL7.Composite.Def.decode_maybe_composite_value(value, type)
-                end
-        Map.put(segment, name, field)
-      nil ->
-        # TODO: should we show a warning when trying to set a field we don't know about?
-        if value !== "" do
-          Logger.warn("Tried to put value #{inspect value} into field with unknown " <>
-                      "sequence #{seq} into HL7 segment #{inspect Map.get(segment, :__segment__)}")
-        end
-        segment
-    end
-  end
-  def put_field(segment, _descriptor, _seq, value) do
-    # TODO: should we show a warning when trying to set a field we don't know about?
-    if value !== "" do
-      Logger.warn("Tried to put value #{inspect value} into field with out-of-bounds " <>
-                  "sequence #{_seq} into HL7 segment #{inspect Map.get(segment, :__segment__)}")
-    end
-    segment
-  end
-
 end

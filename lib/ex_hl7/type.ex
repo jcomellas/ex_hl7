@@ -1,6 +1,7 @@
 defmodule HL7.Type do
   @type segment_id     :: binary
   @type sequence       :: pos_integer
+  @type composite_id   :: binary
   @type item_type      :: :field | :component | :repetition | :subcomponent
   @type subcomponent   :: binary | tuple(binary)
   @type component      :: binary | tuple(binary) | tuple(subcomponent)

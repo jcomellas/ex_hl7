@@ -86,6 +86,7 @@ defmodule HL7.Composite.Def do
                  #         |> Enum.reverse
                  #         |> Macro.escape)}
 
+      @spec descriptor() :: HL7.Composite.descriptor
       def descriptor(), do:
         unquote(Module.get_attribute(__CALLER__.module, :components)
                 |> Enum.reverse
@@ -101,16 +102,15 @@ defmodule HL7.Composite.Def do
 
       @spec decode(HL7.Type.field) :: t
       def decode(value), do:
-        unquote(__MODULE__).decode_composite(%unquote(__CALLER__.module){}, descriptor(), value)
+        HL7.Composite.decode(%unquote(__CALLER__.module){}, descriptor(), value)
 
       @spec encode(t) :: HL7.Type.field
-      def encode(map), do:
-        unquote(__MODULE__).encode_composite(map, descriptor())
+      def encode(composite), do:
+        HL7.Composite.encode(composite, descriptor())
 
-      @spec to_iodata(t, [unquote(__MODULE__).option]) :: iodata
-      def to_iodata(map, options), do:
-        unquote(__MODULE__).to_iodata(map, descriptor(), options)
-
+      @spec to_iodata(t, [HL7.Composite.option]) :: iodata
+      def to_iodata(composite, options), do:
+        HL7.Composite.to_iodata(composite, descriptor(), options)
     end
   end
 
@@ -191,70 +191,5 @@ defmodule HL7.Composite.Def do
   end
   defp is_datetime(_datetime) do
     false
-  end
-
-
-  @doc """
-  Creates the map corresponding to the underlying struct in a composite field.
-  """
-  @spec decode_composite(map, descriptor :: [{name :: atom, type :: atom}], binary | tuple) :: map
-  def decode_composite(map, descriptor, tuple) when is_tuple(tuple), do:
-    decode_tuple_composite(map, descriptor, tuple, 0)
-  def decode_composite(map, [{name, type} | _tail], value), do:
-    Map.put(map, name, decode_maybe_composite_value(value, type))
-
-  defp decode_tuple_composite(map, [{name, type} | tail], tuple, index) when index < tuple_size(tuple) do
-    value = elem(tuple, index)
-    map = Map.put(map, name, decode_maybe_composite_value(value, type))
-    decode_tuple_composite(map, tail, tuple, index + 1)
-  end
-  defp decode_tuple_composite(map, _descriptor, _tuple, _index) do
-    map
-  end
-
-  def decode_maybe_composite_value(value, type) do
-    case HL7.Codec.decode_value(value, type) do
-      :nomatch -> apply(type, :decode, [value])
-      value    -> value
-    end
-  end
-
-  @doc """
-  Converts the struct holding the composite field data into the tuple format
-  accepted by the functions in `HL7.Writer`.
-  """
-  @spec encode_composite(composite :: map, descriptor :: [{name :: atom, type :: atom}]) :: HL7.Type.field
-  def encode_composite(composite, descriptor), do:
-    encode_composite(composite, descriptor, [])
-
-  def encode_composite(composite, [{name, type} | tail], acc) do
-    value = encode_maybe_composite_value(Map.get(composite, name), type)
-    encode_composite(composite, tail, [value | acc])
-  end
-  def encode_composite(_composite, [], acc) do
-    List.to_tuple(Enum.reverse(acc))
-  end
-
-  def encode_maybe_composite_value(value, type) do
-    case HL7.Codec.encode_value(value, type) do
-      :nomatch -> apply(type, :encode, [value])
-      value    -> value
-    end
-  end
-
-
-  @doc """
-  Converts a composite field into an iolist suitable to send over a socket or
-  write to a file.
-  """
-  @spec to_iodata(map, [{name :: atom, type :: atom}], [option]) :: iodata
-  def to_iodata(map, descriptor, options) do
-    field = encode_composite(map, descriptor)
-    separators = case Keyword.get(options, :separators) do
-                   nil        -> HL7.Codec.separators()
-                   separators -> separators
-                 end
-    trim = Keyword.get(options, :trim, true)
-    HL7.Codec.encode_field(field, separators, trim)
   end
 end
