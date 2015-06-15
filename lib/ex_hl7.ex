@@ -3,6 +3,7 @@ defmodule HL7 do
   @type segment        :: HL7.Segment.t
   @type segment_id     :: HL7.Type.segment_id
   @type sequence       :: HL7.Type.sequence
+  @type composite_id   :: HL7.Type.composite_id
   @type field          :: HL7.Type.field
   @type item_type      :: HL7.Type.item_type
   @type value_type     :: HL7.Type.value_type
@@ -312,7 +313,7 @@ defmodule HL7 do
   @doc """
   Inserts a segment or group of segments before the first repetition of an
   existing segment in a message.
-  
+
   ## Arguments
 
   * `message`: the `HL7.message` where the segment/s will be inserted.
@@ -341,7 +342,7 @@ defmodule HL7 do
   @doc """
   Inserts a segment or group of segments before the given repetition of an
   existing segment in a message.
-  
+
   ## Arguments
 
   * `message`: the `HL7.message` where the segment/s will be inserted.
@@ -372,7 +373,7 @@ defmodule HL7 do
   @doc """
   Inserts a segment or group of segments after the first repetition of an
   existing segment in a message.
-  
+
   ## Arguments
 
   * `message`: the `HL7.message` where the segment/s will be inserted.
@@ -401,7 +402,7 @@ defmodule HL7 do
   @doc """
   Inserts a segment or group of segments after the given repetition of an
   existing segment in a message.
-  
+
   ## Arguments
 
   * `message`: the `HL7.message` where the segment/s will be inserted.
@@ -431,7 +432,7 @@ defmodule HL7 do
 
   @doc """
   Replaces the first repetition of an existing segment in a message.
-  
+
   ## Arguments
 
   * `message`: the `HL7.message` where the segment/s will be inserted.
@@ -460,7 +461,7 @@ defmodule HL7 do
 
   @doc """
   Replaces the given repetition of an existing segment in a message.
-  
+
   ## Arguments
 
   * `message`: the `HL7.message` where the segment/s will be inserted.
@@ -541,5 +542,4 @@ defmodule HL7 do
     escape_char = Keyword.get(options, :escape_char, ?\\)
     HL7.Codec.unescape(value, separators, escape_char)
   end
-
 end
