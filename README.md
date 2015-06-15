@@ -262,7 +262,7 @@ Segments are also exposed as structs and can be defined in this way:
 ```elixir
 use HL7.Segment.Def
 
-defmodule OBX do
+defmodule HL7.Segment.OBX do
   alias HL7.Composite.CE
 
   segment "OBX" do
