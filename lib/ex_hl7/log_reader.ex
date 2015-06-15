@@ -51,7 +51,7 @@ defmodule HL7.LogReader do
   end
 
   defp match_segment_line(<<segment_id :: binary-size(3), ?|, _rest :: binary>> = line) do
-    if ASCII.upper_alphanumeric?(segment_id) do
+    if HL7.Lexer.valid_segment_id?(segment_id) do
       size = byte_size(line) - 3
       case line do
         <<segment :: binary-size(size), "\\r\n">> ->

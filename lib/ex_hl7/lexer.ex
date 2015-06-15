@@ -66,7 +66,7 @@ defmodule HL7.Lexer do
     {:token, {lexer, token, rest}}
   end
   def read_segment_id(lexer, <<segment_id :: binary-size(@segment_id_length), rest :: binary>>) do
-    if ASCII.upper_alphanumeric?(segment_id) do
+    if valid_segment_id?(segment_id) do
       token = {:literal, segment_id}
       lexer = %Lexer{lexer | state: :read_separator}
       {:token, {lexer, token, rest}}
@@ -79,7 +79,7 @@ defmodule HL7.Lexer do
   end
 
   def read_delimiters(lexer, <<delimiters :: binary-size(5), rest :: binary>>) do
-    if ASCII.printable?(delimiters) and not ASCII.alphanumeric?(delimiters) do
+    if printable?(delimiters) and not alphanumeric?(delimiters) do
       # The MSH segment must be handled as a special case because the 5
       # characters after the segment ID act both as separators and elements.
       # These 5 characters determine what separators will be used for the rest
@@ -128,7 +128,7 @@ defmodule HL7.Lexer do
     case find_characters(buffer, HL7.Codec.separator(:field, separators), terminator, <<>>) do
       {:ok, {value, item_type, rest}} ->
         # Check that the contents of the field we just found are printable
-        if ASCII.printable?(value) do
+        if printable?(value) do
           # Set the lexer to the state to be used once all the buffered tokens are retrieved.
           state = case item_type do
                     :segment -> :read_segment_id
@@ -167,4 +167,50 @@ defmodule HL7.Lexer do
         _     -> ?\r
     end
   end
+
+  @doc """
+  Checks that the characters in the string are printable ASCII and ISO-8859-1
+  (Latin 1) characters.
+  """
+  @spec printable?(binary) :: boolean
+  def printable?(<<char, rest :: binary>>)
+   when (char >= 0x20 and char <= 0x7e) or (char >= 0xa0 and char <= 0xff), do:
+    printable?(rest)
+  def printable?(<<_char, _rest :: binary>>), do:
+    false
+  def printable?(<<>>), do:
+    true
+
+  @doc """
+  Checks that the string is a valid segment ID.
+  """
+  @spec valid_segment_id?(binary) :: boolean
+  def valid_segment_id?(str) when is_binary(str) and byte_size(str) === 3, do:
+    _valid_segment_id?(str)
+  def valid_segment_id?(_str), do:
+    false
+
+  defp _valid_segment_id?(<<char, rest :: binary>>)
+   when (char >= ?A and char <= ?Z) or (char >= ?0 and char <= ?9), do:
+    _valid_segment_id?(rest)
+  defp _valid_segment_id?(<<_char, _rest :: binary>>), do:
+    false
+  defp _valid_segment_id?(<<>>), do:
+    true
+
+  @doc """
+  Checks that the characters in the string are only alphanumeric ASCII
+  characters.
+  """
+  @spec alphanumeric?(binary) :: boolean
+  def alphanumeric?(""), do: false
+  def alphanumeric?(str), do: _alphanumeric?(str)
+
+  def _alphanumeric?(<<char, rest :: binary>>)
+   when (char >= ?A and char <= ?Z) or (char >= ?a and char <= ?z) or (char >= ?0 and char <= ?9), do:
+    _alphanumeric?(rest)
+  def _alphanumeric?(<<_char, _rest :: binary>>), do:
+    false
+  def _alphanumeric?(<<>>), do:
+    true
 end
