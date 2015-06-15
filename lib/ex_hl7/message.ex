@@ -262,8 +262,7 @@ defmodule HL7.Message do
   def read(reader, buffer, acc) do
     case Reader.read(reader, buffer) do
       {:token, {reader, {:start_segment, segment_id}, buffer}} ->
-        module = HL7.Segment.module(segment_id)
-        segment = apply(module, :new, [])
+        {module, segment} = HL7.Reader.create_segment(reader, segment_id)
         case read_segment(reader, segment, module, buffer) do
           {:ok, {reader, segment, buffer}} ->
             read(reader, buffer, [segment | acc])

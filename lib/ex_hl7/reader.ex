@@ -43,7 +43,8 @@ defmodule HL7.Reader do
             segment_id: nil,
             sequence: 0,
             item_type: :segment,
-            trim: true
+            trim: true,
+            segment_creator: nil
 
   @type option     :: HL7.Lexer.option
   @type token      :: {:start_segment, HL7.Type.segment_id} |
@@ -54,7 +55,8 @@ defmodule HL7.Reader do
                         segment_id: HL7.Type.segment_id,
                         sequence: non_neg_integer,
                         item_type: HL7.Type.item_type,
-                        trim: boolean
+                        trim: boolean,
+                        segment_creator: (HL7.Type.segment_id -> {module, HL7.Segment.t})
                       }
 
   @doc "Create a new Reader instance"
@@ -65,7 +67,8 @@ defmodule HL7.Reader do
       segment_id: nil,
       sequence: 0,
       item_type: :segment,
-      trim: Keyword.get(options, :trim, true)
+      trim: Keyword.get(options, :trim, true),
+      segment_creator: Keyword.get(options, :segment_creator, &HL7.Segment.new/1)
     }
   end
 
@@ -76,6 +79,10 @@ defmodule HL7.Reader do
   @doc "Return the sequence number of the last field that was read by the `Reader`."
   @spec sequence(t) :: 0 | HL7.Type.sequence
   def sequence(reader), do: reader.sequence
+
+  @spec create_segment(t, HL7.Type.segment_id) :: {module, HL7.Segment.t}
+  def create_segment(%Reader{segment_creator: segment_creator}, segment_id), do:
+    segment_creator.(segment_id)
 
   @doc "Return the separators that were used in the message that was read by the `Reader`."
   @spec separators(t) :: binary

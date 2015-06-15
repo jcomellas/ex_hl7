@@ -28,6 +28,9 @@ defmodule HL7 do
       segment terminators or `:text` for a format that replaces segment
       terminators with line feeds to easily output messages to a console or
       text file.
+    * `segment_creator`: function that receives a segment ID and returns a
+      tuple containing the module and the struct corresponding to the given
+      segment ID. By default, `&HL7.Segment.new/1` is used.
     * `trim`: boolean that when set to `true` causes the fields to be
       shortened to their optimal layout, removing trailing empty items (see
       `HL7.Codec` for an explanation of this).
@@ -72,6 +75,9 @@ defmodule HL7 do
       segment terminators or `:text` for a format that replaces segment
       terminators with line feeds to easily output messages to a console or
       text file.
+    * `segment_creator`: function that receives a segment ID and returns a
+      tuple containing the module and the struct corresponding to the given
+      segment ID. By default, `&HL7.Segment.new/1` is used.
     * `trim`: boolean that when set to `true` causes the fields to be
       shortened to their optimal layout, removing trailing empty items (see
       `HL7.Codec` for an explanation of this).

@@ -1,6 +1,4 @@
 defmodule HL7.Segment do
-  use HL7.Segment.Def
-
   @type t :: map
 
   @spec id(t) :: HL7.Type.segment_id
@@ -10,6 +8,13 @@ defmodule HL7.Segment do
   @spec module(HL7.Type.segment_id) :: module
   def module(id) when is_binary(id), do: Module.concat([HL7.Segment, id])
 
+  @spec new(HL7.Type.segment_id) :: {module, t}
+  def new(segment_id) do
+    module = module(segment_id)
+    {module, apply(module, :new, [])}
+  end
+
+  use HL7.Segment.Def
 
   defmodule AUT do
     @moduledoc "11.6.2 AUT - authorization information segment"
