@@ -105,7 +105,7 @@ defmodule HL7.Composite.CE do
   end
 end
 
-defmodule HL7.Composite.CM_ERR do
+defmodule HL7.Composite.CM_ERR_1 do
   @moduledoc """
   2.16.5.1 ERR-1 Error code and location (CM) 00024
 
@@ -122,7 +122,7 @@ defmodule HL7.Composite.CM_ERR do
   end
 end
 
-defmodule HL7.Composite.CM_IN1 do
+defmodule HL7.Composite.CM_IN1_14 do
   @moduledoc """
   6.5.6.14 IN1-14 Authorization information (CM) 00439
 
@@ -132,6 +132,19 @@ defmodule HL7.Composite.CM_IN1 do
     component :number,                       type: :string
     component :date,                         type: :date
     component :source,                       type: :string
+  end
+end
+
+defmodule HL7.Composite.CM_MSH_9 do
+  @moduledoc """
+  2.16.9.9 MSH-9 Message type (CM) 00009
+
+  Components: <message type (ID)> ^ <trigger event (ID)> ^ <message structure (ID)>
+  """
+  composite do
+    component :id,                           type: :string
+    component :trigger_event,                type: :string
+    component :structure,                    type: :string
   end
 end
 
@@ -151,20 +164,7 @@ defmodule HL7.Composite.CM_PRD do
   end
 end
 
-defmodule HL7.Composite.CM_MSH do
-  @moduledoc """
-  2.16.9.9 MSH-9 Message type (CM) 00009
-
-  Components: <message type (ID)> ^ <trigger event (ID)> ^ <message structure (ID)>
-  """
-  composite do
-    component :id,                           type: :string
-    component :trigger_event,                type: :string
-    component :structure,                    type: :string
-  end
-end
-
-defmodule HL7.Composite.CM_QPD do
+defmodule HL7.Composite.CM_QPD_3 do
   @moduledoc """
   QPD_Q15-3 Provider ID number (CM)
 
@@ -206,7 +206,7 @@ defmodule HL7.Composite.CP do
   alias HL7.Composite.MO
 
   composite do
-    component :price,                        type: MO
+    component :price,                        type: MO,       default: %MO{}
     component :price_type,                   type: :string
     component :from_value,                   type: :float
     component :to_value,                     type: :float
@@ -321,6 +321,32 @@ defmodule HL7.Composite.FN do
   end
 end
 
+defmodule HL7.Composite.CN do
+  @moduledoc """
+  2.9.7 CN - composite ID number and name
+
+  Components: <ID number (ST)> ^ <family name (FN)> ^ <given name (ST)> ^
+              <second and further given names or initials thereof (ST)> ^
+              <suffix (e.g., JR or III) (ST)> ^ <prefix (e.g., DR) (ST)> ^
+              <degree (e.g., MD) (IS)> ^ <source table (IS)> ^
+              <assigning authority (HD)>
+  """
+  alias HL7.Composite.FN
+  alias HL7.Composite.HD
+
+  composite do
+    component :id_number,                    type: :string
+    component :family_name,                  type: FN,       default: %FN{}
+    component :given_name,                   type: :string
+    component :second_name,                  type: :string
+    component :suffix,                       type: :string
+    component :prefix,                       type: :string
+    component :degree,                       type: :string
+    component :source_table,                 type: :string
+    component :assigning_authority,          type: HD,       default: %HD{}
+  end
+end
+
 defmodule HL7.Composite.PL do
   @moduledoc """
   2.9.29 PL - person location
@@ -372,6 +398,162 @@ defmodule HL7.Composite.PL do
     component :building,                     type: :string
     component :floor,                        type: :string
     component :location_description,         type: :string
+  end
+end
+
+defmodule HL7.Composite.CM_OBR_15 do
+  @moduledoc """
+  7.4.1.15 OBR-15 Specimen source (CM) 00249
+
+  Components: <specimen source name or code (CE)> ^ <additives (TX)> ^
+              <freetext (TX)> ^ <body site (CE)> ^ <site modifier (CE)> ^
+              <collection method modifier code (CE)>
+  """
+  alias HL7.Composite.CE
+
+  composite do
+    component :code,                           type: CE,       default: %CE{}
+    component :additives,                      type: :string
+    component :free_text,                      type: :string
+    component :body_site,                      type: CE,       default: %CE{}
+    component :site_modifier,                  type: CE,       default: %CE{}
+    component :collection_method,              type: CE,       default: %CE{}
+  end
+end
+
+defmodule HL7.Composite.CM_OBR_23 do
+  @moduledoc """
+  7.4.1.23 OBR-23 Charge to practice (CM) 00256
+
+  Components: <dollar amount (MO)> ^ <charge code (CE)>
+  """
+  alias HL7.Composite.CE
+  alias HL7.Composite.MO
+
+  composite do
+    component :amount,                       type: MO,       default: %MO{}
+    component :charge_code,                  type: CE,       default: %CE{}
+  end
+end
+
+defmodule HL7.Composite.CM_OBR_26 do
+  @moduledoc """
+  7.4.1.26 OBR-26 Parent result (CM) 00259
+
+  Components: <OBX-3-observation identifier of parent result (CE)> ^
+              <OBX-4-sub-ID of parent result (ST)> ^
+              <part of OBX-5 observation result from parent (TX) see discussion>
+  """
+  alias HL7.Composite.CE
+
+  composite do
+    component :observation_id,               type: CE,       default: %CE{}
+    component :observation_sub_id,           type: :string
+    component :observation_result,           type: :string
+  end
+end
+
+defmodule HL7.Composite.CM_OBR_29 do
+  @moduledoc """
+  7.4.1.29 OBR-29 Parent (CM) 00261
+
+  Components: <parent's placer order number (EI)> ^ <parent's filler order number (EI)>
+  """
+  alias HL7.Composite.EI
+
+  composite do
+    component :placer_order,                 type: EI,       default: %EI{}
+    component :filler_order,                 type: EI,       default: %EI{}
+  end
+end
+
+defmodule HL7.Composite.CM_OBR_32 do
+  @moduledoc """
+  7.4.1.32 OBR-32 Principal result interpreter (CM) 00264
+
+  Components: <name (CN)> ^ <start date/time (TS)> ^ <end date/time (TS)> ^
+              <point of care (IS)> ^ <room (IS)> ^ <bed (IS)> ^ <facility (HD)> ^
+              <location status (IS)> ^ <patient location type (IS)> ^
+              <building (IS)> ^ <floor (IS)>
+  """
+  alias HL7.Composite.CN
+  alias HL7.Composite.HD
+
+  composite do
+    component :name,                         type: CN,       default: %CN{}
+    component :start_datetime,               type: :datetime
+    component :end_datetime,                 type: :datetime
+    component :point_of_care,                type: :string
+    component :room,                         type: :string
+    component :bed,                          type: :string
+    component :facility,                     type: HD,       default: %HD{}
+    component :location_status,              type: :string
+    component :patient_location_type,        type: :string
+    component :building,                     type: :string
+    component :floor,                        type: :string
+  end
+end
+
+defmodule HL7.Composite.CM_TQ_2 do
+  @moduledoc """
+  4.3.2 Interval component (CM)
+
+  Subcomponents: <repeat pattern (IS)> & <explicit time interval (ST)>
+  """
+  composite do
+    component :repeat_pattern,               type: :string
+    component :explicit_interval,            type: :string
+  end
+end
+
+defmodule HL7.Composite.CM_TQ_10 do
+  @moduledoc """
+  4.3.10 Order sequencing component (CM)
+  """
+  composite do
+    component :results_flag,                   type: :string
+    component :placer_order_id,                type: :string
+    component :placer_order_namespace_id,      type: :string
+    component :filler_order_id,                type: :string
+    component :filler_order_namespace_id,      type: :string
+    component :condition,                      type: :string
+    component :max_repeats,                    type: :integer
+    component :placer_order_universal_id,      type: :string
+    component :placer_order_universal_id_type, type: :string
+    component :filler_order_universal_id,      type: :string
+    component :filler_order_universal_id_type, type: :string
+  end
+end
+
+defmodule HL7.Composite.TQ do
+  @moduledoc """
+  4.3 QUANTITY/TIMING (TQ) DATA TYPE DEFINITION
+
+  Components: <quantity (CQ)> ^ <interval (CM)> ^ <duration (ST)> ^
+              <start date/time (TS)> ^ <end date/time (TS)> ^ <priority (ST)> ^
+              <condition (ST)> ^ <text (TX)> ^ <conjunction (ID)> ^
+              <order sequencing (CM)> ^ <occurrence duration (CE)> ^
+              <total occurrences (NM)>
+  """
+  alias HL7.Composite.CE
+  alias HL7.Composite.CQ
+  alias HL7.Composite.CM_TQ_2
+  alias HL7.Composite.CM_TQ_10
+  alias HL7.Composite.HD
+
+  composite do
+    component :quantity,                     type: CQ,       default: %CQ{}
+    component :interval,                     type: CM_TQ_2,  default: %CM_TQ_2{}
+    component :duration,                     type: :string
+    component :start_datetime,               type: :datetime
+    component :end_datetime,                 type: :datetime
+    component :priority,                     type: :string
+    component :condition,                    type: :string
+    component :text,                         type: :string
+    component :conjunction,                  type: :string
+    component :order_sequencing,             type: CM_TQ_10, default: %CM_TQ_10{}
+    component :order_duration,               type: CE,       default: %CE{}
+    component :total_occurrences,            type: :integer
   end
 end
 
@@ -525,9 +707,11 @@ defmodule HL7.Composite.XPN do
   """
   alias HL7.Composite.CE
   alias HL7.Composite.DR
+  alias HL7.Composite.FN
+
 
   composite do
-    component :family_name,                  type: :string
+    component :family_name,                  type: FN,       default: %FN{}
     component :given_name,                   type: :string
     component :second_name,                  type: :string
     component :suffix,                       type: :string
@@ -538,5 +722,27 @@ defmodule HL7.Composite.XPN do
     component :name_context,                 type: CE,       default: %CE{}
     component :name_validity,                type: DR,       default: %DR{}
     component :name_assembly_order,          type: :string
+  end
+end
+
+defmodule HL7.Composite.XTN do
+  @moduledoc """
+  2.9.55 XTN - extended telecommunication number
+
+  Components: [NNN] [(999)]999-9999 [X99999] [B99999] [C any text] ^
+              <telecommunication use code (ID)> ^ <telecommunication equipment type (ID)> ^
+              <email address (ST)> ^ <country code (NM)> ^ <area/city code (NM)> ^
+              <phone number (NM)> ^ <extension (NM)> ^ <any text (ST)>
+  """
+  composite do
+    component :formatted_phone_number,       type: :string
+    component :telecom_use_code,             type: :string
+    component :telecom_equipment_type,       type: :string
+    component :email,                        type: :string
+    component :country_code,                 type: :integer
+    component :area_code,                    type: :integer
+    component :phone_number,                 type: :integer
+    component :extension,                    type: :integer
+    component :any_text,                     type: :string
   end
 end

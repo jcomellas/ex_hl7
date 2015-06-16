@@ -127,10 +127,10 @@ end
 
 defmodule HL7.Segment.ERR do
   @moduledoc "2.16.5 ERR - error segment"
-  alias HL7.Composite.CM_ERR
+  alias HL7.Composite.CM_ERR_1
 
   segment "ERR" do
-    field :error_info,                 seq:  1, type: CM_ERR,    length: 80
+    field :error_info,                 seq:  1, type: CM_ERR_1,  length: 80
   end
 end
 
@@ -147,13 +147,13 @@ defmodule HL7.Segment.IN1 do
   @moduledoc "6.5.6 IN1 - insurance segment"
   alias HL7.Composite.CE
   alias HL7.Composite.CX
-  alias HL7.Composite.CM_IN1
+  alias HL7.Composite.CM_IN1_14
 
   segment "IN1" do
     field :set_id,                     seq:  1, type: :integer,  length:  4
     field :plan,                       seq:  2, type: CE,        length: 51
     field :company,                    seq:  3, type: CX,        length: 48
-    field :authorization,              seq: 14, type: CM_IN1,    length: 29
+    field :authorization,              seq: 14, type: CM_IN1_14, length: 29
   end
 end
 
@@ -172,7 +172,7 @@ end
 defmodule HL7.Segment.MSH do
   @moduledoc "2.16.9 MSH - message header segment"
   alias HL7.Composite.HD
-  alias HL7.Composite.CM_MSH
+  alias HL7.Composite.CM_MSH_9
 
   segment "MSH" do
     field :field_separator,            seq:  1, type: :string,   length:  1
@@ -183,7 +183,7 @@ defmodule HL7.Segment.MSH do
     field :receiving_facility,         seq:  6, type: HD,        length: 54
     field :message_datetime,           seq:  7, type: :datetime, length: 14
     field :security,                   seq:  8, type: :string,   length: 40
-    field :message_type,               seq:  9, type: CM_MSH,    length: 15
+    field :message_type,               seq:  9, type: CM_MSH_9,  length: 15
     field :message_control_id,         seq: 10, type: :string,   length: 20
     field :processing_id,              seq: 11, type: :string,   length:  3
     field :version,                    seq: 12, type: :string,   length:  8
@@ -205,6 +205,63 @@ defmodule HL7.Segment.NTE do
   end
 end
 
+defmodule HL7.Segment.OBR do
+  @moduledoc "7.4.1 OBR - observation request segment"
+  alias HL7.Composite.CE
+  alias HL7.Composite.CM_OBR_15
+  alias HL7.Composite.CM_OBR_23
+  alias HL7.Composite.CM_OBR_26
+  alias HL7.Composite.CM_OBR_29
+  alias HL7.Composite.CM_OBR_32
+  alias HL7.Composite.CQ
+  alias HL7.Composite.EI
+  alias HL7.Composite.TQ
+  alias HL7.Composite.XCN
+  alias HL7.Composite.XTN
+
+  segment "OBR" do
+    field :set_id,                     seq:  1, type: :integer,  length:  4
+    field :placer_order_number,        seq:  2, type: EI,        lenght: 22
+    field :filler_order_number,        seq:  3, type: EI,        lenght: 22
+    field :universal_service,          seq:  4, type: CE,        lenght: 250
+    field :priority,                   seq:  5, type: :string,   length:  2
+    field :requested_datetime,         seq:  6, type: :datetime, length: 14
+    field :observation_datetime,       seq:  7, type: :datetime, length: 14
+    field :observation_end_datetime,   seq:  8, type: :datetime, length: 14
+    field :collection_volume,          seq:  9, type: CQ,        length: 20
+    field :collector,                  seq: 10, type: XCN,       length: 250
+    field :specimen_action_code,       seq: 11, type: :string,   length:  1
+    field :danger_code,                seq: 12, type: CE,        lenght: 250
+    field :relevant_clinical_info,     seq: 13, type: :string,   length: 300
+    field :specimen_received_datetime, seq: 14, type: :datetime, length: 14
+    field :specimen_source,            seq: 15, type: CM_OBR_15, length: 300
+    field :ordering_provider,          seq: 16, type: XCN,       length: 250
+    field :order_callback_phone,       seq: 17, type: XTN,       length: 250
+    field :placer_field_1,             seq: 18, type: :string,   length: 60
+    field :placer_field_2,             seq: 19, type: :string,   length: 60
+    field :filler_field_1,             seq: 20, type: :string,   length: 60
+    field :filler_field_2,             seq: 21, type: :string,   length: 60
+    field :results_datetime,           seq: 22, type: :datetime, length: 14
+    field :charge_to_practice,         seq: 23, type: CM_OBR_23, length: 300
+    field :diagnostic_service_id,      seq: 24, type: :string,   length: 10
+    field :result_status,              seq: 25, type: :string,   length:  1
+    field :parent_result,              seq: 26, type: CM_OBR_26, length: 400
+    field :timing,                     seq: 27, type: TQ,        length: 200
+    field :result_copies_to,           seq: 28, type: XCN,       length: 250
+    field :parent,                     seq: 29, type: CM_OBR_29, length: 200
+    field :transportation_mode,        seq: 30, type: :string,   length: 20
+    field :reason_for_study,           seq: 31, type: CE,        length: 250
+    field :principal_interpreter,      seq: 32, type: CM_OBR_32, length: 200
+    field :assistant_interpreter,      seq: 33, type: CM_OBR_32, length: 200
+    field :technician,                 seq: 34, type: CM_OBR_32, length: 200
+    field :transcriptionist,           seq: 35, type: CM_OBR_32, length: 200
+    field :scheduled_datetime,         seq: 36, type: :datetime, length: 14
+    field :sample_containers_count,    seq: 37, type: :integer,  length:  4
+    field :transport_logistics,        seq: 38, type: CE,        length: 250
+    field :collectors_comment,         seq: 39, type: CE,        length: 250
+  end
+end
+
 defmodule HL7.Segment.OBX do
   @moduledoc "7.4.2 OBX - observation/result segment"
   alias HL7.Composite.CE
@@ -216,6 +273,34 @@ defmodule HL7.Segment.OBX do
     field :observation_sub_id,         seq:  4, type: :string,   length: 20
     field :observation_value,          seq:  5, type: CE,        length: 24
     field :observation_status,         seq: 11, type: :string,   length:  1
+  end
+end
+
+defmodule HL7.Segment.ORC do
+  @moduledoc "4.5.1 ORC - common order segment"
+  alias HL7.Composite.CE
+  alias HL7.Composite.CM_OBR_29, as: CM_ORC_8
+  alias HL7.Composite.EI
+  alias HL7.Composite.PL
+  alias HL7.Composite.TQ
+  alias HL7.Composite.XCN
+  alias HL7.Composite.XTN
+
+  segment "ORC" do
+    field :order_control,              seq:  1, type: :string,   length:  2
+    field :placer_order,               seq:  2, type: EI,        length: 22
+    field :filler_order,               seq:  3, type: EI,        length: 22
+    field :placer_group,               seq:  4, type: EI,        length: 22
+    field :order_status,               seq:  5, type: :string,   length:  2
+    field :response_flag,              seq:  6, type: :string,   length:  1
+    field :timing,                     seq:  7, type: TQ,        length: 200
+    field :parent,                     seq:  8, type: CM_ORC_8,  length: 200
+    field :transaction_datetime,       seq:  9, type: :datetime, length: 14
+    field :entered_by,                 seq: 10, type: XCN,       length: 250
+    field :verified_by,                seq: 11, type: XCN,       length: 250
+    field :ordering_provider,          seq: 12, type: XCN,       length: 250
+    field :enterers_location,          seq: 13, type: PL,        length: 80
+    field :callback_phone,             seq: 14, type: XTN,       length: 250
   end
 end
 
@@ -314,13 +399,13 @@ end
 defmodule HL7.Segment.QPD do
   @moduledoc "5.5.3 QPD - query parameter definition - procedure totals"
   alias HL7.Composite.CE
-  alias HL7.Composite.CM_QPD
+  alias HL7.Composite.CM_QPD_3
   alias HL7.Composite.CX
 
   segment "QPD" do
     field :query_name,                 seq:  1, type: CE,        length: 51
     field :query_tag,                  seq:  2, type: :string,   length: 32
-    field :provider,                   seq:  3, type: CM_QPD,    length: 20
+    field :provider,                   seq:  3, type: CM_QPD_3,  length: 20
     field :start_date,                 seq:  4, type: :datetime, length: 12
     field :end_date,                   seq:  5, type: :datetime, length: 12
     field :procedure,                  seq:  6, type: CE,        length: 39
