@@ -74,13 +74,16 @@ defmodule HL7.Composite.Def do
   end
 
   defmacro __before_compile__(_env) do
+    composite_module = __CALLER__.module
+    descriptor = Enum.reverse(Module.get_attribute(composite_module, :components))
+    struct_fields = Enum.reverse(Module.get_attribute(composite_module, :struct_fields))
+
     quote do
-      defstruct unquote(Module.get_attribute(__CALLER__.module, :struct_fields)
-                        |> Enum.reverse
+      defstruct unquote([{:__composite__, composite_module} | struct_fields]
                         |> Macro.escape)
 
       # TODO: how do we inject a type spec in the generated code?
-      @type t :: %unquote(__CALLER__.module){}
+      @type t :: %unquote(composite_module){}
                  # unquote(Module.get_attribute(__CALLER__.module, :components)
                  #         |> Enum.map(fn {name, type} -> {name, type()} end)
                  #         |> Enum.reverse
@@ -88,21 +91,19 @@ defmodule HL7.Composite.Def do
 
       @spec descriptor() :: HL7.Composite.descriptor
       def descriptor(), do:
-        unquote(Module.get_attribute(__CALLER__.module, :components)
-                |> Enum.reverse
-                |> Macro.escape)
+        unquote(Macro.escape(descriptor))
 
       @spec valid?(t) :: boolean
-      def valid?(%unquote(__CALLER__.module){}), do: true
+      def valid?(%unquote(composite_module){}), do: true
       def valid?(_), do: false
 
       @spec new() :: t
       def new(), do:
-        %unquote(__CALLER__.module){}
+        %unquote(composite_module){}
 
       @spec decode(HL7.Type.field) :: t
       def decode(value), do:
-        HL7.Composite.decode(%unquote(__CALLER__.module){}, descriptor(), value)
+        HL7.Composite.decode(%unquote(composite_module){}, descriptor(), value)
 
       @spec encode(t) :: HL7.Type.field
       def encode(composite), do:
