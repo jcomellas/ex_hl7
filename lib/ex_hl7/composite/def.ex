@@ -59,7 +59,7 @@ defmodule HL7.Composite.Def do
       following the behaviour of an `HL7.Composite`. There are some sample
       composite field modules already defined in the `HL7.Composite` module.
   """
-  defmacro component(name, args \\ [type: :binary, default: ""]) do
+  defmacro component(name, args \\ []) do
     type = Keyword.get(args, :type, :binary)
     default = Keyword.get(args, :default, "")
 
@@ -79,8 +79,7 @@ defmodule HL7.Composite.Def do
     struct_fields = Enum.reverse(Module.get_attribute(composite_module, :struct_fields))
 
     quote do
-      defstruct unquote([{:__composite__, composite_module} | struct_fields]
-                        |> Macro.escape)
+      defstruct unquote(Macro.escape(struct_fields))
 
       # TODO: how do we inject a type spec in the generated code?
       @type t :: %unquote(composite_module){}
