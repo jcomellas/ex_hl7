@@ -16,13 +16,16 @@ This is a basic example of a pre-authorization request with referral to another 
 
 ```elixir
 defmodule Authorizer do
+  require HL7.Composite
+
   alias HL7.Segment.AUT
   alias HL7.Segment.MSA
   alias HL7.Segment.MSH
+  alias HL7.Segment.PID
   alias HL7.Segment.PRD
 
   alias HL7.Composite.CE
-  alias HL7.Composite.CM_MSH
+  alias HL7.Composite.CM_MSH_9
   alias HL7.Composite.CP
   alias HL7.Composite.EI
   alias HL7.Composite.MO
@@ -45,7 +48,7 @@ defmodule Authorizer do
             receiving_facility: msh.sending_facility,
             message_datetime: :calendar.universal_time(),
             # RPA^I08
-            message_type: %CM_MSH{msh.message_type | id: "RPA"},
+            message_type: %CM_MSH_9{msh.message_type | id: "RPA"},
             # Kids, don't try this at home
             message_control_id: Base.encode32(:crypto.rand_bytes(5)),
             accept_ack_type: "ER",
@@ -66,9 +69,11 @@ defmodule Authorizer do
     HL7.insert_after(res, "PR1", 0, aut)
   end
 
-  def patient(pid) do
-    name = pid.patient_name
-    "Patient: #{name.given_name} #{name.family_name}"
+  def patient(%PID{patient_name: name}) when is_map(name) do
+    "Patient: #{name.given_name} #{name.family_name.surname}"
+  end
+  def patient(_pid) do
+    nil
   end
 
   def practice([dg1, pr1]) do
@@ -81,14 +86,18 @@ defmodule Authorizer do
   def providers(prds), do:
     providers(prds, [])
 
-  def providers([%PRD{role: role, name: name, address: address} | tail], acc) do
+  def providers([%PRD{role: role, name: name, address: address} | tail], acc)
+   when is_map(role) and is_map(name) and is_map(address) do
     info = """
     #{role_label(role.id)}:
-      #{name.prefix} #{name.given_name} #{name.family_name}
+      #{name.prefix} #{name.given_name} #{name.family_name.surname}
       #{address.street_address}
       #{address.city}, #{address.state} #{address.postal_code}
     """
     providers(tail, [info | acc])
+  end
+  def providers([_prd | tail], acc) do
+    providers(tail, acc)
   end
   def providers([], acc) do
     Enum.reverse(acc)
