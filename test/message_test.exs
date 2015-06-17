@@ -80,7 +80,6 @@ defmodule HL7.Message.Test do
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
       "AUT|4^Cart. 4|112233||20120201094256||4928307\r" <>
-      "ZAU||4928307|B001^AUTORIZADA\r" <>
       "PRD|PS~46.00^Radiologia General|Prestador Radiologico^|^^^B||||30123456789^CU\r" <>
       "PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P\r" <>
       "IN1|1|4^Cart. 4|112233\r" <>
@@ -88,17 +87,14 @@ defmodule HL7.Message.Test do
       "PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH||\r" <>
       "OBX|1||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH||\r" <>
       "OBX|2||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "NTE|1|||\r"
     trim =
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
       "AUT|4^Cart. 4|112233||20120201094256||4928307\r" <>
-      "ZAU||4928307|B001^AUTORIZADA\r" <>
       "PRD|PS~46.00^Radiologia General|Prestador Radiologico|^^^B||||30123456789^CU\r" <>
       "PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P\r" <>
       "IN1|1|4^Cart. 4|112233\r" <>
@@ -106,11 +102,9 @@ defmodule HL7.Message.Test do
       "PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH\r" <>
       "OBX|1||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0.0&$\r" <>
       "PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH\r" <>
       "OBX|2||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0.0&$\r" <>
       "NTE|1\r"
     {:ok, msg} = HL7.read(orig, input_format: :wire, trim: true)
     gen = HL7.write(msg, output_format: :wire, trim: true)
@@ -123,7 +117,6 @@ defmodule HL7.Message.Test do
       MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG
       MSA|AA|00XX20120201101155
       AUT|4^Cart. 4|112233||20120201094256||4928307
-      ZAU||4928307|B001^AUTORIZADA
       PRD|PS~46.00^Radiologia General|Prestador Radiologico^|^^^B||||30123456789^CU
       PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P
       IN1|1|4^Cart. 4|112233
@@ -131,11 +124,9 @@ defmodule HL7.Message.Test do
       PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH||
       OBX|1||||||||||F
       AUT||112233||||||1|1
-      ZAU|||B004^PRESTACION AUTORIZADA|||0&$^
       PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH||
       OBX|2||||||||||F
       AUT||112233||||||1|1
-      ZAU|||B004^PRESTACION AUTORIZADA|||0&$^
       NTE|1|||
       """
     trim =
@@ -143,7 +134,6 @@ defmodule HL7.Message.Test do
       MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG
       MSA|AA|00XX20120201101155
       AUT|4^Cart. 4|112233||20120201094256||4928307
-      ZAU||4928307|B001^AUTORIZADA
       PRD|PS~46.00^Radiologia General|Prestador Radiologico|^^^B||||30123456789^CU
       PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P
       IN1|1|4^Cart. 4|112233
@@ -151,11 +141,9 @@ defmodule HL7.Message.Test do
       PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH
       OBX|1||||||||||F
       AUT||112233||||||1|1
-      ZAU|||B004^PRESTACION AUTORIZADA|||0.0&$
       PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH
       OBX|2||||||||||F
       AUT||112233||||||1|1
-      ZAU|||B004^PRESTACION AUTORIZADA|||0.0&$
       NTE|1
       """
     {:ok, msg} = HL7.read(orig, input_format: :text, trim: true)
@@ -168,7 +156,6 @@ defmodule HL7.Message.Test do
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
       "AUT|4^Cart. 4|112233||20120201094256||4928307\r" <>
-      "ZAU||4928307|B001^AUTORIZADA\r" <>
       "PRD|PS~46.00^Radiologia General|Prestador Radiologico^|^^^B||||30123456789^CU\r" <>
       "PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P\r" <>
       "IN1|1|4^Cart. 4|112"
@@ -178,11 +165,9 @@ defmodule HL7.Message.Test do
       "PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH||\r" <>
       "OBX|1||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH||\r" <>
       "OBX|2||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "NTE|1|||\r"
     {:incomplete, {function, rest}} = HL7.read(part1, input_format: :wire, trim: true)
     rest = rest <> part2
@@ -195,7 +180,6 @@ defmodule HL7.Message.Test do
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
       "AUT|4^Cart. 4|112233||20120201094256||4928307\r" <>
-      "ZAU||4928307|B001^AUTORIZADA\r" <>
       "PRD|PS~46.00^Radiologia General|Prestador Radiologico^|^^^B||||30123456789^CU\r" <>
       "PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P\r" <>
       "IN1|1|4^Cart. 4|112233\r" <>
@@ -203,11 +187,9 @@ defmodule HL7.Message.Test do
       "PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH||\r" <>
       "OBX|1||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH||\r" <>
       "OBX|2||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "NTE|1|||\r"
     reader = HL7.Reader.new(input_format: :wire, trim: true)
     {:ok, msg} = HL7.Message.read(reader, buf)
@@ -234,30 +216,26 @@ defmodule HL7.Message.Test do
     assert pr1.procedure.id === "90.46.20"
     assert pr1.procedure.text === "GADOLINEO EN AMBULATORIO."
     # Retrieve paired segments from message with explicit position
-    segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 0)
-    assert length(segments) === 4
-    [pr1, obx, aut, zau] = segments
+    segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT"], 0)
+    assert length(segments) === 3
+    [pr1, obx, aut] = segments
     assert HL7.segment_id(pr1) === "PR1"
     assert pr1.set_id === 1
     assert HL7.segment_id(obx) === "OBX"
     assert obx.set_id === 1
     assert HL7.segment_id(aut) === "AUT"
     assert aut.requested_treatments === 1
-    assert HL7.segment_id(zau) === "ZAU"
-    assert zau.authorization_status.id === "B004"
-    segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 1)
-    assert length(segments) === 4
-    [pr1, obx, aut, zau] = segments
+    segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT"], 1)
+    assert length(segments) === 3
+    [pr1, obx, aut] = segments
     assert HL7.segment_id(pr1) === "PR1"
     assert pr1.set_id === 2
     assert HL7.segment_id(obx) === "OBX"
     assert obx.set_id === 2
     assert HL7.segment_id(aut) === "AUT"
     assert aut.requested_treatments === 1
-    assert HL7.segment_id(zau) === "ZAU"
-    assert zau.authorization_status.id === "B004"
     # Try to retrieve inexistent paired segments
-    assert [] === HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT", "ZAU"], 2)
+    assert [] === HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT"], 2)
     # Retrieve partial paired segments
     segments = HL7.Message.paired_segments(msg, ["PR1", "AUT"], 1)
     assert length(segments) === 1
@@ -273,7 +251,6 @@ defmodule HL7.Message.Test do
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
       "AUT|4^Cart. 4|112233||20120201094256||4928307\r" <>
-      "ZAU||4928307|B001^AUTORIZADA\r" <>
       "PRD|PS~46.00^Radiologia General|Prestador Radiologico^|^^^B||||30123456789^CU\r" <>
       "PID|1||1234567890ABC^^^^HC||PEREZ^PEPE P\r" <>
       "IN1|1|4^Cart. 4|112233\r" <>
@@ -281,11 +258,9 @@ defmodule HL7.Message.Test do
       "PR1|1||90.34.01^RESONANCIA MAGNETICA NUCLEAR^99DH||\r" <>
       "OBX|1||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "PR1|2||90.46.20^GADOLINEO EN AMBULATORIO.^99DH||\r" <>
       "OBX|2||||||||||F\r" <>
       "AUT||112233||||||1|1\r" <>
-      "ZAU|||B004^PRESTACION AUTORIZADA|||0&$^\r" <>
       "NTE|1|||\r"
     {:ok, msg} = HL7.read(buf, input_format: :wire, trim: true)
     assert HL7.segment(msg, "OBX", 1) !== nil
