@@ -19,6 +19,17 @@ defmodule HL7.Composite do
   end
 
   @doc """
+  Checks if a composite field is empty. This function is defined as a macro so
+  that it can be used in guards.
+  """
+  @spec empty?(HL7.value | t) :: boolean
+  defmacro empty?(value) do
+    quote do
+      unquote(value) === ""
+    end
+  end
+
+  @doc """
   Creates the map corresponding to the underlying struct in a composite field.
   """
   @spec decode(t, [descriptor], binary | tuple) :: t
