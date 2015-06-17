@@ -39,9 +39,9 @@ defmodule Authorizer do
             message_control_id: msh.message_control_id
           }
     msh = %MSH{msh |
-            sending_application: msh.receiving_application,
+            sending_app: msh.receiving_app,
             sending_facility: msh.receiving_facility,
-            receiving_application: msh.sending_application,
+            receiving_app: msh.sending_app,
             receiving_facility: msh.sending_facility,
             message_datetime: :calendar.universal_time(),
             # RPA^I08
@@ -49,7 +49,7 @@ defmodule Authorizer do
             # Kids, don't try this at home
             message_control_id: Base.encode32(:crypto.rand_bytes(5)),
             accept_ack_type: "ER",
-            application_ack_type: "ER"
+            app_ack_type: "ER"
           }
     aut = %AUT{
             plan: %CE{id: "PPO"},

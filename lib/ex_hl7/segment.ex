@@ -177,9 +177,9 @@ defmodule HL7.Segment.MSH do
   segment "MSH" do
     field :field_separator,            seq:  1, type: :string,   length:  1
     field :encoding_chars,             seq:  2, type: :string,   length:  4
-    field :sending_application,        seq:  3, type: HD,        length: 12
+    field :sending_app,                seq:  3, type: HD,        length: 12
     field :sending_facility,           seq:  4, type: HD,        length: 54
-    field :receiving_application,      seq:  5, type: HD,        length: 12
+    field :receiving_app,              seq:  5, type: HD,        length: 12
     field :receiving_facility,         seq:  6, type: HD,        length: 54
     field :message_datetime,           seq:  7, type: :datetime, length: 14
     field :security,                   seq:  8, type: :string,   length: 40
@@ -190,7 +190,7 @@ defmodule HL7.Segment.MSH do
     field :sequence_number,            seq: 13, type: :integer,  length: 15
     field :continuation_pointer,       seq: 14, type: :string,   length: 180
     field :accept_ack_type,            seq: 15, type: :string,   length:  2
-    field :application_ack_type,       seq: 16, type: :string,   length:  2
+    field :app_ack_type,               seq: 16, type: :string,   length:  2
     field :country_code,               seq: 17, type: :string,   length:  3
     field :char_set,                   seq: 18, type: :string,   length: 10
   end
