@@ -84,11 +84,10 @@ defmodule HL7.Segment.Def do
     segment_module = __CALLER__.module
     segment_id = Module.get_attribute(segment_module, :segment_id)
     descriptor = build_descriptor(Module.get_attribute(segment_module, :fields))
-    struct_fields = Module.get_attribute(segment_module, :struct_fields)
+    struct_fields = Enum.reverse(Module.get_attribute(segment_module, :struct_fields))
 
     quote do
-      defstruct unquote([{:__segment__, segment_id} | Enum.reverse(struct_fields)]
-                        |> Macro.escape)
+      defstruct unquote(Macro.escape([{:__segment__, segment_id} | struct_fields]))
 
       # TODO: how do we inject a type spec into the generated code?
       @type t :: %unquote(segment_module){}
