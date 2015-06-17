@@ -19,8 +19,8 @@ defmodule HL7.Composite do
   end
 
   @doc """
-  Checks if a composite field is empty. This function is defined as a macro so
-  that it can be used in guards.
+  Checks if a composite field is empty. This function is implemented as a
+  macro so that it can be used in guards.
   """
   @spec empty?(HL7.value | t) :: boolean
   defmacro empty?(value) do
@@ -719,7 +719,6 @@ defmodule HL7.Composite.XPN do
   alias HL7.Composite.CE
   alias HL7.Composite.DR
   alias HL7.Composite.FN
-
 
   composite do
     component :family_name,                  type: FN,       default: %FN{}
