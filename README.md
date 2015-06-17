@@ -70,7 +70,12 @@ defmodule Authorizer do
   end
 
   def patient(%PID{patient_name: name}) when is_map(name) do
-    "Patient: #{name.given_name} #{name.family_name.surname}"
+    surname = if is_map(name.family_name) do
+                name.family_name.surname
+              else
+                "<unknown>"
+              end
+    "Patient: #{name.given_name} #{surname}"
   end
   def patient(_pid) do
     nil
@@ -88,9 +93,14 @@ defmodule Authorizer do
 
   def providers([%PRD{role: role, name: name, address: address} | tail], acc)
    when is_map(role) and is_map(name) and is_map(address) do
+    surname = if is_map(name.family_name) do
+                name.family_name.surname
+              else
+                "<unknown>"
+              end
     info = """
     #{role_label(role.id)}:
-      #{name.prefix} #{name.given_name} #{name.family_name.surname}
+      #{name.prefix} #{name.given_name} #{surname}
       #{address.street_address}
       #{address.city}, #{address.state} #{address.postal_code}
     """
