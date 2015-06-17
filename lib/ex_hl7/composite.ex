@@ -107,12 +107,12 @@ defmodule HL7.Composite.CE do
   Example: |F-11380^CREATININE^I9^2148-5^CREATININE^LN|
   """
   composite do
-    component :id,                           type: :string
-    component :text,                         type: :string
-    component :coding_system,                type: :string
-    component :alt_id,                       type: :string
-    component :alt_text,                     type: :string
-    component :alt_coding_system,            type: :string
+    component :id,                             type: :string
+    component :text,                           type: :string
+    component :coding_system,                  type: :string
+    component :alt_id,                         type: :string
+    component :alt_text,                       type: :string
+    component :alt_coding_system,              type: :string
   end
 end
 
@@ -126,10 +126,10 @@ defmodule HL7.Composite.CM_ERR_1 do
   alias HL7.Composite.CE
 
   composite do
-    component :segment_id,                   type: :string
-    component :sequence,                     type: :integer
-    component :field_pos,                    type: :integer
-    component :error,                        type: CE,       default: %CE{}
+    component :segment_id,                     type: :string
+    component :sequence,                       type: :integer
+    component :field_pos,                      type: :integer
+    component :error,                          type: CE
   end
 end
 
@@ -140,9 +140,9 @@ defmodule HL7.Composite.CM_IN1_14 do
   Components: <authorization number (ST)> ^ <date (DT)> ^ <source (ST)>
   """
   composite do
-    component :number,                       type: :string
-    component :date,                         type: :date
-    component :source,                       type: :string
+    component :number,                         type: :string
+    component :date,                           type: :date
+    component :source,                         type: :string
   end
 end
 
@@ -153,9 +153,9 @@ defmodule HL7.Composite.CM_MSH_9 do
   Components: <message type (ID)> ^ <trigger event (ID)> ^ <message structure (ID)>
   """
   composite do
-    component :id,                           type: :string
-    component :trigger_event,                type: :string
-    component :structure,                    type: :string
+    component :id,                             type: :string
+    component :trigger_event,                  type: :string
+    component :structure,                      type: :string
   end
 end
 
@@ -169,9 +169,9 @@ defmodule HL7.Composite.CM_PRD do
   such as UPIN, Medicare and Medicaid numbers.
   """
   composite do
-    component :id_number,                    type: :string
-    component :id_number_type,               type: :string
-    component :other_info,                   type: :string
+    component :id_number,                      type: :string
+    component :id_number_type,                 type: :string
+    component :other_info,                     type: :string
   end
 end
 
@@ -182,8 +182,8 @@ defmodule HL7.Composite.CM_QPD_3 do
   Components: <ID number (ID)> ^ <type of ID number (IS)>
   """
   composite do
-    component :id_number,                    type: :string
-    component :id_number_type,               type: :string
+    component :id_number,                      type: :string
+    component :id_number_type,                 type: :string
   end
 end
 
@@ -194,8 +194,8 @@ defmodule HL7.Composite.MO do
   Components: <quantity (NM)> ^ <denomination (ID)>
   """
   composite do
-    component :quantity,                     type: :float
-    component :denomination,                 type: :string
+    component :quantity,                       type: :float
+    component :denomination,                   type: :string
   end
 end
 
@@ -217,12 +217,12 @@ defmodule HL7.Composite.CP do
   alias HL7.Composite.MO
 
   composite do
-    component :price,                        type: MO,       default: %MO{}
-    component :price_type,                   type: :string
-    component :from_value,                   type: :float
-    component :to_value,                     type: :float
-    component :range_units,                  type: CE,       default: %CE{}
-    component :range_type,                   type: :string
+    component :price,                          type: MO
+    component :price_type,                     type: :string
+    component :from_value,                     type: :float
+    component :to_value,                       type: :float
+    component :range_units,                    type: CE
+    component :range_type,                     type: :string
   end
 end
 
@@ -235,8 +235,8 @@ defmodule HL7.Composite.CQ do
   alias HL7.Composite.CE
 
   composite do
-    component :quantity,                     type: :integer
-    component :units,                        type: CE,       default: %CE{}
+    component :quantity,                       type: :integer
+    component :units,                          type: CE
   end
 end
 
@@ -247,9 +247,9 @@ defmodule HL7.Composite.HD do
   Components: <namespace ID (IS)> ^ <universal ID (ST)> ^ <universal ID type (ID)>
   """
   composite do
-    component :namespace_id,                 type: :string
-    component :universal_id,                 type: :string
-    component :universal_id_type,            type: :string
+    component :namespace_id,                   type: :string
+    component :universal_id,                   type: :string
+    component :universal_id_type,              type: :string
   end
 end
 
@@ -270,14 +270,14 @@ defmodule HL7.Composite.CX do
   alias HL7.Composite.HD
 
   composite do
-    component :id,                           type: :string
-    component :check_digit,                  type: :string
-    component :check_digit_scheme,           type: :string
-    component :assigning_authority,          type: HD,       default: %HD{}
-    component :id_type,                      type: :string
-    component :assigning_facility,           type: HD,       default: %HD{}
-    component :effective_date,               type: :date
-    component :expiration_date,              type: :date
+    component :id,                             type: :string
+    component :check_digit,                    type: :string
+    component :check_digit_scheme,             type: :string
+    component :assigning_authority,            type: HD
+    component :id_type,                        type: :string
+    component :assigning_facility,             type: HD
+    component :effective_date,                 type: :date
+    component :expiration_date,                type: :date
   end
 end
 
@@ -289,8 +289,8 @@ defmodule HL7.Composite.DR do
   period during which this name was valid.
   """
   composite do
-    component :start_datetime,               type: :datetime
-    component :end_datetime,                 type: :datetime
+    component :start_datetime,                 type: :datetime
+    component :end_datetime,                   type: :datetime
   end
 end
 
@@ -302,10 +302,10 @@ defmodule HL7.Composite.EI do
               <universal ID (ST)> ^ < universal ID type (ID)>
   """
   composite do
-    component :id,                           type: :string
-    component :namespace_id,                 type: :string
-    component :universal_id,                 type: :string
-    component :universal_id_type,            type: :string
+    component :id,                             type: :string
+    component :namespace_id,                   type: :string
+    component :universal_id,                   type: :string
+    component :universal_id_type,              type: :string
   end
 end
 
@@ -324,11 +324,11 @@ defmodule HL7.Composite.FN do
   surname prefix (such as "van" or "de") from the surname root.
   """
   composite do
-    component :surname,                      type: :string
-    component :own_surname_prefix,           type: :string
-    component :own_surname,                  type: :string
-    component :surname_prefix_from_partner,  type: :string
-    component :surname_from_partner,         type: :string
+    component :surname,                        type: :string
+    component :own_surname_prefix,             type: :string
+    component :own_surname,                    type: :string
+    component :surname_prefix_from_partner,    type: :string
+    component :surname_from_partner,           type: :string
   end
 end
 
@@ -346,15 +346,15 @@ defmodule HL7.Composite.CN do
   alias HL7.Composite.HD
 
   composite do
-    component :id_number,                    type: :string
-    component :family_name,                  type: FN,       default: %FN{}
-    component :given_name,                   type: :string
-    component :second_name,                  type: :string
-    component :suffix,                       type: :string
-    component :prefix,                       type: :string
-    component :degree,                       type: :string
-    component :source_table,                 type: :string
-    component :assigning_authority,          type: HD,       default: %HD{}
+    component :id_number,                      type: :string
+    component :family_name,                    type: FN
+    component :given_name,                     type: :string
+    component :second_name,                    type: :string
+    component :suffix,                         type: :string
+    component :prefix,                         type: :string
+    component :degree,                         type: :string
+    component :source_table,                   type: :string
+    component :assigning_authority,            type: HD
   end
 end
 
@@ -400,15 +400,15 @@ defmodule HL7.Composite.PL do
   alias HL7.Composite.HD
 
   composite do
-    component :point_of_care,                type: :string
-    component :room,                         type: :string
-    component :bed,                          type: :string
-    component :facility,                     type: HD,       default: %HD{}
-    component :location_status,              type: :string
-    component :person_location_type,         type: :string
-    component :building,                     type: :string
-    component :floor,                        type: :string
-    component :location_description,         type: :string
+    component :point_of_care,                  type: :string
+    component :room,                           type: :string
+    component :bed,                            type: :string
+    component :facility,                       type: HD
+    component :location_status,                type: :string
+    component :person_location_type,           type: :string
+    component :building,                       type: :string
+    component :floor,                          type: :string
+    component :location_description,           type: :string
   end
 end
 
@@ -423,12 +423,12 @@ defmodule HL7.Composite.CM_OBR_15 do
   alias HL7.Composite.CE
 
   composite do
-    component :code,                           type: CE,       default: %CE{}
+    component :code,                           type: CE
     component :additives,                      type: :string
     component :free_text,                      type: :string
-    component :body_site,                      type: CE,       default: %CE{}
-    component :site_modifier,                  type: CE,       default: %CE{}
-    component :collection_method,              type: CE,       default: %CE{}
+    component :body_site,                      type: CE
+    component :site_modifier,                  type: CE
+    component :collection_method,              type: CE
   end
 end
 
@@ -442,8 +442,8 @@ defmodule HL7.Composite.CM_OBR_23 do
   alias HL7.Composite.MO
 
   composite do
-    component :amount,                       type: MO,       default: %MO{}
-    component :charge_code,                  type: CE,       default: %CE{}
+    component :amount,                         type: MO
+    component :charge_code,                    type: CE
   end
 end
 
@@ -458,9 +458,9 @@ defmodule HL7.Composite.CM_OBR_26 do
   alias HL7.Composite.CE
 
   composite do
-    component :observation_id,               type: CE,       default: %CE{}
-    component :observation_sub_id,           type: :string
-    component :observation_result,           type: :string
+    component :observation_id,                 type: CE
+    component :observation_sub_id,             type: :string
+    component :observation_result,             type: :string
   end
 end
 
@@ -473,8 +473,8 @@ defmodule HL7.Composite.CM_OBR_29 do
   alias HL7.Composite.EI
 
   composite do
-    component :placer_order,                 type: EI,       default: %EI{}
-    component :filler_order,                 type: EI,       default: %EI{}
+    component :placer_order,                   type: EI
+    component :filler_order,                   type: EI
   end
 end
 
@@ -491,17 +491,17 @@ defmodule HL7.Composite.CM_OBR_32 do
   alias HL7.Composite.HD
 
   composite do
-    component :name,                         type: CN,       default: %CN{}
-    component :start_datetime,               type: :datetime
-    component :end_datetime,                 type: :datetime
-    component :point_of_care,                type: :string
-    component :room,                         type: :string
-    component :bed,                          type: :string
-    component :facility,                     type: HD,       default: %HD{}
-    component :location_status,              type: :string
-    component :patient_location_type,        type: :string
-    component :building,                     type: :string
-    component :floor,                        type: :string
+    component :name,                           type: CN
+    component :start_datetime,                 type: :datetime
+    component :end_datetime,                   type: :datetime
+    component :point_of_care,                  type: :string
+    component :room,                           type: :string
+    component :bed,                            type: :string
+    component :facility,                       type: HD
+    component :location_status,                type: :string
+    component :patient_location_type,          type: :string
+    component :building,                       type: :string
+    component :floor,                          type: :string
   end
 end
 
@@ -512,8 +512,8 @@ defmodule HL7.Composite.CM_TQ_2 do
   Subcomponents: <repeat pattern (IS)> & <explicit time interval (ST)>
   """
   composite do
-    component :repeat_pattern,               type: :string
-    component :explicit_interval,            type: :string
+    component :repeat_pattern,                 type: :string
+    component :explicit_interval,              type: :string
   end
 end
 
@@ -553,18 +553,18 @@ defmodule HL7.Composite.TQ do
   alias HL7.Composite.HD
 
   composite do
-    component :quantity,                     type: CQ,       default: %CQ{}
-    component :interval,                     type: CM_TQ_2,  default: %CM_TQ_2{}
-    component :duration,                     type: :string
-    component :start_datetime,               type: :datetime
-    component :end_datetime,                 type: :datetime
-    component :priority,                     type: :string
-    component :condition,                    type: :string
-    component :text,                         type: :string
-    component :conjunction,                  type: :string
-    component :order_sequencing,             type: CM_TQ_10, default: %CM_TQ_10{}
-    component :order_duration,               type: CE,       default: %CE{}
-    component :total_occurrences,            type: :integer
+    component :quantity,                       type: CQ
+    component :interval,                       type: CM_TQ_2
+    component :duration,                       type: :string
+    component :start_datetime,                 type: :datetime
+    component :end_datetime,                   type: :datetime
+    component :priority,                       type: :string
+    component :condition,                      type: :string
+    component :text,                           type: :string
+    component :conjunction,                    type: :string
+    component :order_sequencing,               type: CM_TQ_10
+    component :order_duration,                 type: CE
+    component :total_occurrences,              type: :integer
   end
 end
 
@@ -610,18 +610,18 @@ defmodule HL7.Composite.XAD do
   alias HL7.Composite.DR
 
   composite do
-    component :street_address,               type: :string
-    component :other_designation,            type: :string
-    component :city,                         type: :string
-    component :state,                        type: :string
-    component :postal_code,                  type: :string
-    component :country,                      type: :string
-    component :address_type,                 type: :string
-    component :other_geo_designation,        type: :string
-    component :county,                       type: :string
-    component :census_tract,                 type: :string
-    component :adrress_representation,       type: :string
-    component :address_validity,             type: DR,       default: %DR{}
+    component :street_address,                 type: :string
+    component :other_designation,              type: :string
+    component :city,                           type: :string
+    component :state,                          type: :string
+    component :postal_code,                    type: :string
+    component :country,                        type: :string
+    component :address_type,                   type: :string
+    component :other_geo_designation,          type: :string
+    component :county,                         type: :string
+    component :census_tract,                   type: :string
+    component :adrress_representation,         type: :string
+    component :address_validity,               type: DR
   end
 end
 
@@ -672,24 +672,24 @@ defmodule HL7.Composite.XCN do
   alias HL7.Composite.HD
 
   composite do
-    component :id_number,                    type: :string
-    component :family_name,                  type: :string
-    component :given_name,                   type: :string
-    component :second_name,                  type: :string
-    component :suffix,                       type: :string
-    component :prefix,                       type: :string
-    component :degree,                       type: :string
-    component :source_table,                 type: :string
-    component :assigning_authority,          type: HD,       default: %HD{}
-    component :name_type_code,               type: :string
-    component :check_digit,                  type: :string
-    component :check_digit_scheme,           type: :string
-    component :id_type,                      type: :string
-    component :assigning_facility,           type: HD,       default: %HD{}
-    component :name_representation_code,     type: :string
-    component :name_context,                 type: CE,       default: %CE{}
-    component :name_validity,                type: DR,       default: %DR{}
-    component :name_assembly_order,          type: :string
+    component :id_number,                      type: :string
+    component :family_name,                    type: :string
+    component :given_name,                     type: :string
+    component :second_name,                    type: :string
+    component :suffix,                         type: :string
+    component :prefix,                         type: :string
+    component :degree,                         type: :string
+    component :source_table,                   type: :string
+    component :assigning_authority,            type: HD
+    component :name_type_code,                 type: :string
+    component :check_digit,                    type: :string
+    component :check_digit_scheme,             type: :string
+    component :id_type,                        type: :string
+    component :assigning_facility,             type: HD
+    component :name_representation_code,       type: :string
+    component :name_context,                   type: CE
+    component :name_validity,                  type: DR
+    component :name_assembly_order,            type: :string
   end
 end
 
@@ -721,17 +721,17 @@ defmodule HL7.Composite.XPN do
   alias HL7.Composite.FN
 
   composite do
-    component :family_name,                  type: FN,       default: %FN{}
-    component :given_name,                   type: :string
-    component :second_name,                  type: :string
-    component :suffix,                       type: :string
-    component :prefix,                       type: :string
-    component :degree,                       type: :string
-    component :name_type_code,               type: :string
-    component :name_representation_code,     type: :string
-    component :name_context,                 type: CE,       default: %CE{}
-    component :name_validity,                type: DR,       default: %DR{}
-    component :name_assembly_order,          type: :string
+    component :family_name,                    type: FN
+    component :given_name,                     type: :string
+    component :second_name,                    type: :string
+    component :suffix,                         type: :string
+    component :prefix,                         type: :string
+    component :degree,                         type: :string
+    component :name_type_code,                 type: :string
+    component :name_representation_code,       type: :string
+    component :name_context,                   type: CE
+    component :name_validity,                  type: DR
+    component :name_assembly_order,            type: :string
   end
 end
 
@@ -745,14 +745,14 @@ defmodule HL7.Composite.XTN do
               <phone number (NM)> ^ <extension (NM)> ^ <any text (ST)>
   """
   composite do
-    component :formatted_phone_number,       type: :string
-    component :telecom_use_code,             type: :string
-    component :telecom_equipment_type,       type: :string
-    component :email,                        type: :string
-    component :country_code,                 type: :integer
-    component :area_code,                    type: :integer
-    component :phone_number,                 type: :integer
-    component :extension,                    type: :integer
-    component :any_text,                     type: :string
+    component :formatted_phone_number,         type: :string
+    component :telecom_use_code,               type: :string
+    component :telecom_equipment_type,         type: :string
+    component :email,                          type: :string
+    component :country_code,                   type: :integer
+    component :area_code,                      type: :integer
+    component :phone_number,                   type: :integer
+    component :extension,                      type: :integer
+    component :any_text,                       type: :string
   end
 end
