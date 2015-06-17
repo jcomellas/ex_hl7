@@ -25,7 +25,7 @@ defmodule HL7.Composite do
   @spec empty?(HL7.value | t) :: boolean
   defmacro empty?(value) do
     quote do
-      unquote(value) === ""
+      unquote(value) === "" or unquote(value) === nil
     end
   end
 
