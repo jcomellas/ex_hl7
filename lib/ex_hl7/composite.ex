@@ -49,8 +49,15 @@ defmodule HL7.Composite do
 
   def maybe_decode_value(value, type) do
     case HL7.Codec.decode_value(value, type) do
-      :nomatch -> apply(type, :decode, [value])
-      value    -> value
+      :nomatch ->
+        # Do not create composite fields when they are empty or null
+        case value do
+          ""     -> ""
+          "\"\"" -> nil
+          _      -> apply(type, :decode, [value])
+        end
+      value ->
+        value
     end
   end
 
