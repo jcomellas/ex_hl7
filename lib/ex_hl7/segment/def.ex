@@ -87,8 +87,7 @@ defmodule HL7.Segment.Def do
     struct_fields = Module.get_attribute(segment_module, :struct_fields)
 
     quote do
-      defstruct unquote([{:__segment__, segment_id} | struct_fields]
-                        |> Enum.reverse
+      defstruct unquote([{:__segment__, segment_id} | Enum.reverse(struct_fields)]
                         |> Macro.escape)
 
       # TODO: how do we inject a type spec into the generated code?
