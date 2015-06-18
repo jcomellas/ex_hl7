@@ -267,7 +267,7 @@ use HL7.Composite.Def
 defmodule HL7.Composite.CQ do
   composite do
     component :quantity,          type: :integer
-    component :units,             type: CE,       default: %CE{}
+    component :units,             type: CE
   end
 end
 ```
@@ -347,6 +347,8 @@ Insert segments:
 ```elixir
 alias HL7.Segment.PR1
 alias HL7.Segment.AUT
+alias HL7.Composite.CE
+alias HL7.Composite.EI
 
 pr1 = HL7.segment(message, "PR1")
 aut = %AUT{plan: %CE{id: "PPO"}, company: %CE{id: "WA02"},
