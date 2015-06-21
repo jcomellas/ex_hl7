@@ -58,7 +58,7 @@ defmodule HL7.LogReader do
           {:match, [unescape(segment), ?\r]}
         _ ->
           :invalid
-      end   
+      end
     else
       :nomatch
     end
