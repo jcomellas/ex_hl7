@@ -192,7 +192,7 @@ subcomponents             [0]--+--[1]
 ```
 The field on sequence 5 contains two repetitions of a composite field.
 
-*Note*: The indexes used for the fields are 1-based because this value is actually the sequence number assigned by HL7 to identify the field, whereas the indexes used for components and subcomponents are 0-based because this is the convention in Elixir.
+*Note*: the indexes used for the fields are 1-based because this value is actually the sequence number assigned by HL7 to identify the field, whereas the indexes used for components and subcomponents are 0-based because this is the convention in Elixir.
 
 The input and output of the high level functions used to read or write a message (e.g. `HL7.read/2`, `HL7.write/2`) is affected by boolean argument named `trim`. This value changes the input and output from the lower level functions of the parser. If set to `true`, some trailing optional items and separators will be omitted from the decoded or encoded message.
 
@@ -308,7 +308,7 @@ Each field has a name represented by an atom and has the following properties:
   * `type`: atom corresponding to the data type of the value (see [single value fields](#single-value-fields)) or to a composite field's module name (e.g. `HL7.Composite.CE`).
   * `length`: maximum length of the serialized field.
 
-Note that not all of the fields need to be defined in a segment. Segments can be "sparse" and the fields can be defined in an order that is not their sequence order. This means that if a segment containing an undefined field is parsed, that field will be lost when writing/serializing the segment back to its wire-format.
+*Note*: not all of the fields need to be defined in a segment. Segments can be "sparse" and the fields can be defined in an order that is not their sequence order. This means that if a segment containing an undefined field is parsed, that field will be lost when writing/serializing the segment back to its wire-format.
 
 ## Messages
 
