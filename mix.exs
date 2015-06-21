@@ -32,12 +32,10 @@ defmodule HL7.Mixfile do
     []
   end
 
-  defp package() do
-    [# These are the default files included in the package
-     files: ["lib", "test", "mix.exs", "README*", "LICENSE*"],
+  defp package do
+    [files: ["lib", "test", "mix.exs", "README*", "LICENSE*"],
      contributors: ["Juan Jose Comellas"],
      licenses: ["Apache 2.0"],
-     links: %{"GitHub" => "https://github.com/jcomellas/ex_hl7",
-              "Docs" => "http://jcomellas.github.io/ex_hl7/"}]
+     links: %{"GitHub" => "https://github.com/jcomellas/ex_hl7"}]
   end
 end
