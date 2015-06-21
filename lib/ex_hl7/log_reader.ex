@@ -100,6 +100,30 @@ defmodule HL7.LogReader do
   defp unescape_char(?t), do: ?\t
   defp unescape_char(char), do: char
 
+  @spec stats(Path.t) :: {:ok, {msg_count :: non_neg_integer, err_count :: non_neg_integer}}
+  def stats(filename) do
+    case read(filename, &stats/3, {0, 0}) do
+      {:ok, {msg_count, err_count}} = result ->
+        Logger.info("Found #{err_count} errors in #{msg_count} messages on `#{filename}`")
+        result
+      error ->
+        error
+    end
+  end
+
+  defp stats(text, row, {msg_count, err_count}) do
+    case HL7.read(text) do
+      {:ok, _msg} ->
+        {:continue, {msg_count + 1, err_count}}
+      {:incomplete, _function} ->
+        Logger.info("Found incomplete HL7 message on line #{row}:\n\n#{inspect text}")
+        {:continue, {msg_count + 1, err_count + 1}}
+      {:error, reason} ->
+        Logger.warn("Failed to read HL7 message on line #{row}: #{inspect reason}\n\n#{inspect text}")
+        {:continue, {msg_count + 1, err_count + 1}}
+    end
+  end
+
   @spec valid?(Path.t) :: boolean
   def valid?(filename) do
     case read(filename, &valid_message?/3, 0) do
