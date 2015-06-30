@@ -25,9 +25,10 @@ defmodule HL7.Composite.Def do
   in the message.
   """
   defmacro composite([do: components]) do
+    caller_module = __CALLER__.module
     quote do
-      Module.register_attribute(unquote(__CALLER__.module), :struct_fields, accumulate: true)
-      Module.register_attribute(unquote(__CALLER__.module), :components, accumulate: true)
+      Module.register_attribute(unquote(caller_module), :struct_fields, accumulate: true)
+      Module.register_attribute(unquote(caller_module), :components, accumulate: true)
       @before_compile unquote(__MODULE__)
 
       unquote(components)

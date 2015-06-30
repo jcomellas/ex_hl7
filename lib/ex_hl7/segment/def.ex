@@ -27,10 +27,11 @@ defmodule HL7.Segment.Def do
   numbers need not be in order, but it is recommended that you do so.
   """
   defmacro segment(segment_id, do: fields) when is_binary(segment_id) do
+    caller_module = __CALLER__.module
     quote do
-      Module.register_attribute(unquote(__CALLER__.module), :segment_id, accumulate: false)
-      Module.register_attribute(unquote(__CALLER__.module), :struct_fields, accumulate: true)
-      Module.register_attribute(unquote(__CALLER__.module), :fields, accumulate: true)
+      Module.register_attribute(unquote(caller_module), :segment_id, accumulate: false)
+      Module.register_attribute(unquote(caller_module), :struct_fields, accumulate: true)
+      Module.register_attribute(unquote(caller_module), :fields, accumulate: true)
 
       @before_compile unquote(__MODULE__)
       @segment_id unquote(segment_id)
