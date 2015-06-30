@@ -2,17 +2,17 @@ defmodule HL7.Composite do
   @moduledoc "Generic functions used by HL7 composite field macros"
 
   @type t          :: map
-  @type descriptor :: {name :: atom, HL7.Type.value_type | module}
+  @type descriptor :: {name :: atom, type :: atom}
   @type option     :: {:separators, [{key :: atom, separator :: byte}]} | {:trim, boolean}
 
   @spec id(t) :: HL7.Type.composite_id
   def id(composite) when is_map(composite), do: Map.get(composite, :__composite__)
   def id(_composite), do: nil
 
-  @spec module(HL7.Type.composite_id) :: module
+  @spec module(HL7.Type.composite_id) :: atom
   def module(id) when is_binary(id), do: Module.concat([HL7.Composite, id])
 
-  @spec new(HL7.Type.composite_id) :: {module, t}
+  @spec new(HL7.Type.composite_id) :: {module :: atom, t}
   def new(composite_id) do
     module = module(composite_id)
     {module, apply(module, :new, [])}
@@ -22,7 +22,7 @@ defmodule HL7.Composite do
   Checks if a composite field is empty. This function is implemented as a
   macro so that it can be used in guards.
   """
-  @spec empty?(HL7.value | t) :: boolean
+  # @spec empty?(HL7.value | t) :: boolean
   defmacro empty?(value) do
     quote do
       unquote(value) === "" or unquote(value) === nil
@@ -32,7 +32,7 @@ defmodule HL7.Composite do
   @doc """
   Creates the map corresponding to the underlying struct in a composite field.
   """
-  @spec decode(t, [descriptor], binary | tuple) :: t
+  @spec decode(t, [descriptor], binary | tuple) :: t | no_return
   def decode(composite, descriptor, tuple) when is_tuple(tuple), do:
     decode_tuple(composite, descriptor, tuple, 0)
   def decode(composite, [{name, type} | _tail], value), do:
@@ -65,7 +65,7 @@ defmodule HL7.Composite do
   Converts the struct holding the composite field data into the tuple format
   accepted by the functions in `HL7.Writer`.
   """
-  @spec encode(t, [descriptor]) :: HL7.Type.field
+  @spec encode(t, [descriptor]) :: HL7.Type.field | no_return
   def encode(composite, descriptor), do:
     encode(composite, descriptor, [])
 
@@ -89,7 +89,7 @@ defmodule HL7.Composite do
   Converts a composite field into an iolist suitable to send over a socket or
   write to a file.
   """
-  @spec to_iodata(t, [descriptor], [option]) :: iodata
+  @spec to_iodata(t, [descriptor], [option]) :: iodata | no_return
   def to_iodata(composite, descriptor, options) do
     field = encode(composite, descriptor)
     separators = case Keyword.get(options, :separators) do

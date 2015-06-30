@@ -100,7 +100,7 @@ defmodule HL7.Segment.Def do
       def id(), do:
         unquote(segment_id)
 
-      @spec descriptor() :: HL7.Segment.descriptor
+      @spec descriptor() :: tuple
       def descriptor(), do:
         unquote(Macro.escape(descriptor))
 
@@ -116,11 +116,11 @@ defmodule HL7.Segment.Def do
       def new(), do:
         %unquote(segment_module){}
 
-      @spec get_field(t, HL7.Type.sequence) :: HL7.Type.field
+      @spec get_field(t, HL7.Type.sequence) :: HL7.Type.field | no_return
       def get_field(segment, sequence) when is_integer(sequence), do:
         HL7.Segment.get_field(segment, descriptor(), sequence)
 
-      @spec put_field(t, HL7.Type.sequence, HL7.Type.field) :: t
+      @spec put_field(t, HL7.Type.sequence, HL7.Type.field) :: t | no_return
       def put_field(segment, sequence, value) when is_integer(sequence), do:
         HL7.Segment.put_field(segment, descriptor(), sequence, value)
     end

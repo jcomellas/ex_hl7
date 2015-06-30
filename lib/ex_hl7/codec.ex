@@ -167,7 +167,7 @@ defmodule HL7.Codec do
     end
   end
 
-  @spec decode_value(HL7.Type.field, HL7.Type.value_type | module) :: HL7.Type.value | :nomatch
+  @spec decode_value(HL7.Type.field, type :: atom) :: HL7.Type.value | :nomatch
   def decode_value(value, type \\ :string)
 
   def decode_value(@null_value, _type), do:
@@ -294,7 +294,7 @@ defmodule HL7.Codec do
     Enum.reverse(maybe_trim_item(acc, separator, trim))
   end
 
-  @spec encode_value(HL7.Type.value | nil, HL7.Type.value_type) :: binary | :nomatch
+  @spec encode_value(HL7.Type.value | nil, type :: atom) :: binary | :nomatch
   def encode_value(value, type \\ :string)
   
   def encode_value(nil, _type), do:

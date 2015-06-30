@@ -3,22 +3,22 @@ defmodule HL7.Segment do
   require Logger
 
   @type t          :: map
-  @type descriptor :: {name :: atom, HL7.Type.sequence, HL7.Type.value_type, length :: pos_integer}
+  @type descriptor :: {name :: atom, HL7.Type.sequence, type :: atom, length :: pos_integer}
 
   @spec id(t) :: HL7.Type.segment_id
   def id(segment) when is_map(segment), do: Map.get(segment, :__segment__)
   def id(_segment), do: nil
 
-  @spec module(HL7.Type.segment_id) :: module
+  @spec module(HL7.Type.segment_id) :: atom
   def module(id) when is_binary(id), do: Module.concat([HL7.Segment, id])
 
-  @spec new(HL7.Type.segment_id) :: {module, t}
+  @spec new(HL7.Type.segment_id) :: {module :: atom, t}
   def new(segment_id) do
     module = module(segment_id)
     {module, apply(module, :new, [])}
   end
 
-  @spec get_field(t, descriptor, HL7.Type.sequence) :: HL7.Type.field
+  @spec get_field(t, descriptor :: tuple, HL7.Type.sequence) :: HL7.Type.field | no_return
   def get_field(segment, descriptor, seq) when seq <= tuple_size(descriptor) do
     case :erlang.element(seq, descriptor) do
       {name, _seq, type, _length} ->
@@ -38,7 +38,7 @@ defmodule HL7.Segment do
     ""
   end
 
-  @spec put_field(t, descriptor, HL7.Type.sequence, HL7.Type.field) :: t
+  @spec put_field(t, descriptor :: tuple, HL7.Type.sequence, HL7.Type.field) :: t | no_return
   def put_field(segment, descriptor, seq, value) when seq <= tuple_size(descriptor) do
     case :erlang.element(seq, descriptor) do
       {name, _seq, type, _length} ->

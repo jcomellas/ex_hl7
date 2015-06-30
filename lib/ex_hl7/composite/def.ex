@@ -88,7 +88,7 @@ defmodule HL7.Composite.Def do
                  #         |> Enum.reverse
                  #         |> Macro.escape)}
 
-      @spec descriptor() :: HL7.Composite.descriptor
+      @spec descriptor() :: [HL7.Composite.descriptor]
       def descriptor(), do:
         unquote(Macro.escape(descriptor))
 
@@ -100,15 +100,15 @@ defmodule HL7.Composite.Def do
       def new(), do:
         %unquote(composite_module){}
 
-      @spec decode(HL7.Type.field) :: t
+      @spec decode(HL7.Type.field) :: t | no_return
       def decode(value), do:
         HL7.Composite.decode(%unquote(composite_module){}, descriptor(), value)
 
-      @spec encode(t) :: HL7.Type.field
+      @spec encode(t) :: HL7.Type.field | no_return
       def encode(composite), do:
         HL7.Composite.encode(composite, descriptor())
 
-      @spec to_iodata(t, [HL7.Composite.option]) :: iodata
+      @spec to_iodata(t, [HL7.Composite.option]) :: iodata | no_return
       def to_iodata(composite, options), do:
         HL7.Composite.to_iodata(composite, descriptor(), options)
     end
