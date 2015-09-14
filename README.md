@@ -150,7 +150,7 @@ You can use *ex_hl7* in your projects by adding it to your `mix.exs` dependencie
 
 ```elixir
 def deps do
-  [{:ex_hl7, "~> 0.1.0"},
+  [{:ex_hl7, "~> 0.1.1"},
 end
 ```
 And then listing it as part of your application's dependencies:
