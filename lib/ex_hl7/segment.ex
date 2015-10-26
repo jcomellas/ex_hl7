@@ -32,9 +32,9 @@ defmodule HL7.Segment do
         ""
     end
   end
-  def get_field(_segment, _descriptor, _seq) do
-    Logger.warn("Retrieving field with out-of-bounds sequence #{_seq} from " <>
-                "HL7 segment #{inspect Map.get(_segment, :__segment__)}")
+  def get_field(segment, _descriptor, seq) do
+    Logger.warn("Retrieving field with out-of-bounds sequence #{seq} from " <>
+                "HL7 segment #{inspect Map.get(segment, :__segment__)}")
     ""
   end
 
@@ -58,11 +58,11 @@ defmodule HL7.Segment do
         segment
     end
   end
-  def put_field(segment, _descriptor, _seq, value) do
+  def put_field(segment, _descriptor, seq, value) do
     # TODO: should we show a warning when trying to set a field we don't know about?
     if value !== "" do
       Logger.warn("Tried to put value #{inspect value} into field with out-of-bounds " <>
-                  "sequence #{_seq} into HL7 segment #{inspect Map.get(segment, :__segment__)}")
+                  "sequence #{seq} into HL7 segment #{inspect Map.get(segment, :__segment__)}")
     end
     segment
   end
