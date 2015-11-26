@@ -3,7 +3,7 @@ defmodule HL7.Mixfile do
 
   def project do
     [app: :ex_hl7,
-     version: "0.1.2",
+     version: "0.1.3",
      elixir: "~> 1.0",
      description: "HL7 Parser for Elixir",
      build_embedded: Mix.env == :prod,
@@ -34,7 +34,7 @@ defmodule HL7.Mixfile do
 
   defp package do
     [files: ["lib", "test", "mix.exs", "README*", "LICENSE*"],
-     contributors: ["Juan Jose Comellas"],
+     maintainers: ["Juan Jose Comellas"],
      licenses: ["Apache 2.0"],
      links: %{"GitHub" => "https://github.com/jcomellas/ex_hl7"}]
   end
