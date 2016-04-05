@@ -375,11 +375,12 @@ buf =
   "PR1|1|C4|45378|Colonoscopy|19940110105309|00\r"
 
 {:ok, req} = HL7.read(buf, input_format: :wire)
+
 # Print authorization request data
 req |> HL7.segment("PID") |> patient |> IO.puts
 req |> HL7.paired_segments(["DG1", "PR1"]) |> practice |> IO.puts
 req |> Enum.filter(&(HL7.segment_id(&1) === "PRD")) |> providers |> IO.puts
+
 # Create an authorized response and print it
 req |> authorize |> HL7.write(output_format: :text, trim: true) |> IO.puts
-
 ```
