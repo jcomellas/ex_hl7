@@ -10,134 +10,6 @@ It also has support for custom [segment](lib/ex_hl7/segment.ex) and [composite](
 
 The parser was designed to make the interaction with HL7 as smooth as possible, but its use requires at least moderate knowledge of the HL7 messaging standards.
 
-## Example
-
-This is a basic example of a pre-authorization request with referral to another provider (`RQA^I08`) that shows how to use the parser. For more information, please check the rest of the sections below.
-
-```elixir
-defmodule Authorizer do
-  require HL7.Composite
-
-  alias HL7.Segment.AUT
-  alias HL7.Segment.MSA
-  alias HL7.Segment.MSH
-  alias HL7.Segment.PID
-  alias HL7.Segment.PRD
-
-  alias HL7.Composite.CE
-  alias HL7.Composite.CM_MSH_9
-  alias HL7.Composite.CP
-  alias HL7.Composite.EI
-  alias HL7.Composite.MO
-
-  def authorize(req) do
-    message_type = HL7.segment(req, "MSH").message_type
-    authorize(req, message_type.id, message_type.trigger_event)
-  end
-
-  def authorize(req, "RQA", "I08") do
-    msh = HL7.segment(req, "MSH")
-    msa = %MSA{
-            ack_code: "AA",
-            message_control_id: msh.message_control_id
-          }
-    msh = %MSH{msh |
-            sending_app: msh.receiving_app,
-            sending_facility: msh.receiving_facility,
-            receiving_app: msh.sending_app,
-            receiving_facility: msh.sending_facility,
-            message_datetime: :calendar.universal_time(),
-            # RPA^I08
-            message_type: %CM_MSH_9{msh.message_type | id: "RPA"},
-            # Kids, don't try this at home
-            message_control_id: Base.encode32(:crypto.rand_bytes(5)),
-            accept_ack_type: "ER",
-            app_ack_type: "ER"
-          }
-    aut = %AUT{
-            plan: %CE{id: "PPO"},
-            company: %CE{id: "WA02"},
-            company_name: "WSIC (WA State Code)",
-            effective_date: {1994, 1, 10},
-            expiration_date: {1994, 05, 10},
-            authorization: %EI{id: "123456789"},
-            reimbursement_limit: %CP{price: %MO{quantity: 175.0, denomination: "USD"}},
-            requested_treatments: 1
-          }
-    res = HL7.replace(req, "MSH", msh)
-    res = HL7.insert_after(res, "MSH", msa)
-    HL7.insert_after(res, "PR1", 0, aut)
-  end
-
-  def patient(%PID{patient_name: name}) when is_map(name) do
-    surname = if is_map(name.family_name) do
-                name.family_name.surname
-              else
-                "<unknown>"
-              end
-    "Patient: #{name.given_name} #{surname}"
-  end
-  def patient(_pid) do
-    nil
-  end
-
-  def practice([dg1, pr1]) do
-    """
-    Diagnosed with: #{dg1.description}
-    Treatment: #{pr1.description}
-    """
-  end
-
-  def providers(prds), do:
-    providers(prds, [])
-
-  def providers([%PRD{role: role, name: name, address: address} | tail], acc)
-   when is_map(role) and is_map(name) and is_map(address) do
-    surname = if is_map(name.family_name) do
-                name.family_name.surname
-              else
-                "<unknown>"
-              end
-    info = """
-    #{role_label(role.id)}:
-      #{name.prefix} #{name.given_name} #{surname}
-      #{address.street_address}
-      #{address.city}, #{address.state} #{address.postal_code}
-    """
-    providers(tail, [info | acc])
-  end
-  def providers([_prd | tail], acc) do
-    providers(tail, acc)
-  end
-  def providers([], acc) do
-    Enum.reverse(acc)
-  end
-
-  def role_label("RP"), do: "By"
-  def role_label("RT"), do: "And referred to"
-end
-
-import Authorizer
-
-buf =
-  "MSH|^~\\&|BLAKEMD|EWHIN|MSC|EWHIN|19940110105307||RQA^I08|BLAKEM7898|P|2.4|||NE|AL\r" <>
-  "PRD|RP|BLAKE^BEVERLY^^^DR^MD|N. 12828 NEWPORT HIGHWAY^^MEAD^WA^99021| ^^^BLAKEMD&EWHIN^^^^^BLAKE MEDICAL CENTER|BLAKEM7899\r" <>
-  "PRD|RT|WSIC||^^^MSC&EWHIN^^^^^WASHINGTON STATE INSURANCE COMPANY\r" <>
-  "PID|||402941703^9^M10||BROWN^CARY^JOE||19600309||||||||||||402941703\r" <>
-  "IN1|1|PPO|WA02|WSIC (WA State Code)|11223 FOURTH STREET^^MEAD^WA^99021^USA|ANN MILLER|509)333-1234|987654321||||19901101||||BROWN^CARY^JOE|1|19600309|N. 12345 SOME STREET^^MEAD^WA^99021^USA|||||||||||||||||402941703||||||01|M\r" <>
-  "DG1|1|I9|569.0|RECTAL POLYP|19940106103500|0\r" <>
-  "PR1|1|C4|45378|Colonoscopy|19940110105309|00\r"
-
-{:ok, req} = HL7.read(buf, input_format: :wire)
-# Print authorization request data
-req |> HL7.segment("PID") |> patient |> IO.puts
-req |> HL7.paired_segments(["DG1", "PR1"]) |> practice |> IO.puts
-req |> Enum.filter(&(HL7.segment_id(&1) === "PRD")) |> providers |> IO.puts
-# Create an authorized response and print it
-req |> authorize |> HL7.write(output_format: :text, trim: true) |> IO.puts
-
-```
-
 ## Requirements
 
 This application was developed and tested using Elixir 1.0.4 (and Erlang 17.5) but there shouldn't be any special dependency that prevents it from working with other versions.
@@ -382,4 +254,132 @@ Write a message as text to standard output:
 
 ```elixir
 IO.puts(HL7.write(message, output_format: :text, trim: true))
+```
+
+## Example
+
+This is a basic example of a pre-authorization request with referral to another provider (`RQA^I08`) that shows how to use the parser. For more information, please check the rest of the sections below.
+
+```elixir
+defmodule Authorizer do
+  require HL7.Composite
+
+  alias HL7.Segment.AUT
+  alias HL7.Segment.MSA
+  alias HL7.Segment.MSH
+  alias HL7.Segment.PID
+  alias HL7.Segment.PRD
+
+  alias HL7.Composite.CE
+  alias HL7.Composite.CM_MSH_9
+  alias HL7.Composite.CP
+  alias HL7.Composite.EI
+  alias HL7.Composite.MO
+
+  def authorize(req) do
+    message_type = HL7.segment(req, "MSH").message_type
+    authorize(req, message_type.id, message_type.trigger_event)
+  end
+
+  def authorize(req, "RQA", "I08") do
+    msh = HL7.segment(req, "MSH")
+    msa = %MSA{
+            ack_code: "AA",
+            message_control_id: msh.message_control_id
+          }
+    msh = %MSH{msh |
+            sending_app: msh.receiving_app,
+            sending_facility: msh.receiving_facility,
+            receiving_app: msh.sending_app,
+            receiving_facility: msh.sending_facility,
+            message_datetime: :calendar.universal_time(),
+            # RPA^I08
+            message_type: %CM_MSH_9{msh.message_type | id: "RPA"},
+            # Kids, don't try this at home
+            message_control_id: Base.encode32(:crypto.rand_bytes(5)),
+            accept_ack_type: "ER",
+            app_ack_type: "ER"
+          }
+    aut = %AUT{
+            plan: %CE{id: "PPO"},
+            company: %CE{id: "WA02"},
+            company_name: "WSIC (WA State Code)",
+            effective_date: {1994, 1, 10},
+            expiration_date: {1994, 05, 10},
+            authorization: %EI{id: "123456789"},
+            reimbursement_limit: %CP{price: %MO{quantity: 175.0, denomination: "USD"}},
+            requested_treatments: 1
+          }
+    res = HL7.replace(req, "MSH", msh)
+    res = HL7.insert_after(res, "MSH", msa)
+    HL7.insert_after(res, "PR1", 0, aut)
+  end
+
+  def patient(%PID{patient_name: name}) when is_map(name) do
+    surname = if is_map(name.family_name) do
+                name.family_name.surname
+              else
+                "<unknown>"
+              end
+    "Patient: #{name.given_name} #{surname}"
+  end
+  def patient(_pid) do
+    nil
+  end
+
+  def practice([dg1, pr1]) do
+    """
+    Diagnosed with: #{dg1.description}
+    Treatment: #{pr1.description}
+    """
+  end
+
+  def providers(prds), do:
+    providers(prds, [])
+
+  def providers([%PRD{role: role, name: name, address: address} | tail], acc)
+   when is_map(role) and is_map(name) and is_map(address) do
+    surname = if is_map(name.family_name) do
+                name.family_name.surname
+              else
+                "<unknown>"
+              end
+    info = """
+    #{role_label(role.id)}:
+      #{name.prefix} #{name.given_name} #{surname}
+      #{address.street_address}
+      #{address.city}, #{address.state} #{address.postal_code}
+    """
+    providers(tail, [info | acc])
+  end
+  def providers([_prd | tail], acc) do
+    providers(tail, acc)
+  end
+  def providers([], acc) do
+    Enum.reverse(acc)
+  end
+
+  def role_label("RP"), do: "By"
+  def role_label("RT"), do: "And referred to"
+end
+
+import Authorizer
+
+buf =
+  "MSH|^~\\&|BLAKEMD|EWHIN|MSC|EWHIN|19940110105307||RQA^I08|BLAKEM7898|P|2.4|||NE|AL\r" <>
+  "PRD|RP|BLAKE^BEVERLY^^^DR^MD|N. 12828 NEWPORT HIGHWAY^^MEAD^WA^99021| ^^^BLAKEMD&EWHIN^^^^^BLAKE MEDICAL CENTER|BLAKEM7899\r" <>
+  "PRD|RT|WSIC||^^^MSC&EWHIN^^^^^WASHINGTON STATE INSURANCE COMPANY\r" <>
+  "PID|||402941703^9^M10||BROWN^CARY^JOE||19600309||||||||||||402941703\r" <>
+  "IN1|1|PPO|WA02|WSIC (WA State Code)|11223 FOURTH STREET^^MEAD^WA^99021^USA|ANN MILLER|509)333-1234|987654321||||19901101||||BROWN^CARY^JOE|1|19600309|N. 12345 SOME STREET^^MEAD^WA^99021^USA|||||||||||||||||402941703||||||01|M\r" <>
+  "DG1|1|I9|569.0|RECTAL POLYP|19940106103500|0\r" <>
+  "PR1|1|C4|45378|Colonoscopy|19940110105309|00\r"
+
+{:ok, req} = HL7.read(buf, input_format: :wire)
+# Print authorization request data
+req |> HL7.segment("PID") |> patient |> IO.puts
+req |> HL7.paired_segments(["DG1", "PR1"]) |> practice |> IO.puts
+req |> Enum.filter(&(HL7.segment_id(&1) === "PRD")) |> providers |> IO.puts
+# Create an authorized response and print it
+req |> authorize |> HL7.write(output_format: :text, trim: true) |> IO.puts
+
 ```
