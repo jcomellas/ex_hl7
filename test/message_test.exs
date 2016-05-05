@@ -3,6 +3,53 @@ Code.require_file "test_helper.exs", __DIR__
 defmodule HL7.Message.Test do
   use ExUnit.Case
 
+  test "Manually generate HL7 message" do
+    alias HL7.Segment.{MSH,PID,PR1,PRD}
+    alias HL7.Composite.{CE,CM_MSH_9,CM_PRD,CX,HD,FN,XAD,XPN}
+
+    msh = %MSH{
+      field_separator: "|",
+      encoding_chars: "^~\\&",
+      sending_app: %HD{namespace_id: "CLIENTHL7"},
+      sending_facility: %HD{namespace_id: "CLI01020304"},
+      receiving_app: %HD{namespace_id: "SERVHL7"},
+      receiving_facility: %HD{namespace_id: "PREPAGA", universal_id: "112233", universal_id_type: "IIN"},
+      message_datetime: {{2012, 2, 1}, {10, 11, 55}},
+      message_type: %CM_MSH_9{id: "ZQA", trigger_event: "Z02", structure: "ZQA_Z02"},
+      message_control_id: "00XX20120201101155",
+      processing_id: "P",
+      version: "2.4",
+      accept_ack_type: "ER",
+      app_ack_type: "SU",
+      country_code: "ARG"
+    }
+    prd = %PRD{
+      role: [%CE{id: "PS"}, %CE{id: "4600", coding_system: "HL70454"}],
+      address: %XAD{state: "B"},
+      id: %CM_PRD{id_number: "30123456789", id_number_type: "CU"}
+    }
+    pid = %PID{
+      set_id: 0,
+      patient_id: %CX{
+        id: "1234567890ABC",
+        assigning_authority: %HD{universal_id: "112233", universal_id_type: "IIN"},
+        id_type: "HC"
+      },
+      patient_name: %XPN{family_name: %FN{surname: "unknown"}}
+    }
+    pr1 = %PR1{
+      set_id: 1,
+      procedure: %CE{id: "903401", coding_system: "99DH"}
+    }
+    trim =
+      "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
+      "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\r" <>
+      "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\r" <>
+      "PR1|1||903401^^99DH\r"
+    gen = HL7.write([msh, prd, pid, pr1], output_format: :wire, trim: true)
+    assert trim === IO.iodata_to_binary(gen)
+  end
+
   test "Read/write complete trimmed request in wire format" do
     orig =
       "MSH|^~\\&|CLIENTHL7|CLI01020304^|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
