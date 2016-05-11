@@ -15,7 +15,7 @@ defmodule HL7.Segment do
   @spec new(HL7.Type.segment_id) :: {module :: atom, t}
   def new(segment_id) do
     module = module(segment_id)
-    {module, apply(module, :new, [])}
+    {module, module.new()}
   end
 
   @spec get_field(t, descriptor :: tuple, HL7.Type.sequence) :: HL7.Type.field | no_return
