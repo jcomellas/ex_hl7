@@ -54,7 +54,7 @@ defmodule HL7.Composite do
         case value do
           ""     -> ""
           "\"\"" -> nil
-          _      -> apply(type, :decode, [value])
+          _      -> type.decode(value)
         end
       value ->
         value

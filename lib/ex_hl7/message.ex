@@ -288,7 +288,7 @@ defmodule HL7.Message do
   def read_segment(reader, segment, module, buffer) do
     case Reader.read(reader, buffer) do
       {:token, {reader, {:field, field}, buffer}} ->
-        segment = apply(module, :put_field, [segment, Reader.sequence(reader), field])
+        segment = module.put_field(segment, Reader.sequence(reader), field)
         read_segment(reader, segment, module, buffer)
       {:token, {reader, {:end_segment, _segment_id}, buffer}} ->
         {:ok, {reader, segment, buffer}}
