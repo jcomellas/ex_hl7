@@ -41,7 +41,7 @@ defmodule HL7.Composite.Def do
   HL7 composite field. Each `component` definition looks like the following
   one:
 
-      component :price,                        type: :float
+      component :price, type: :float
 
   A `component` has a name that has to be an atom, a `type` and a `default`
   value. The default `type` is `:string` and the default `value` is `""`.
