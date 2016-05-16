@@ -337,14 +337,14 @@ defmodule HL7.Segment.PRD do
   alias HL7.Composite.XAD
   alias HL7.Composite.XPN
   alias HL7.Composite.PL
-  alias HL7.Composite.CM_PRD
+  alias HL7.Composite.CM_PRD_7
 
   segment "PRD" do
     field :role,                       seq:  1, type: CE,        length:  44
     field :name,                       seq:  2, type: XPN,       length:  71
     field :address,                    seq:  3, type: XAD,       length: 121
     field :location,                   seq:  4, type: PL,        length: 121
-    field :id,                         seq:  7, type: CM_PRD,    length: 121
+    field :id,                         seq:  7, type: CM_PRD_7,  length: 121
   end
 end
 

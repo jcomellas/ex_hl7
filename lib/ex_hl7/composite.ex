@@ -167,9 +167,11 @@ defmodule HL7.Composite.CM_MSH_9 do
 end
 
 defmodule HL7.Composite.CM_PRD_7_3 do
-  component :license_type,                     type: :string
-  component :province_id,                      type: :string
-  component :specialty_id,                     type: :string
+  composite do
+    component :license_type,                   type: :string
+    component :province_id,                    type: :string
+    component :specialty_id,                   type: :string
+  end
 end
 
 defmodule HL7.Composite.CM_PRD_7 do
@@ -181,6 +183,8 @@ defmodule HL7.Composite.CM_PRD_7 do
   Definition: This repeating field contains the provider's unique identifiers
   such as UPIN, Medicare and Medicaid numbers.
   """
+  alias HL7.Composite.CM_PRD_7_3
+
   composite do
     component :id,                             type: :string
     component :id_type,                        type: :string
@@ -195,8 +199,8 @@ defmodule HL7.Composite.CM_QPD_3 do
   Components: <ID number (ID)> ^ <type of ID number (IS)>
   """
   composite do
-    component :id_number,                      type: :string
-    component :id_number_type,                 type: :string
+    component :id,                             type: :string
+    component :id_type,                        type: :string
   end
 end
 
