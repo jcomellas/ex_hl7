@@ -166,7 +166,13 @@ defmodule HL7.Composite.CM_MSH_9 do
   end
 end
 
-defmodule HL7.Composite.CM_PRD do
+defmodule HL7.Composite.CM_PRD_7_3 do
+  component :license_type,                     type: :string
+  component :province_id,                      type: :string
+  component :specialty_id,                     type: :string
+end
+
+defmodule HL7.Composite.CM_PRD_7 do
   @moduledoc """
   11.6.3.7 PRD-7 Provider identifiers (CM) 01162
 
@@ -176,9 +182,9 @@ defmodule HL7.Composite.CM_PRD do
   such as UPIN, Medicare and Medicaid numbers.
   """
   composite do
-    component :id_number,                      type: :string
-    component :id_number_type,                 type: :string
-    component :other_info,                     type: :string
+    component :id,                             type: :string
+    component :id_type,                        type: :string
+    component :other,                          type: CM_PRD_7_3
   end
 end
 

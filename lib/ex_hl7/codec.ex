@@ -174,7 +174,7 @@ defmodule HL7.Codec do
     nil
   def decode_value(value, type)
    when type === :string or
-        (value === "" and 
+        (value === "" and
           (type === :string or type === :integer or type === :float or
            type === :date or type === :datetime)), do:
     # Empty fields have to be passed to the composite field module
