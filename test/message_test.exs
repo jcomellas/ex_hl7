@@ -5,7 +5,7 @@ defmodule HL7.Message.Test do
 
   test "Manually generate HL7 message" do
     alias HL7.Segment.{MSH,PID,PR1,PRD}
-    alias HL7.Composite.{CE,CM_MSH_9,CM_PRD,CX,HD,FN,XAD,XPN}
+    alias HL7.Composite.{CE,CM_MSH_9,CM_PRD_7,CX,HD,FN,XAD,XPN}
 
     msh = %MSH{
       field_separator: "|",
@@ -26,7 +26,7 @@ defmodule HL7.Message.Test do
     prd = %PRD{
       role: [%CE{id: "PS"}, %CE{id: "4600", coding_system: "HL70454"}],
       address: %XAD{state: "B"},
-      id: %CM_PRD{id_number: "30123456789", id_number_type: "CU"}
+      id: %CM_PRD_7{id: "30123456789", id_type: "CU"}
     }
     pid = %PID{
       set_id: 0,
