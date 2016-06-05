@@ -248,9 +248,9 @@ defmodule HL7.Codec do
     @null_value
   def encode_field(repetitions, separators, trim) when is_list(repetitions), do:
     encode_repetitions(repetitions, separators, trim, [])
-  def encode_field(components, separators, trim) when is_tuple(components) do
+  def encode_field(components, separators, trim) when is_tuple(components), do:
     encode_components(components, separators, trim)
-  end
+
 
   defp encode_repetitions([repetition | tail], separators, trim, acc) when not is_list(repetition) do
     value = encode_field(repetition, separators, trim)
