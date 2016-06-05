@@ -61,7 +61,7 @@ defmodule HL7.Composite.Def do
   """
   defmacro component(name, args \\ []) do
     type = Keyword.get(args, :type, :binary)
-    default = Keyword.get(args, :default, "")
+    default = default_for(type, Keyword.get(args, :default))
     quote bind_quoted: [name: name, type: type, default: default, module: __CALLER__.module] do
       check_component!(name, type, default, module, Module.get_attribute(module, :components))
       # Accumulate the components and fields of the struct that will be added

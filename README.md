@@ -128,12 +128,14 @@ defstruct :id, :text, :coding_system, :alt_id, :alt_text, :alt_coding_system
 Each component has a name represented by an atom with the following properties:
 
   * `type`: atom corresponding to the data type of the value (see [single value fields](#single-value-fields)) or to a composite field's module name (e.g. `HL7.Composite.CE`).
-  * `default`: optional default value; if not defined it will be set to an empty string (`""`) for all types when creating a new segment. When reading from a buffer, the default value will be set to an empty string (`""`) for scalar types and to an empty composite for composite types.
+  * `default`: optional default value; if not defined it will be set to an empty string (`""`) for scalar types and to an empty struct for composite types.
 
 Composite fields can also be nested, and you can do it in the following way:
 
 ```elixir
 use HL7.Composite.Def
+
+alias HL7.Composite.CE
 
 defmodule HL7.Composite.CQ do
   composite do
@@ -157,8 +159,8 @@ defmodule HL7.Segment.OBX do
 
   segment "OBX" do
     field :set_id,             seq:  1, type: :integer,  length:  4
-    field :value_type,         seq:  2, type: :string,   length: 10
-    field :observation_id,     seq:  3, type: CE,        length: 24
+    field :value_type,         seq:  2, type: :string,   length: 10, default: ""
+    field :observation_id,     seq:  3, type: CE,        length: 24, default: %CE{}
     field :observation_sub_id, seq:  4, type: :string,   length: 20
     field :observation_value,  seq:  5, type: CE,        length: 24
     field :observation_status, seq: 11, type: :string,   length:  1
@@ -178,6 +180,7 @@ Each field has a name represented by an atom and has the following properties:
   * `seq`: sequence (1-based index) of the field in the segment.
   * `type`: atom corresponding to the data type of the value (see [single value fields](#single-value-fields)) or to a composite field's module name (e.g. `HL7.Composite.CE`).
   * `length`: maximum length of the serialized field.
+  * `default`: optional default value; if not defined it will be set to an empty string (`""`) for all types when creating a new segment. When reading a segment from a buffer, it will be set to an empty string (`""`) for scalar types and to an empty struct for composite types.
 
 *Note*: not all of the fields need to be defined in a segment. Segments can be "sparse" and the fields can be defined in an order that is not their sequence order. This means that if a segment containing an undefined field is parsed, that field will be lost when writing/serializing the segment back to its wire-format.
 
