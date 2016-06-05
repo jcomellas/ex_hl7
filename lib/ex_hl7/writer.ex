@@ -53,8 +53,12 @@ defmodule HL7.Writer do
     %Writer{writer | buffer: [HL7.Codec.separator(:field, separators) | buffer]}
   end
   def put_field(%Writer{state: :normal, buffer: buffer, separators: separators, trim: trim} = writer, field) do
-    %Writer{writer | buffer: [HL7.Codec.encode_field(field, separators, trim),
-                              HL7.Codec.separator(:field, separators) | buffer]}
+    separator = HL7.Codec.separator(:field, separators)
+    buffer = case HL7.Codec.encode_field(field, separators, trim) do
+               []    -> [separator | buffer]
+               value -> [value, separator | buffer]
+             end
+    %Writer{writer | buffer: buffer}
   end
   def put_field(%Writer{state: :field_separator, buffer: buffer} = writer, <<separator>>) do
     %Writer{writer | state: :encoding_chars, buffer: [separator | buffer]}
@@ -75,5 +79,4 @@ defmodule HL7.Writer do
   defp trim_buffer(buffer, _separators) do
     buffer
   end
-
 end
