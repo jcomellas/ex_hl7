@@ -35,7 +35,6 @@ defmodule HL7.Composite.Def do
     end
   end
 
-
   @doc """
   Macro that generates the code for each individual component within an
   HL7 composite field. Each `component` definition looks like the following
@@ -44,8 +43,8 @@ defmodule HL7.Composite.Def do
       component :price, type: :float
 
   A `component` has a name that has to be an atom, a `type` and a `default`
-  value. The default `type` is `:string` and the default `value` is `""`.
-  The supported types are:
+  value. The default `type` is `:string` and the default `value` is `""` for
+  scalar types and an empty struct for composite types. The supported types are:
 
     * `:string`
     * `:integer`
@@ -62,8 +61,7 @@ defmodule HL7.Composite.Def do
   """
   defmacro component(name, args \\ []) do
     type = Keyword.get(args, :type, :binary)
-    default = Keyword.get(args, :default, "")
-
+    default = default_for(type, Keyword.get(args, :default))
     quote bind_quoted: [name: name, type: type, default: default, module: __CALLER__.module] do
       check_component!(name, type, default, module, Module.get_attribute(module, :components))
       # Accumulate the components and fields of the struct that will be added
@@ -175,6 +173,24 @@ defmodule HL7.Composite.Def do
     apply(type, :valid?, [default])
   def check_default?(_type, _default), do:
     false
+
+  def default_for(type, default) when is_nil(default) do
+    if scalar_type?(type) do
+      quote do: unquote("")
+    else
+      quote do: %unquote(type){}
+    end
+  end
+  def default_for(_type, default) do
+    quote do: unquote(default)
+  end
+
+  def scalar_type?(:string),   do: true
+  def scalar_type?(:integer),  do: true
+  def scalar_type?(:float),    do: true
+  def scalar_type?(:date),     do: true
+  def scalar_type?(:datetime), do: true
+  def scalar_type?(_type),     do: false
 
   defp is_date({day, month, year}) 
    when is_integer(day) and is_integer(month) and is_integer(year) do
