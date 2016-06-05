@@ -128,8 +128,7 @@ defstruct :id, :text, :coding_system, :alt_id, :alt_text, :alt_coding_system
 Each component has a name represented by an atom with the following properties:
 
   * `type`: atom corresponding to the data type of the value (see [single value fields](#single-value-fields)) or to a composite field's module name (e.g. `HL7.Composite.CE`).
-  * `default`: optional default value; if not defined, the empty string (`""`)
-will be used.
+  * `default`: optional default value; if not defined it will be set to an empty string (`""`) for scalar types and to an empty composite for composite types.
 
 Composite fields can also be nested, and you can do it in the following way:
 
