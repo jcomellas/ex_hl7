@@ -68,7 +68,7 @@ defmodule HL7.Segment.Def do
     seq = Keyword.get(options, :seq)
     type = Keyword.get(options, :type, :binary)
     length = Keyword.get(options, :length)
-    default = HL7.Composite.Def.default_for(type, Keyword.get(options, :default))
+    default = Keyword.get(options, :default, "")
 
     quote bind_quoted: [name: name, seq: seq, type: type, default: default,
                         length: length, caller_module: __CALLER__.module] do
