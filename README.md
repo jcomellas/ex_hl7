@@ -39,7 +39,7 @@ Only a small subset of the HL7 segments and composite fields are included in the
 
 ## Encoding Rules
 
-An HL7 message in its v2.x wire-format is actually a collection of concatenated segments, each terminated by a carriage-return (0x13) character. Each segment is a collection of fields separated by a custom separator character (`|` by default). Depending on the type of the field, each field can have multiple optional repetitions (separated by `~` by default), can be made out of multiple components (separated by `^` by default) where each of them can also have subcomponents (separated by `&` by default).
+An HL7 message in its v2.x wire-format is actually a collection of concatenated segments, each terminated by a carriage-return (0x0d) character. Each segment is a collection of fields separated by a custom separator character (`|` by default). Depending on the type of the field, each field can have multiple optional repetitions (separated by `~` by default), can be made out of multiple components (separated by `^` by default) where each of them can also have subcomponents (separated by `&` by default).
 
 This structure maps nicely to a k-ary tree. For example, given the following segment:
 
@@ -66,7 +66,7 @@ The field on sequence 5 contains two repetitions of a composite field.
 
 *Note*: the indexes used for the fields are 1-based because this value is actually the sequence number assigned by HL7 to identify the field, whereas the indexes used for components and subcomponents are 0-based because this is the convention in Elixir.
 
-The input and output of the high level functions used to read or write a message (e.g. `HL7.read/2`, `HL7.write/2`) is affected by boolean argument named `trim`. This value changes the input and output from the lower level functions of the parser. If set to `true`, some trailing optional items and separators will be omitted from the decoded or encoded message.
+The input and output of the high level functions used to read or write a message (e.g. `HL7.read/2`, `HL7.write/2`) is affected by a boolean argument named `trim`. This value changes the input and output from the lower level functions of the parser. If set to `true`, some trailing optional items and separators will be omitted from the decoded or encoded message.
 
 For example, a field that was originally read as:
 
