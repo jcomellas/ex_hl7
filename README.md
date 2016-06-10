@@ -312,9 +312,10 @@ defmodule Authorizer do
             reimbursement_limit: %CP{price: %MO{quantity: 175.0, denomination: "USD"}},
             requested_treatments: 1
           }
-    res = HL7.replace(req, "MSH", msh)
-    res = HL7.insert_after(res, "MSH", msa)
-    HL7.insert_after(res, "PR1", 0, aut)
+    req
+    |> HL7.replace("MSH", msh)
+    |> HL7.insert_after("MSH", msa)
+    |> HL7.insert_after("PR1", 0, aut)
   end
 
   def patient(%PID{patient_name: name}) when is_map(name) do
