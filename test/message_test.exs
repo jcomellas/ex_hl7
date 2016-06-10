@@ -326,4 +326,28 @@ defmodule HL7.Message.Test do
     assert HL7.segment(msg, "NTE", 0).comment === "First"
     assert HL7.segment(msg, "NTE", 1).comment === "Second"
   end
+
+  @vertical_tab 0x0b
+  @file_separator 0x1c
+  @carriage_return 0x0d
+
+  test "Add/remove MLLP framing to encoded HL7 message" do
+    buf =
+      "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
+      "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\r" <>
+      "PID|0||1234567890ABC^^^&112233&IIN^HC||unknown\r" <>
+      "PR1|1||903401^^99DH\r"
+    # Add/remove MLLP framing to binary.
+    mllp_buf = IO.iodata_to_binary([@vertical_tab, buf, @file_separator, @carriage_return])
+    incomplete_buf = [@vertical_tab, buf]
+    {:ok, msg} = HL7.read(buf, input_format: :wire, trim: true)
+    msg_buf = HL7.write(msg, output_format: :wire, trim: true)
+    mllp_msg_buf = HL7.to_mllp(msg_buf)
+    assert buf === HL7.from_mllp!(mllp_buf)
+    assert IO.iodata_to_binary(mllp_buf) === IO.iodata_to_binary(HL7.to_mllp(buf))
+    assert :incomplete === HL7.from_mllp(incomplete_buf)
+    assert {:error, :bad_mllp_framing} === HL7.from_mllp(buf)
+    assert mllp_buf === IO.iodata_to_binary(HL7.to_mllp(buf))
+    assert msg_buf === HL7.from_mllp!(mllp_msg_buf)
+  end
 end

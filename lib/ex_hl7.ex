@@ -542,4 +542,93 @@ defmodule HL7 do
     escape_char = Keyword.get(options, :escape_char, ?\\)
     HL7.Codec.unescape(value, separators, escape_char)
   end
+
+  @vertical_tab 0x0b
+  @file_separator 0x1c
+  @carriage_return 0x0d
+
+  @doc """
+  Add MLLP framing to an already encoded HL7 message.
+
+  An MLLP-framed message carries a one byte vertical tab (0x0b) control code
+  as header and a two byte trailer consisting of a file separator (0x1c) and
+  a carriage return (0x0d) control code.
+
+  ## Arguments
+
+  * `buffer`: binary or iolist containing an encoded HL7 message as returned
+              by `HL7.write/2`.
+  """
+  @spec to_mllp(buffer :: iodata) :: iolist
+  def to_mllp(buffer) when is_binary(buffer) or is_list(buffer) do
+    [@vertical_tab, buffer, @file_separator, @carriage_return]
+  end
+
+  @doc """
+  Remove MLLP framing from an already encoded HL7 message.
+
+  An MLLP-framed message carries a one byte vertical tab (0x0b) control code
+  as header and a two byte trailer consisting of a file separator (0x1c) and
+  a carriage return (0x0d) control code.
+
+  ## Arguments
+
+  * `buffer`: binary or iolist containing an MLLP-framed HL7 message as
+              returned by `HL7.to_mllp/1`.
+
+  ## Return value
+
+  Returns the encoded message with the MLLP framing removed.
+
+  """
+  @spec from_mllp(buffer :: iodata) :: {:ok, msg_buffer :: iodata} | :incomplete | {:error, reason :: term}
+  def from_mllp([@vertical_tab, msg_buffer, @file_separator, @carriage_return]) do
+    {:ok, msg_buffer}
+  end
+  def from_mllp([@vertical_tab | tail]) do
+    case Enum.reverse(tail) do
+      [@carriage_return, @file_separator | msg_iolist] ->
+        {:ok, Enum.reverse(msg_iolist)}
+      _ ->
+        :incomplete
+    end
+  end
+  def from_mllp(buffer) when is_binary(buffer) do
+    msg_len = byte_size(buffer) - 3
+    case buffer do
+      <<@vertical_tab, msg_buffer :: binary-size(msg_len), @file_separator, @carriage_return>> when msg_len > 0 ->
+        {:ok, msg_buffer}
+      <<@vertical_tab, _tail :: binary>> ->
+        :incomplete
+      _ ->
+        {:error, :bad_mllp_framing}
+    end
+  end
+
+  @doc """
+  Remove MLLP framing from an already encoded HL7 message.
+
+  An MLLP-framed message carries a one byte vertical tab (0x0b) control code
+  as header and a two byte trailer consisting of a file separator (0x1c) and
+  a carriage return (0x0d) control code.
+
+  ## Arguments
+
+  * `buffer`: binary or iolist containing an MLLP-framed HL7 message as
+              returned by `HL7.to_mllp/1`.
+
+  ## Return value
+
+  Returns the encoded message with the MLLP framing removed or raises an
+  `HL7.ReadError` exception in case of error.
+
+  """
+  @spec from_mllp!(buffer :: iodata) :: msg_buffer :: iodata
+  def from_mllp!(buffer) do
+    case from_mllp(buffer) do
+      {:ok, msg_buffer}  -> msg_buffer
+      :incomplete        -> raise HL7.ReadError, :incomplete
+      {:error, reason}   -> raise HL7.ReadError, reason
+    end
+  end
 end
