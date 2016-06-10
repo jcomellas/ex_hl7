@@ -13,10 +13,12 @@ defmodule HL7.Segment.Def do
   Macro that generates the code that allows a module to be used as an HL7
   segment. A `segment` definition looks like the following block:
 
+      alias HL7.Composite.CE
+
       segment "DG1" do
-        field :set_id,                     seq:  1, type: :integer,  length:  4
-        field :diagnosis,                  seq:  3, type: CE,        length: 64
-        field :diagnosis_type,             seq:  6, type: :binary,   length:  2
+        field :set_id,         seq:  1, type: :integer,  length:  4
+        field :diagnosis,      seq:  3, type: CE,        length: 64
+        field :diagnosis_type, seq:  6, type: :binary,   length:  2
       end
 
   A `segment` has a name or segment ID, which is a binary that will be used to
@@ -44,7 +46,7 @@ defmodule HL7.Segment.Def do
   Macro that injects the code used to represent a field within an HL7 segment
   block. Each `field` definition looks like the following one:
 
-      field :diagnosis_type,             seq:  6, type: :binary,   length:  2
+      field :diagnosis_type, seq: 6, type: :binary, length: 2
 
   A `field` has a name that has to be an atom, a `seq` number (1-based) with
   the field's position in the segment, a `type` and a `length`. The default

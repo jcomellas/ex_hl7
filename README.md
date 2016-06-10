@@ -12,7 +12,7 @@ The parser was designed to make the interaction with HL7 as smooth as possible, 
 
 ## Requirements
 
-This application was developed and tested using Elixir 1.0.4 (and Erlang 17.5) but there shouldn't be any special dependency that prevents it from working with other versions.
+This application was developed and tested using Elixir 1.0.4 (and Erlang 17.5) but there shouldn't be any special dependency that prevents it from working with later versions.
 
 There are no dependencies on external projects. The parser will make use of the [Logger](http://elixir-lang.org/docs/stable/logger/) application included in Elixir to output warnings when reading or writing to fields that are not present in the corresponding segment's definition.
 
@@ -260,7 +260,7 @@ IO.puts(HL7.write(message, output_format: :text, trim: true))
 
 ## Example
 
-This is a basic example of a pre-authorization request with referral to another provider (`RQA^I08`) that shows how to use the parser. For more information, please check the rest of the sections below.
+This is a basic example of a pre-authorization request with referral to another provider (`RQA^I08`) that shows how to use the parser. For more information, please check the rest of the sections above.
 
 ```elixir
 defmodule Authorizer do

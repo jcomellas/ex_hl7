@@ -16,13 +16,13 @@ defmodule HL7.Composite.Def do
   following block:
 
       composite do
-        component :number,                       type: :string
-        component :date,                         type: :date
-        component :source,                       type: :string
+        component :number, type: :string
+        component :date,   type: :date
+        component :source, type: :string
       end
 
   *Note*: when defining a composite, the fields have to be in the order they
-  in the message.
+  are in the message.
   """
   defmacro composite([do: components]) do
     caller_module = __CALLER__.module
