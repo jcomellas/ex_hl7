@@ -104,7 +104,7 @@ defmodule HL7.LogReader do
   def stats(filename) do
     case read(filename, &stats/3, {0, 0}) do
       {:ok, {msg_count, err_count}} = result ->
-        Logger.info("Found #{err_count} errors in #{msg_count} messages on `#{filename}`")
+        Logger.info("Found #{err_count} errors in #{msg_count} messages on '#{filename}'")
         result
       error ->
         error
@@ -128,7 +128,7 @@ defmodule HL7.LogReader do
   def valid?(filename) do
     case read(filename, &valid_message?/3, 0) do
       {:ok, error_count} ->
-        Logger.debug("Found #{error_count} errors in `#{filename}`")
+        Logger.debug("Found #{error_count} errors in '#{filename}'")
         true
       _ ->
         false

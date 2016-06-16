@@ -121,14 +121,14 @@ defmodule HL7.Composite.Def do
     check_default!(name, type, default)
 
     unless List.keyfind(components, name, 0) === nil do
-      raise ArgumentError, "component #{inspect name} is already set on composite `#{module}`"
+      raise ArgumentError, "component #{inspect name} is already set on composite '#{module}'"
     end
   end
 
   @doc "Checks that the type of a component inside a composite field is valid"
   def check_type!(name, type) do
     unless check_type?(type) do
-      raise ArgumentError, "invalid type #{inspect type} on component `#{inspect name}`"
+      raise ArgumentError, "invalid type #{inspect type} on component '#{inspect name}'"
     end
   end
 
@@ -152,7 +152,7 @@ defmodule HL7.Composite.Def do
     if check_default?(type, default) do
       true
     else
-      raise ArgumentError, "invalid default argument `#{inspect default}` for " <>
+      raise ArgumentError, "invalid default argument '#{inspect default}' for " <>
                            "#{type} component #{inspect name}"
     end
   end

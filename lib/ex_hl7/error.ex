@@ -21,17 +21,17 @@ defmodule HL7.ReadError do
     "incomplete HL7 message; please use HL7.read/2 to read partial messages"
   end
   def message(%HL7.ReadError{reason: :bad_segment_id, value: value}) do
-    "unknown HL7 segment ID `#{value}`"
+    "unknown HL7 segment ID '#{value}'"
   end
   def message(%HL7.ReadError{reason: reason, segment_id: segment_id,
                              sequence: sequence, value: value}) do
     case reason do
       :bad_delimiters ->
-        "invalid HL7 delimiter definition `#{value}` in field #{segment_id}.#{sequence}"
+        "invalid HL7 delimiter definition '#{value}' in field #{segment_id}.#{sequence}"
       :bad_field ->
-        "invalid value `#{value}` for HL7 field #{segment_id}.#{sequence}"
+        "invalid value '#{value}' for HL7 field #{segment_id}.#{sequence}"
       :bad_separator ->
-        "invalid HL7 separator `#{value}` after field #{segment_id}.#{sequence}"
+        "invalid HL7 separator '#{value}' after field #{segment_id}.#{sequence}"
     end
   end
 end

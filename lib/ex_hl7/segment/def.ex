@@ -147,7 +147,7 @@ defmodule HL7.Segment.Def do
   @doc "Check that the default value of a field in a segment is valid"
   def check_default!(name, seq, type, default) do
     unless HL7.Composite.Def.check_default?(type, default) do
-      raise ArgumentError, "invalid default argument `#{inspect default}` for " <>
+      raise ArgumentError, "invalid default argument '#{inspect default}' for " <>
                            "#{type} field #{inspect name}, sequence #{seq}"
     end
   end
