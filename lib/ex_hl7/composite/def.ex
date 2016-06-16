@@ -87,26 +87,32 @@ defmodule HL7.Composite.Def do
                  #         |> Enum.reverse
                  #         |> Macro.escape)}
 
+      @doc false
       @spec descriptor() :: [HL7.Composite.descriptor]
       def descriptor(), do:
         unquote(Macro.escape(descriptor))
 
+      @doc false
       @spec valid?(t) :: boolean
       def valid?(%unquote(composite_module){}), do: true
       def valid?(_), do: false
 
+      @doc "Create a new composite field"
       @spec new() :: t
       def new(), do:
         %unquote(composite_module){}
 
+      @doc false
       @spec decode(HL7.Type.field) :: t | no_return
       def decode(value), do:
         HL7.Composite.decode(%unquote(composite_module){}, descriptor(), value)
 
+      @doc false
       @spec encode(t) :: HL7.Type.field | no_return
       def encode(composite), do:
         HL7.Composite.encode(composite, descriptor())
 
+      @doc false
       @spec to_iodata(t, [HL7.Composite.option]) :: iodata | no_return
       def to_iodata(composite, options), do:
         HL7.Composite.to_iodata(composite, descriptor(), options)

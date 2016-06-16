@@ -99,30 +99,37 @@ defmodule HL7.Segment.Def do
                  #         |> Enum.reverse
                  #         |> Macro.escape)}
 
+      @doc "Return the segment's ID"
       @spec id() :: HL7.Type.segment_id
       def id(), do:
         unquote(segment_id)
 
+      @doc false
       @spec descriptor() :: tuple
       def descriptor(), do:
         unquote(Macro.escape(descriptor))
 
+      @doc false
       @spec field_count() :: non_neg_integer
       def field_count(), do:
         unquote(tuple_size(descriptor))
 
+      @doc false
       @spec valid?(t) :: boolean
       def valid?(%unquote(segment_module){}), do: true
       def valid?(_), do: false
 
+      @doc "Create a new segment of this type"
       @spec new() :: t
       def new(), do:
         %unquote(segment_module){}
 
+      @doc false
       @spec get_field(t, HL7.Type.sequence) :: HL7.Type.field | no_return
       def get_field(segment, sequence) when is_integer(sequence), do:
         HL7.Segment.get_field(segment, descriptor(), sequence)
 
+      @doc false
       @spec put_field(t, HL7.Type.sequence, HL7.Type.field) :: t | no_return
       def put_field(segment, sequence, value) when is_integer(sequence), do:
         HL7.Segment.put_field(segment, descriptor(), sequence, value)

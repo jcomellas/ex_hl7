@@ -107,11 +107,19 @@ defmodule HL7.Composite.CE do
   @moduledoc """
   2.9.3 CE - coded element
 
-  Components: <identifier (ST)> ^ <text (ST)> ^ <name of coding system (IS)> ^
-              <alternate identifier (ST)> ^ <alternate text (ST)> ^
-              <name of alternate coding system (IS)>
+  Components:
 
-  Example: |F-11380^CREATININE^I9^2148-5^CREATININE^LN|
+    * `identifier` (ST)
+    * `text` (ST)
+    * `coding_system` (IS)
+    * `alt_id` (ST)
+    * `alt_text` (ST)
+    * `alt_coding_system` (IS)
+
+  ## Examples
+
+      |F-11380^CREATININE^I9^2148-5^CREATININE^LN|
+
   """
   composite do
     component :id,                             type: :string
@@ -127,8 +135,13 @@ defmodule HL7.Composite.CM_ERR_1 do
   @moduledoc """
   2.16.5.1 ERR-1 Error code and location (CM) 00024
 
-  Components: <segment ID (ST)> ^ <sequence (NM)> ^ <field position (NM)> ^
-              <code identifying error (CE)>
+  Components:
+
+    - `segment_id` (ST)
+    - `sequence` (NM)
+    - `field_pos` (NM)
+    - `error` (CE)
+
   """
   alias HL7.Composite.CE
 
@@ -144,7 +157,12 @@ defmodule HL7.Composite.CM_IN1_14 do
   @moduledoc """
   6.5.6.14 IN1-14 Authorization information (CM) 00439
 
-  Components: <authorization number (ST)> ^ <date (DT)> ^ <source (ST)>
+  Components:
+
+    - `number` (ST)
+    - `date` (DT)
+    - `source` (ST)
+
   """
   composite do
     component :number,                         type: :string
@@ -157,7 +175,12 @@ defmodule HL7.Composite.CM_MSH_9 do
   @moduledoc """
   2.16.9.9 MSH-9 Message type (CM) 00009
 
-  Components: <message type (ID)> ^ <trigger event (ID)> ^ <message structure (ID)>
+  Components:
+
+    - `id` (ID)
+    - `trigger_event` (ID)
+    - `structure` (ID)
+
   """
   composite do
     component :id,                             type: :string
@@ -167,6 +190,16 @@ defmodule HL7.Composite.CM_MSH_9 do
 end
 
 defmodule HL7.Composite.CM_PRD_7_3 do
+  @moduledoc """
+  Custom composite type for PRD-7.3
+
+  Components:
+
+    - `license_type`
+    - `province_id`
+    - `specialty_id`
+
+  """
   composite do
     component :license_type,                   type: :string
     component :province_id,                    type: :string
@@ -178,10 +211,15 @@ defmodule HL7.Composite.CM_PRD_7 do
   @moduledoc """
   11.6.3.7 PRD-7 Provider identifiers (CM) 01162
 
-  Components: <ID number (ST)> ^ <type of ID number (IS)> ^ <other qualifying info (ST)>
+  Components:
+
+    - `id` (ST)
+    - `id_type` (IS)
+    - `other` (ST)
 
   Definition: This repeating field contains the provider's unique identifiers
   such as UPIN, Medicare and Medicaid numbers.
+
   """
   alias HL7.Composite.CM_PRD_7_3
 
@@ -196,7 +234,11 @@ defmodule HL7.Composite.CM_QPD_3 do
   @moduledoc """
   QPD_Q15-3 Provider ID number (CM)
 
-  Components: <ID number (ID)> ^ <type of ID number (IS)>
+  Components:
+
+    - `id` (ID)
+    - `id_type` (IS)
+
   """
   composite do
     component :id,                             type: :string
@@ -208,7 +250,11 @@ defmodule HL7.Composite.MO do
   @moduledoc """
   2.9.26 MO - money
 
-  Components: <quantity (NM)> ^ <denomination (ID)>
+  Components:
+
+    - `quantity` (NM)
+    - `denomination` (ID)
+
   """
   composite do
     component :quantity,                       type: :float
@@ -220,15 +266,25 @@ defmodule HL7.Composite.CP do
   @moduledoc """
   2.9.9 CP - composite price
 
-  Components: <price (MO)> ^ <price type (ID)> ^ <from value (NM)> ^
-              <to value (NM)> ^ <range units (CE)> ^ <range type (ID)>
+  Components:
 
-  Subcomponents of price: <quantity (NM)> & <denomination (ID)>
+    - `price` (MO)
+    - `price_type` (ID)
+    - `from_value` (NM)
+    - `to_value` (NM)
+    - `range_units` (CE)
+    - `range_type` (ID)
+
+  Subcomponents of `price`:
+
+    - `quantity` (NM)
+    - `denomination` (ID)
 
   Example:
 
       |100.00&USD^UP^0^9^min^P~50.00&USD^UP^10^59^min^P~
        10.00&USD^UP^60^999^P~50.00&USD^AP~200.00&USD^PF~80.00&USD^DC|
+
   """
   alias HL7.Composite.CE
   alias HL7.Composite.MO
@@ -247,7 +303,11 @@ defmodule HL7.Composite.CQ do
   @moduledoc """
   2.9.10 CQ - composite quantity with units
 
-  Components: <quantity (NM)> ^ <units (CE)>
+  Components:
+
+    - `quantity` (NM)
+    - `units` (CE)
+
   """
   alias HL7.Composite.CE
 
@@ -261,7 +321,12 @@ defmodule HL7.Composite.HD do
   @moduledoc """
   2.9.5.4 Assigning authority (HD)
 
-  Components: <namespace ID (IS)> ^ <universal ID (ST)> ^ <universal ID type (ID)>
+  Components:
+
+    - `namespace_id` (IS)
+    - `universal_id` (ST)
+    - `universal_id_type` (ID)
+
   """
   composite do
     component :namespace_id,                   type: :string
@@ -274,15 +339,21 @@ defmodule HL7.Composite.CX do
   @moduledoc """
   2.9.12 CX - extended composite ID with check digit
 
-  Components: <ID (ST)> ^ <check digit (ST)> ^
-              <code identifying the check digit scheme employed (ID)> ^
-              <assigning authority (HD)> ^ <identifier type code (ID)> ^
-              <assigning facility (HD) ^ <effective date (DT)> ^
-              <expiration date (DT)>
+  Components:
 
-  Example:
+    - `id` (ST)
+    - `check_digit` (ST)
+    - `check_digit_scheme` (ID)
+    - `assigning_authority` (HD)
+    - `id_type` (ID)
+    - `assigning_facility` (HD)
+    - `effective_date` (DT)
+    - `expiration_date` (DT)
+
+  ## Examples
 
       |1234567^4^M11^ADT01^MR^University Hospital|
+
   """
   alias HL7.Composite.HD
 
@@ -304,6 +375,12 @@ defmodule HL7.Composite.DR do
 
   This component contains the start and end date/times which define the
   period during which this name was valid.
+
+  Components:
+
+    - `start_datetime` (DT)
+    - `end_datetime` (DT)
+
   """
   composite do
     component :start_datetime,                 type: :datetime
@@ -315,8 +392,13 @@ defmodule HL7.Composite.EI do
   @moduledoc """
   2.9.17 EI - entity identifier
 
-  Components: <entity identifier (ST)> ^ <namespace ID (IS)> ^
-              <universal ID (ST)> ^ < universal ID type (ID)>
+  Components:
+
+    - `id` (ST)
+    - `namespace_id` (IS)
+    - `universal_id` (ST)
+    - `universal_id_type` (ID)
+
   """
   composite do
     component :id,                             type: :string
@@ -330,9 +412,13 @@ defmodule HL7.Composite.FN do
   @moduledoc """
   2.9.19 FN - family name
 
-  Components: <surname (ST)> ^ <own surname prefix (ST)> ^ <own surname (ST)> ^
-              <surname prefix from partner/spouse (ST)> ^
-              <surname from partner/spouse (ST)>
+  Components:
+
+    - `surname` (ST)
+    - `own_surname_prefix` (ST)
+    - `own_surname` (ST)
+    - `surname_prefix_from_partner` (ST)
+    - `surname_from_partner` (ST)
 
   This data type allows full specification of the surname of a person. Where
   appropriate, it differentiates the person's own surname from that of the
@@ -353,11 +439,18 @@ defmodule HL7.Composite.CN do
   @moduledoc """
   2.9.7 CN - composite ID number and name
 
-  Components: <ID number (ST)> ^ <family name (FN)> ^ <given name (ST)> ^
-              <second and further given names or initials thereof (ST)> ^
-              <suffix (e.g., JR or III) (ST)> ^ <prefix (e.g., DR) (ST)> ^
-              <degree (e.g., MD) (IS)> ^ <source table (IS)> ^
-              <assigning authority (HD)>
+  Components:
+
+    - `id_number` (ST)
+    - `family_name` (FN)
+    - `given_name` (ST)
+    - `second_name` (ST)
+    - `suffix` (ST)
+    - `prefix` (ST)
+    - `degree` (IS)
+    - `source_table` (IS)
+    - `assigning_authority` (HD)
+
   """
   alias HL7.Composite.FN
   alias HL7.Composite.HD
@@ -379,10 +472,17 @@ defmodule HL7.Composite.PL do
   @moduledoc """
   2.9.29 PL - person location
 
-  Components: <point of care (IS)> ^ <room (IS)> ^ <bed (IS)> ^
-              <facility (HD)> ^ < location status (IS )> ^
-              <person location type (IS)> ^ <building (IS )> ^
-              <floor (IS)> ^ <location description (ST)>
+  Components:
+
+    - `point_of_care` (IS)
+    - `room` (IS)
+    - `bed` (IS)
+    - `facility` (HD)
+    - `location_status` (IS )
+    - `person_location_type` (IS)
+    - `building` (IS )
+    - `floor` (IS)
+    - `location_description` (ST)
 
   *Note*: This data type contains several location identifiers that should be
   thought of in the following order from the most general to the most
@@ -413,6 +513,7 @@ defmodule HL7.Composite.PL do
   The patient was treated at his home.
 
       ^^^^^H^^^
+
   """
   alias HL7.Composite.HD
 
@@ -433,9 +534,15 @@ defmodule HL7.Composite.CM_OBR_15 do
   @moduledoc """
   7.4.1.15 OBR-15 Specimen source (CM) 00249
 
-  Components: <specimen source name or code (CE)> ^ <additives (TX)> ^
-              <freetext (TX)> ^ <body site (CE)> ^ <site modifier (CE)> ^
-              <collection method modifier code (CE)>
+  Components:
+
+    - `code` (CE)
+    - `additives` (TX)
+    - `free_text` (TX)
+    - `body_site` (CE)
+    - `site_modifier` (CE)
+    - `collection_method` (CE)
+
   """
   alias HL7.Composite.CE
 
@@ -453,7 +560,11 @@ defmodule HL7.Composite.CM_OBR_23 do
   @moduledoc """
   7.4.1.23 OBR-23 Charge to practice (CM) 00256
 
-  Components: <dollar amount (MO)> ^ <charge code (CE)>
+  Components:
+
+    - `amount` (MO)
+    - `charge_code` (CE)
+
   """
   alias HL7.Composite.CE
   alias HL7.Composite.MO
@@ -468,9 +579,12 @@ defmodule HL7.Composite.CM_OBR_26 do
   @moduledoc """
   7.4.1.26 OBR-26 Parent result (CM) 00259
 
-  Components: <OBX-3-observation identifier of parent result (CE)> ^
-              <OBX-4-sub-ID of parent result (ST)> ^
-              <part of OBX-5 observation result from parent (TX) see discussion>
+  Components:
+
+    - `observation_id` (CE)
+    - `observation_sub_id` (ST)
+    - `observation_result` (TX)
+
   """
   alias HL7.Composite.CE
 
@@ -485,7 +599,11 @@ defmodule HL7.Composite.CM_OBR_29 do
   @moduledoc """
   7.4.1.29 OBR-29 Parent (CM) 00261
 
-  Components: <parent's placer order number (EI)> ^ <parent's filler order number (EI)>
+  Components:
+
+    - `placer_order` (EI)
+    - `filler_order` (EI)
+
   """
   alias HL7.Composite.EI
 
@@ -499,10 +617,20 @@ defmodule HL7.Composite.CM_OBR_32 do
   @moduledoc """
   7.4.1.32 OBR-32 Principal result interpreter (CM) 00264
 
-  Components: <name (CN)> ^ <start date/time (TS)> ^ <end date/time (TS)> ^
-              <point of care (IS)> ^ <room (IS)> ^ <bed (IS)> ^ <facility (HD)> ^
-              <location status (IS)> ^ <patient location type (IS)> ^
-              <building (IS)> ^ <floor (IS)>
+  Components:
+
+    - `name` (CN)
+    - `start_datetime` (TS)
+    - `end_datetime` (TS)
+    - `point_of_care` (IS)
+    - `room` (IS)
+    - `bed` (IS)
+    - `facility` (HD)
+    - `location_status` (IS)
+    - `patient_location_type` (IS)
+    - `building` (IS)
+    - `floor` (IS)
+
   """
   alias HL7.Composite.CN
   alias HL7.Composite.HD
@@ -526,7 +654,11 @@ defmodule HL7.Composite.CM_TQ_2 do
   @moduledoc """
   4.3.2 Interval component (CM)
 
-  Subcomponents: <repeat pattern (IS)> & <explicit time interval (ST)>
+  Subcomponents:
+
+    - `repeat_pattern` (IS)
+    - `explicit_interval` (ST)
+
   """
   composite do
     component :repeat_pattern,                 type: :string
@@ -555,13 +687,23 @@ end
 
 defmodule HL7.Composite.TQ do
   @moduledoc """
-  4.3 QUANTITY/TIMING (TQ) DATA TYPE DEFINITION
+  4.3 Quantity/Timing (TQ) data type definition
 
-  Components: <quantity (CQ)> ^ <interval (CM)> ^ <duration (ST)> ^
-              <start date/time (TS)> ^ <end date/time (TS)> ^ <priority (ST)> ^
-              <condition (ST)> ^ <text (TX)> ^ <conjunction (ID)> ^
-              <order sequencing (CM)> ^ <occurrence duration (CE)> ^
-              <total occurrences (NM)>
+  Components:
+
+    - `quantity` (CQ)
+    - `interval` (CM)
+    - `duration` (ST)
+    - `start_datetime` (TS)
+    - `end_datetime` (TS)
+    - `priority` (ST)
+    - `condition` (ST)
+    - `text` (TX)
+    - `conjunction` (ID)
+    - `order_sequencing` (CM)
+    - `occurrence_duration` (CE)
+    - `total_occurrences` (NM)
+
   """
   alias HL7.Composite.CE
   alias HL7.Composite.CQ
@@ -589,19 +731,31 @@ defmodule HL7.Composite.XAD do
   @moduledoc """
   2.9.51 XAD - extended address
 
-  Components: <street address (SAD)> ^ <other designation (ST)> ^
-              <city (ST)> ^ <state or province (ST)> ^
-              <zip or postal code (ST)> ^ <country (ID)> ^
-              <address type (ID)> ^ <other geographic designation (ST)> ^
-              <county/parish code (IS)> ^ <census tract (IS)> ^
-              <address representation code (ID)> ^
-              <address validity range (DR)>
+  Components:
 
-  Subcomponents of street address (SAD): <street or mailing address (ST)> &
-                                         <street name (ST)> & <dwelling number (ST)>
+    - `street_address` (SAD)
+    - `other_designation` (ST)
+    - `city` (ST)
+    - `state` (ST)
+    - `postal_code` (ST)
+    - `country` (ID)
+    - `address_type` (ID)
+    - `other_geo_designation` (ST)
+    - `county` (IS)
+    - `census_tract` (IS)
+    - `address_representation` (ID)
+    - `address_validity` (DR)
 
-  Subcomponents of address validity range (DR): <date range start date/time (TS)> &
-                                                <date range end date/time (TS)>
+  Subcomponents of street address (SAD):
+
+    - `mailing_address` (ST)
+    - `street_name` (ST)
+    - `dwelling_number` (ST)
+
+  Subcomponents of address validity range (DR):
+
+    - `start_datetime` (TS)
+    - `end_datetime` (TS)
 
   Example of usage for US:
 
@@ -623,6 +777,7 @@ defmodule HL7.Composite.XAD do
       14th Floor
       50 Paterson St
       Coorparoo QLD 4151
+
   """
   alias HL7.Composite.DR
 
@@ -646,43 +801,72 @@ defmodule HL7.Composite.XCN do
   @moduledoc """
   2.9.52 XCN - extended composite ID number and name for persons
 
-  Components: <ID number (ST)> ^ <family name (FN)> ^ <given name (ST)> ^
-              <second and further given names or initials thereof (ST)> ^
-              <suffix (e.g., JR or III) (ST)> ^ <prefix (e.g., DR) (ST)> ^
-              <degree (e.g., MD) (IS)> ^ <source table (IS)> ^
-              <assigning authority (HD)> ^ <name type code (ID)> ^
-              <identifier check digit (ST)> ^
-              <code identifying the check digit scheme employed (ID)> ^
-              <identifier type code (IS)> ^ <assigning facility (HD)> ^
-              <name representation code (ID)> ^ <name context (CE)> ^
-              <name validity range (DR)> ^ <name assembly order (ID)>
+  Components:
 
-  Subcomponents of family name: <surname (ST)> & <own surname prefix (ST)> &
-                                <own surname (ST)> &
-                                <surname prefix from partner/spouse (ST)> &
-                                <surname from partner/spouse (ST)>
+    - `id_number` (ST)
+    - `family_name` (FN)
+    - `given_name` (ST)
+    - `second_name` (ST)
+    - `suffix` (ST)
+    - `prefix` (ST)
+    - `degree` (IS)
+    - `source_table` (IS)
+    - `assigning_authority` (HD)
+    - `name_type_code` (ID)
+    - `check_digit` (ST)
+    - `check_digit_scheme` (ID)
+    - `id_type` (IS)
+    - `assigning_facility` (HD)
+    - `name_representation_code` (ID)
+    - `name_context` (CE)
+    - `name_validity` (DR)
+    - `name_assembly_order` (ID)
 
-  Subcomponents of assigning authority: <namespace ID (IS)> & <universal ID (ST)> &
-                                        <universal ID type (ID)>
+  Subcomponents of `family_name`:
 
-  Subcomponents of assigning facility: <namespace ID (IS)> & <universal ID (ST)> &
-                                       <universal ID type (ID)>
+    - `surname` (ST)
+    - `own_surname_prefix` (ST)
+    - `own_surname` (ST)
+    - `surname_prefix_from_partner` (ST)
+    - `surname_from_partner` (ST)
 
-  Subcomponents of name context: <identifier (ST)> & <text (ST)> &
-                                 <name of coding system (IS)> &
-                                 <alternate identifier (ST)> & <alternate text (ST)> &
-                                 <name of alternate coding system (IS)>
+  Subcomponents of `assigning_authority`:
 
-  Subcomponents of name validity range: <date range start date/time (TS)> &
-                                        <date range end date/time (TS)>
+    - `namespace_id` (IS)
+    - `universal_id` (ST)
+    - `universal_id_type` (ID)
+
+  Subcomponents of `assigning_facility`:
+
+    - `namespace_id` (IS)
+    - `universal_id` (ST)
+    - `universal_id_type` (ID)
+
+  Subcomponents of `name_context`:
+
+    - `id` (ST)
+    - `text` (ST)
+    - `coding_system` (IS)
+    - `alt_id` (ST)
+    - `alt_text` (ST)
+    - `alt_coding_system` (IS)
+
+  Subcomponents of `name_validity`:
+
+    - `start_datetime` (TS)
+    - `end_datetime` (TS)
 
   This data type is used extensively appearing in the PV1, ORC, RXO, RXE, OBR
   and SCH segments, as well as others, where there is a need to specify the
   ID number and name of a person.
 
-  Example without assigning authority and assigning facility:
+  ## Examples
+
+   Neither an assigning authority nor an assigning facility are present in the
+   example:
 
       |1234567^Smith^John^J^III^DR^PHD^ADT01^^L^4^M11^MR|
+
   """
   alias HL7.Composite.CE
   alias HL7.Composite.DR
@@ -714,24 +898,46 @@ defmodule HL7.Composite.XPN do
   @moduledoc """
   2.9.54 XPN - extended person name
 
-  Components: <family name (FN)> ^ <given name (ST)> ^
-              <second and further given names or initials thereof (ST)> ^
-              <suffix (e.g., JR or III) (ST)> ^ <prefix (e.g., DR) (ST)> ^
-              <degree (e.g., MD) (IS)> ^ <name type code (ID) > ^
-              <name representation code (ID)> ^ <name context (CE)> ^
-              <name validity range (DR)> ^ <name assembly order (ID)>
+  Components:
 
-  Subcomponents of family name: <surname (ST)> ^ <own surname prefix (ST)> ^
-                                <own surname (ST)> ^ <surname prefix from partner/spouse (ST)> ^
-                                <surname from partner/spouse (ST)>
+    - `family_name` (FN)
+    - `given_name` (ST)
+    - `second_name` (ST)
+    - `suffix` (ST)
+    - `prefix` (ST)
+    - `degree` (IS)
+    - `name_type_code` (ID)
+    - `name_representation_code` (ID)
+    - `name_context` (CE)
+    - `name_validity` (DR)
+    - `name_assembly_order` (ID)
 
-  Subcomponents of name context: <identifier (ST)> & <text (ST)> & <name of coding system (IS)> &
-                                 <alternate identifier (ST)> & <alternate text (ST)> &
-                                 <name of alternate coding system (IS)>
+  Subcomponents of `family_name`:
 
-  Subcomponents of name validity range: <date range start date/time (TS)> & <date range end date/time (TS)>
+    - `surname` (ST)
+    - `own_surname_prefix` (ST)
+    - `own_surname` (ST)
+    - `surname_prefix_from_partner` (ST)
+    - `surname_from_partner` (ST)
 
-  Example: `|Smith^John^J^III^DR^PHD^L|`
+  Subcomponents of `name_context`:
+
+    - `id` (ST)
+    - `text` (ST)
+    - `coding_system` (IS)
+    - `alt_id` (ST)
+    - `alt_text` (ST)
+    - `alt_coding_system` (IS)
+
+  Subcomponents of `name_validity`:
+
+    - `start_datetime` (TS)
+    - `end_datetime` (TS)
+
+  ## Examples
+
+      |Smith^John^J^III^DR^PHD^L|
+
   """
   alias HL7.Composite.CE
   alias HL7.Composite.DR
@@ -756,10 +962,18 @@ defmodule HL7.Composite.XTN do
   @moduledoc """
   2.9.55 XTN - extended telecommunication number
 
-  Components: [NNN] [(999)]999-9999 [X99999] [B99999] [C any text] ^
-              <telecommunication use code (ID)> ^ <telecommunication equipment type (ID)> ^
-              <email address (ST)> ^ <country code (NM)> ^ <area/city code (NM)> ^
-              <phone number (NM)> ^ <extension (NM)> ^ <any text (ST)>
+  Components:
+
+    - `formatted_phone_number` (ST): [NNN] [(999)]999-9999 [X99999] [B99999] [C any text]
+    - `telecom_use_code` (ID)
+    - `telecom_equipment_type` (ID)
+    - `email` (ST)
+    - `country_code` (NM)
+    - `area_code` (NM)
+    - `phone_number` (NM)
+    - `extension` (NM)
+    - `any_text` (ST)
+
   """
   composite do
     component :formatted_phone_number,         type: :string
