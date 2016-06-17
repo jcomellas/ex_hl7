@@ -76,16 +76,12 @@ defmodule HL7.Composite.Def do
     composite_module = __CALLER__.module
     descriptor = Enum.reverse(Module.get_attribute(composite_module, :components))
     struct_fields = Enum.reverse(Module.get_attribute(composite_module, :struct_fields))
+    struct_type_spec = quote_struct_type_spec(composite_module, descriptor)
 
     quote do
       defstruct unquote(Macro.escape(struct_fields))
 
-      # TODO: how do we inject a type spec in the generated code?
-      @type t :: %unquote(composite_module){}
-                 # unquote(Module.get_attribute(__CALLER__.module, :components)
-                 #         |> Enum.map(fn {name, type} -> {name, type()} end)
-                 #         |> Enum.reverse
-                 #         |> Macro.escape)}
+      unquote(struct_type_spec)
 
       @doc false
       @spec descriptor() :: [HL7.Composite.descriptor]
@@ -118,6 +114,29 @@ defmodule HL7.Composite.Def do
         HL7.Composite.to_iodata(composite, descriptor(), options)
     end
   end
+
+  defp quote_struct_type_spec(module, components) do
+    struct_spec = quote_struct_type(module, components)
+
+    quote [context: Elixir] do
+      @type t :: unquote(struct_spec)
+    end
+  end
+
+  def quote_struct_type(module, components) do
+    field_specs = components
+    |> Enum.map(fn {name, type} -> {name, quote_single_type(type)} end)
+    |> Enum.reverse
+    name_spec = quote do: unquote(module)
+    {:%, [], [name_spec, {:"%{}", [], field_specs}]}
+  end
+
+  def quote_single_type(:string),   do: quote context: Elixir, do: binary
+  def quote_single_type(:integer),  do: quote context: Elixir, do: integer
+  def quote_single_type(:float),    do: quote context: Elixir, do: float
+  def quote_single_type(:date),     do: quote context: Elixir, do: :calendar.date
+  def quote_single_type(:datetime), do: quote context: Elixir, do: :calendar.datetime
+  def quote_single_type(composite), do: quote context: Elixir, do: unquote(composite).t
 
   @doc "Checks that a component definition is correct"
   @spec check_component!(name :: atom, type :: atom, default :: any, module :: atom,
