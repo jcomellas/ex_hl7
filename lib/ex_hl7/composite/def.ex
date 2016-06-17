@@ -116,17 +116,18 @@ defmodule HL7.Composite.Def do
   end
 
   defp quote_struct_type_spec(module, components) do
-    struct_spec = quote_struct_type(module, components)
+    field_specs = components
+    |> Enum.map(fn {name, type} -> {name, quote_single_type(type)} end)
+    |> Enum.reverse
+
+    struct_spec = quote_struct_type(module, field_specs)
 
     quote [context: Elixir] do
       @type t :: unquote(struct_spec)
     end
   end
 
-  def quote_struct_type(module, components) do
-    field_specs = components
-    |> Enum.map(fn {name, type} -> {name, quote_single_type(type)} end)
-    |> Enum.reverse
+  def quote_struct_type(module, field_specs) do
     name_spec = quote do: unquote(module)
     {:%, [], [name_spec, {:"%{}", [], field_specs}]}
   end

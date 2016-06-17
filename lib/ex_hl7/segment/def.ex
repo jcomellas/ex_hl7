@@ -88,16 +88,12 @@ defmodule HL7.Segment.Def do
     segment_id = Module.get_attribute(segment_module, :segment_id)
     descriptor = build_descriptor(Module.get_attribute(segment_module, :fields))
     struct_fields = Enum.reverse(Module.get_attribute(segment_module, :struct_fields))
+    struct_type_spec = quote_struct_type_spec(segment_module, descriptor)
 
     quote do
       defstruct unquote(Macro.escape([{:__segment__, segment_id} | struct_fields]))
 
-      # TODO: how do we inject a type spec into the generated code?
-      @type t :: %unquote(segment_module){}
-                 # unquote(Module.get_attribute(segment_module, :components)
-                 #         |> Enum.map(fn {name, type} -> {name, type()} end)
-                 #         |> Enum.reverse
-                 #         |> Macro.escape)}
+      unquote(struct_type_spec)
 
       @doc "Return the segment's ID"
       @spec id() :: HL7.Type.segment_id
@@ -134,6 +130,36 @@ defmodule HL7.Segment.Def do
       def put_field(segment, sequence, value) when is_integer(sequence), do:
         HL7.Segment.put_field(segment, descriptor(), sequence, value)
     end
+  end
+
+  defp quote_struct_type_spec(module, fields) do
+    field_specs = descriptor_map(fields, fn {name, _seq, type, _length} ->
+      {name, HL7.Composite.Def.quote_single_type(type)}
+    end)
+
+    struct_spec = HL7.Composite.Def.quote_struct_type(module, field_specs)
+
+    quote [context: Elixir] do
+      @type t :: unquote(struct_spec)
+    end
+  end
+
+  def descriptor_map(tuple, fun) do
+    descriptor_map(tuple, fun, tuple_size(tuple), 0, [])
+  end
+
+  defp descriptor_map(tuple, fun, size, index, acc) when index < size do
+    # Filter out the descriptors that are nil.
+    acc = case elem(tuple, index) do
+            nil   -> acc
+            value -> [fun.(value) | acc]
+          end
+    descriptor_map(tuple, fun, size, index + 1, acc)
+  end
+  defp descriptor_map(_tuple, _fun_, _size, _index, acc) do
+    # There's no need to reverse the accumulated list, as the oringal list was
+    # already reversed.
+    acc
   end
 
   def check_field!(name, seq, type, default, length, segment_id, acc) do
