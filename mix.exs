@@ -3,13 +3,14 @@ defmodule HL7.Mixfile do
 
   def project do
     [app: :ex_hl7,
-     version: "0.2.2",
+     version: "0.3.0",
      elixir: "~> 1.0",
      description: "HL7 Parser for Elixir",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     deps: deps,
      package: package,
-     deps: deps]
+     consolidate_protocols: Mix.env != :test]
   end
 
   # Configuration for the OTP application
