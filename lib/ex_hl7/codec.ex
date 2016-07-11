@@ -370,7 +370,7 @@ defmodule HL7.Codec do
     generating the message as returned by `HL7.Codec.compile_separators/1`.
     Defaults to `HL7.Codec.separators`.
 
-  * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\`.
+  * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\ `.
 
   ## Examples
 
@@ -433,7 +433,7 @@ defmodule HL7.Codec do
 
   * `value`: a string to unescape; it may or may not contain escaped characters.
 
-  * `escape_char`: character that was used as escape delimiter. Defaults to `?\\\\`.
+  * `escape_char`: character that was used as escape delimiter. Defaults to `?\\\\ `.
 
   ## Examples
 

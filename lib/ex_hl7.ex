@@ -502,12 +502,13 @@ defmodule HL7 do
     * `separators`: a binary containing the item separators to be used when
       generating the message as returned by `HL7.Codec.compile_separators/1`.
       Defaults to `HL7.Codec.separators`.
-    * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\`.
+    * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\ `
+      (backlash).
 
   ## Examples
 
       iex> "ABCDEF" = HL7.escape("ABCDEF")
-      iex> "ABC\\\\|\\\\DEF\\\\|\\\\GHI" = HL7.escape("ABC|DEF|GHI", separators: HL7.Codec.separators(), escape_char: ?\\\\)
+      iex> "ABC\\\\F\\\\DEF\\\\F\\\\GHI" = HL7.escape("ABC|DEF|GHI", separators: HL7.Codec.separators())
 
   """
   @spec escape(binary, options :: Keyword.t) :: binary
@@ -528,12 +529,13 @@ defmodule HL7 do
     * `separators`: a binary containing the item separators to be used when
       generating the message as returned by `HL7.Codec.compile_separators/1`.
       Defaults to `HL7.Codec.separators`.
-    * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\`.
+    * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\ `
+      (backlash).
 
   ## Examples
 
       iex> "ABCDEF" = HL7.unescape("ABCDEF")
-      iex> "ABC|DEF|GHI" = HL7.unescape("ABC\\\\|\\\\DEF\\\\|\\\\GHI", escape_char: ?\\\\)
+      iex> "ABC|DEF|GHI" = HL7.unescape("ABC\\\\F\\\\DEF\\\\F\\\\GHI", escape_char: ?\\)
 
   """
   @spec unescape(binary, options :: Keyword.t) :: binary
