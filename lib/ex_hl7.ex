@@ -1,4 +1,7 @@
 defmodule HL7 do
+  @moduledoc """
+  Main module of the **ex_hl7** library.
+  """
   @type message        :: HL7.Message.t
   @type segment        :: HL7.Segment.t
   @type segment_id     :: HL7.Type.segment_id
@@ -478,7 +481,7 @@ defmodule HL7 do
 
   If a segment with the `segment_id` was present with the given `repetition`,
   the function will return a new message with the replaced segments. If not,
-  it will return the original message
+  it will return the original message.
 
   ## Examples
 
@@ -617,7 +620,7 @@ defmodule HL7 do
   ## Arguments
 
   * `buffer`: binary or iolist containing an MLLP-framed HL7 message as
-              returned by `HL7.to_mllp/1`.
+     returned by `HL7.to_mllp/1`.
 
   ## Return value
 
