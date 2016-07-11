@@ -14,6 +14,23 @@ defmodule HL7.Message do
                       {:error, reason :: any}
 
 
+  @doc """
+  Return the nth repetition (0-based) of a segment within a message.
+
+  ## Return value
+
+  If the corresponding `repetition` of a segment with the passed `segment_id`
+  is present in the `message` then the function returns the segment; otherwise
+  it returns `nil`.
+
+  ## Examples
+
+  iex> pr1 = HL7.Message.segment(message, "PR1", 0)
+  iex> 1 = pr1.set_id
+  iex> pr1 = HL7.Message.segment(message, "PR1", 1)
+  iex> 2 = pr1.set_id
+
+  """
   @spec segment(t, HL7.Type.segment_id, HL7.Type.repetition) :: HL7.Segment.t
   def segment(message, segment_id, repetition \\ 0)
 
@@ -24,6 +41,33 @@ defmodule HL7.Message do
     end
   end
 
+  @doc """
+  Return the nth (0-based) grouping of segments with the specified segment IDs.
+
+  In HL7 messages sometimes some segments are immediately followed by other
+  segments within the message. This function was created to help find those
+  "grouped segments".
+
+  For example, the `PR1` segment is sometimes followed by some other segments
+  (e.g. `OBX`, `AUT`, etc.) to include observations and other related
+  information for a practice. Note that there might be multiple segment
+  groupings in a message.
+
+  ## Return value
+
+  A list of segments corresponding to the segment IDs that were passed. The
+  list might not include all of the requested segments if they were not
+  present in the message. The function will stop as soon as it finds a segment
+  that does not belong to the passed sequence.
+
+  ## Examples
+
+      iex> [pr1, aut] = HL7.Message.paired_segments(message, ["PR1", "AUT"], 0)
+      iex> [pr1, aut] = HL7.Message.paired_segments(message, ["PR1", "AUT"], 1)
+      iex> [] = HL7.Message.paired_segments(message, ["PR1", "AUT"], 2)
+      iex> [aut] = HL7.Message.paired_segments(message, ["PR1", "OBX"], 1)
+
+  """
   @spec paired_segments(t, [HL7.Type.segment_id], HL7.Type.repetition) :: [HL7.Segment.t]
   def paired_segments(message, segment_ids, repetition \\ 0)
 
@@ -63,6 +107,15 @@ defmodule HL7.Message do
     segments
   end
 
+  @doc """
+  Return the number of segments with a specified segment ID in an HL7 message.
+
+  ## Examples
+
+  iex> 2 = HL7.Message.segment_count(message, "PR1")
+  iex> 0 = HL7.Message.segment_count(message, "OBX")
+
+  """
   @spec segment_count(t, HL7.Type.segment_id) :: non_neg_integer
   def segment_count(segments, segment_id)
    when is_list(segments) and is_binary(segment_id), do:
@@ -79,6 +132,14 @@ defmodule HL7.Message do
     count
   end
 
+  @doc """
+  Deletes the given repetition (0-based) of a segment in a message
+
+  ## Examples
+
+  iex> HL7.delete(message, "NTE", 0)
+
+  """
   @spec delete(t, HL7.Type.segment_id, HL7.Type.repetition) :: t
   def delete(message, segment_id, repetition \\ 0) do
     case split_at_segment(message, segment_id, repetition, []) do
@@ -89,10 +150,64 @@ defmodule HL7.Message do
     end
   end
 
+  @doc """
+  Inserts a segment or group of segments before the first repetition of an
+  existing segment in a message.
+
+  ## Arguments
+
+  * `message`: the `HL7.message` where the segment/s will be inserted.
+
+  * `segment_id`: the segment ID of a segment that should be present in the
+  `message`.
+
+  * `segment`: the segment or list of segments that will be inserted
+
+  ## Return values
+
+  If a segment with the `segment_id` was present, the function will return a
+  new message with the inserted segments. If not, it will return the original
+  message
+
+  ## Examples
+
+  iex> alias HL7.Segment.MSA
+  iex> ack = %MSA{ack_code: "AA", message_control_id: "1234"}
+  iex> HL7.insert_before(message, "ERR", msa)
+
+  """
   @spec insert_before(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
   def insert_before(message, segment_id, segment), do:
     insert_before(message, segment_id, 0, segment)
 
+  @doc """
+  Inserts a segment or group of segments before the given repetition of an
+  existing segment in a message.
+
+  ## Arguments
+
+  * `message`: the `HL7.message` where the segment/s will be inserted.
+
+  * `segment_id`: the segment ID of a segment that should be present in the
+  `message`.
+
+  * `repetition`: the repetition (0-based) of the `segment_id` in the `message`.
+
+  * `segment`: the segment or list of segments that will be inserted
+
+  ## Return values
+
+  If a segment with the `segment_id` was present with the given `repetition`,
+  the function will return a new message with the inserted segments. If not,
+  it will return the original message
+
+  ## Examples
+
+  iex> alias HL7.Segment.MSA
+  iex> ack = %MSA{ack_code: "AA", message_control_id: "1234"}
+  iex> HL7.Message.insert_before(message, "ERR", 0, msa)
+
+  """
   @spec insert_before(t, HL7.Type.segment_id, HL7.Type.repetition,
                       HL7.Segment.t | [HL7.Segment.t]) :: t
   def insert_before(message, segment_id, repetition, new_segments)
@@ -110,10 +225,64 @@ defmodule HL7.Message do
     insert_before(message, segment_id, repetition, [new_segment])
   end
 
+  @doc """
+  Inserts a segment or group of segments after the first repetition of an
+  existing segment in a message.
+
+  ## Arguments
+
+  * `message`: the `HL7.message` where the segment/s will be inserted.
+
+  * `segment_id`: the segment ID of a segment that should be present in the
+  `message`.
+
+  * `segment`: the segment or list of segments that will be inserted
+
+  ## Return values
+
+  If a segment with the `segment_id` was present, the function will return a
+  new message with the inserted segments. If not, it will return the original
+  message
+
+  ## Examples
+
+  iex> alias HL7.Segment.MSA
+  iex> ack = %MSA{ack_code: "AA", message_control_id: "1234"}
+  iex> HL7.Message.insert_after(message, "MSH", msa)
+
+  """
   @spec insert_after(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
   def insert_after(message, segment_id, segment), do:
     insert_after(message, segment_id, 0, segment)
 
+  @doc """
+  Inserts a segment or group of segments after the given repetition of an
+  existing segment in a message.
+
+  ## Arguments
+
+  * `message`: the `HL7.message` where the segment/s will be inserted.
+
+  * `segment_id`: the segment ID of a segment that should be present in the
+  `message`.
+
+  * `repetition`: the repetition (0-based) of the `segment_id` in the `message`.
+
+  * `segment`: the segment or list of segments that will be inserted
+
+  ## Return values
+
+  If a segment with the `segment_id` was present with the given `repetition`,
+  the function will return a new message with the inserted segments. If not,
+  it will return the original message
+
+  ## Examples
+
+  iex> alias HL7.Segment.MSA
+  iex> ack = %MSA{ack_code: "AA", message_control_id: "1234"}
+  iex> HL7.Message.insert_after(message, "MSH", 0, msa)
+
+  """
   @spec insert_after(t, HL7.Type.segment_id, HL7.Type.repetition,
                      HL7.Segment.t | [HL7.Segment.t]) :: t
   def insert_after(message, segment_id, repetition, new_segments)
@@ -131,10 +300,64 @@ defmodule HL7.Message do
     insert_after(message, segment_id, repetition, [new_segment])
   end
 
+  @doc """
+  Replaces the first repetition of an existing segment in a message.
+
+  ## Arguments
+
+  * `message`: the `HL7.message` where the segment/s will be inserted.
+
+  * `segment_id`: the segment ID of a segment that should be present in the
+  `message`.
+
+  * `segment`: the segment or list of segments that will replace the existing
+  one.
+
+  ## Return values
+
+  If a segment with the `segment_id` was present, the function will return a
+  new message with the replaced segments. If not, it will return the original
+  message
+
+  ## Examples
+
+  iex> alias HL7.Segment.MSA
+  iex> ack = %MSA{ack_code: "AA", message_control_id: "1234"}
+  iex> HL7.Message.replace(message, "MSA", msa)
+
+  """
   @spec replace(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
   def replace(message, segment_id, segment), do:
     replace(message, segment_id, 0, segment)
 
+  @doc """
+  Replaces the given repetition of an existing segment in a message.
+
+  ## Arguments
+
+  * `message`: the `HL7.message` where the segment/s will be inserted.
+
+  * `segment_id`: the segment ID of a segment that should be present in the
+  `message`.
+
+  * `repetition`: the repetition (0-based) of the `segment_id` in the `message`.
+
+  * `segment`: the segment or list of segments that will replace the existing
+  one.
+
+  ## Return values
+
+  If a segment with the `segment_id` was present with the given `repetition`,
+  the function will return a new message with the replaced segments. If not,
+  it will return the original message
+
+  ## Examples
+
+  iex> alias HL7.Segment.MSA
+  iex> ack = %MSA{ack_code: "AA", message_control_id: "1234"}
+  iex> HL7.Message.replace(message, "MSA", 0, msa)
+
+  """
   @spec replace(t, HL7.Type.segment_id, HL7.Type.repetition,
                 HL7.Segment.t | [HL7.Segment.t]) :: t
   def replace(message, segment_id, repetition, new_segments)
