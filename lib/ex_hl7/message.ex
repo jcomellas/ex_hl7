@@ -18,9 +18,9 @@ defmodule HL7.Message do
   def segment(message, segment_id, repetition \\ 0)
 
   def segment(message, segment_id, repetition) do
-    case tail_at_segment(message, segment_id, repetition) do
-      {segment, _tail} -> segment
-      nil              -> nil
+    case drop_until_segment(message, segment_id, repetition) do
+      [segment | _tail] -> segment
+      []                -> nil
     end
   end
 
@@ -28,9 +28,9 @@ defmodule HL7.Message do
   def paired_segments(message, segment_ids, repetition \\ 0)
 
   def paired_segments(message, [segment_id | tail2], repetition) do
-    case tail_at_segment(message, segment_id, repetition) do
-      {segment, tail1} -> _paired_segments(tail1, tail2, [segment])
-      nil              -> []
+    case drop_until_segment(message, segment_id, repetition) do
+      [segment | tail1] -> _paired_segments(tail1, tail2, [segment])
+      []                -> []
     end
   end
   def paired_segments(_message, [], _repetition) do
@@ -47,20 +47,20 @@ defmodule HL7.Message do
     Enum.reverse(acc)
   end
 
-  defp tail_at_segment([segment | tail], segment_id, repetition) do
+  defp drop_until_segment([segment | tail] = segments, segment_id, repetition) do
     case HL7.Segment.id(segment) do
       ^segment_id ->
         if repetition === 0 do
-          {segment, tail}
+          segments
         else
-          tail_at_segment(tail, segment_id, repetition - 1)
+          drop_until_segment(tail, segment_id, repetition - 1)
         end
       _ ->
-        tail_at_segment(tail, segment_id, repetition)
+        drop_until_segment(tail, segment_id, repetition)
     end
   end
-  defp tail_at_segment([], _segment_id, _repetition) do
-    nil
+  defp drop_until_segment([] = segments, _segment_id, _repetition) do
+    segments
   end
 
   @spec segment_count(t, HL7.Type.segment_id) :: non_neg_integer
