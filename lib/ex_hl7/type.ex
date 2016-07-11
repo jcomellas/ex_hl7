@@ -1,4 +1,7 @@
 defmodule HL7.Type do
+  @moduledoc """
+  Type specifications used by the library.
+  """
   @type segment_id     :: binary
   @type sequence       :: pos_integer
   @type composite_id   :: binary
