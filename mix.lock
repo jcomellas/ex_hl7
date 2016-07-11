@@ -1,3 +1,2 @@
 %{"earmark": {:hex, :earmark, "0.2.1", "ba6d26ceb16106d069b289df66751734802777a3cbb6787026dd800ffeb850f3", [:mix], []},
-  "eep": {:git, "https://github.com/virtan/eep.git", "635d09bcc5d23c4c884da8e0e1bfb516b1eb1629", [tag: "v1.1"]},
   "ex_doc": {:hex, :ex_doc, "0.12.0", "b774aabfede4af31c0301aece12371cbd25995a21bb3d71d66f5c2fe074c603f", [:mix], [{:earmark, "~> 0.2", [hex: :earmark, optional: false]}]}}
