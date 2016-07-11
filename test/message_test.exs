@@ -289,6 +289,20 @@ defmodule HL7.Message.Test do
     [pr1] = segments
     assert HL7.segment_id(pr1) === "PR1"
     assert pr1.set_id === 2
+    # Process all paired segments
+    acc = HL7.reduce_paired_segments(msg, ["PR1", "OBX", "AUT"], 0, [], fn paired_segments, index, acc0 ->
+      value =
+        for segment <- paired_segments do
+          case HL7.segment_id(segment) do
+            "PR1" -> {index, "PR1", segment.set_id, segment.procedure.id}
+            "OBX" -> {index, "OBX", segment.set_id}
+            "AUT" -> {index, "AUT"}
+          end
+        end
+      [value | acc0]
+    end)
+    assert [[{0, "PR1", 1, "90.34.01"}, {0, "OBX", 1}, {0, "AUT"}],
+            [{1, "PR1", 2, "90.46.20"}, {1, "OBX", 2}, {1, "AUT"}]] === Enum.reverse(acc)
   end
 
   test "Delete/Insert/Replace segments into a message" do

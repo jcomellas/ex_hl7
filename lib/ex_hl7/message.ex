@@ -71,25 +71,85 @@ defmodule HL7.Message do
   @spec paired_segments(t, [HL7.Type.segment_id], HL7.Type.repetition) :: [HL7.Segment.t]
   def paired_segments(message, segment_ids, repetition \\ 0)
 
-  def paired_segments(message, [segment_id | tail2], repetition) do
-    case drop_until_segment(message, segment_id, repetition) do
-      [segment | tail1] -> _paired_segments(tail1, tail2, [segment])
-      []                -> []
-    end
-  end
-  def paired_segments(_message, [], _repetition) do
-    []
+  def paired_segments(message, [segment_id | _tail] = segment_ids, repetition) do
+    {group, _message_tail} = message
+    |> drop_until_segment(segment_id, repetition)
+    |> segment_group(segment_ids, [])
+    group
   end
 
-  defp _paired_segments([segment | tail1], [segment_id | tail2], acc) do
-    case HL7.Segment.id(segment) do
-      ^segment_id -> _paired_segments(tail1, tail2, [segment | acc])
-      _           -> Enum.reverse(acc)
+  @doc """
+  It skips over the first `repetition` groups of paired segment and invokes
+  `fun` for each subsequent group of paired segments in the `message`. It
+  passes the following arguments to `fun` on each call:
+
+    - list of segments found that correspond to the group.
+    - index of the group of segments in the `message` (0-based).
+    - accumulator `acc` with the incremental results returned by `fun`.
+
+  In HL7 messages sometimes some segments are immediately followed by other
+  segments within the message. This function was created to easily process
+  those "paired segments".
+
+  For example, the `PR1` segment is sometimes followed by some other segments
+  (e.g. `OBX`, `AUT`, etc.) to include observations and other related
+  information for a procedure. Note that there might be multiple segment
+  groupings in a message.
+
+  ## Return value
+
+  The accumulator returned by `fun` in its last invocation.
+
+  ## Examples
+
+      iex> HL7.Message.reduce_paired_segments(message, ["PR1", "AUT"], 0, [], fun segments, index, acc ->
+        segment_ids = for segment <- segments, do: HL7.segment_id(segment)
+        [{index, segment_ids} | acc]
+      end
+      [{0, ["PR1", "AUT"]}, {1, ["PR1", "AUT"]}]
+
+  """
+  @spec reduce_paired_segments(t, [HL7.Type.segment_id], HL7.Type.repetition, acc :: term,
+                               ([HL7.Segment.t], HL7.Type.Repetition, acc :: term -> acc :: term)) :: acc :: term
+  def reduce_paired_segments(message, [segment_id | _segment_id_tail] = segment_ids,
+                             initial_repetition, acc, fun) do
+    # Skip all the segments before the segment ID that starts the group we're
+    # interested in.
+    message
+    |> drop_until_segment(segment_id, initial_repetition)
+    |> reduce_segment_groups(segment_ids, 0, acc, fun)
+  end
+
+  defp reduce_segment_groups([_ | _] = message, [segment_id | _] = segment_ids, repetition, acc, fun) do
+    message = drop_until_segment(message, segment_id)
+    case segment_group(message, segment_ids, []) do
+      {[_ | _] = group, message_tail} ->
+        acc = fun.(group, repetition, acc)
+        reduce_segment_groups(message_tail, segment_ids, repetition + 1, acc, fun)
+      {[], _message_tail} ->
+        acc
     end
   end
-  defp _paired_segments(_message, _segment_ids, acc) do
-    Enum.reverse(acc)
+  defp reduce_segment_groups([], _segment_ids, _repetition, acc, _fun) do
+    acc
   end
+
+  defp segment_group([segment | message_tail] = message, [segment_id | segment_id_tail], acc) do
+    # If the segment ID does not match the next segment in the list, we skip
+    # the segment ID and continue with the following segment ID. This behaviour
+    # deals with scenarios where we're looking for the `["PR1", "OBX", "AUT"]`
+    # group and the message only contains the `["PR1", "AUT"]` one because the
+    # `OBX` segment is optional.
+    case HL7.Segment.id(segment) do
+      ^segment_id -> segment_group(message_tail, segment_id_tail, [segment | acc])
+      _           -> segment_group(message, segment_id_tail, acc)
+    end
+  end
+  defp segment_group(message, _segment_ids, acc) do
+    {Enum.reverse(acc), message}
+  end
+
+  defp drop_until_segment(segments, segment_id, repetition \\ 0)
 
   defp drop_until_segment([segment | tail] = segments, segment_id, repetition) do
     case HL7.Segment.id(segment) do

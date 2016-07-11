@@ -280,6 +280,58 @@ defmodule HL7 do
   defdelegate paired_segments(message, segment_ids, repetition), to: HL7.Message
 
   @doc """
+  It skips over the first `repetition` groups of paired segment and invokes
+  `fun` for each subsequent group of paired segments in the `message`. It
+  passes the following arguments to `fun` on each call:
+
+    - list of segments found that correspond to the group.
+    - index of the group of segments in the `message` (0-based).
+    - accumulator `acc` with the incremental results returned by `fun`.
+
+  In HL7 messages sometimes some segments are immediately followed by other
+  segments within the message. This function was created to easily process
+  those "paired segments".
+
+  For example, the `PR1` segment is sometimes followed by some other segments
+  (e.g. `OBX`, `AUT`, etc.) to include observations and other related
+  information for a procedure. Note that there might be multiple segment
+  groupings in a message.
+
+  ## Arguments
+
+  * `message`: list of segments containing a decoded HL7 message.
+
+  * `segment_ids`: list of segment IDs that define the group of segments to
+  retrieve.
+
+  * `repetition`: index of the group of segments to retrieve (0-based); it also
+  corresponds to the number of groups to skip.
+
+  * `acc`: term containing the initial value of the accumulator to be passed to
+  the `fun` callback.
+
+  * `fun`: callback function receiving a group of segments, the index of the
+  group in the message and the accumulator.
+
+  ## Return value
+
+  The accumulator returned by `fun` in its last invocation.
+
+  ## Examples
+
+      iex> HL7.reduce_paired_segments(message, ["PR1", "AUT"], 0, [], fun segments, index, acc ->
+        segment_ids = for segment <- segments, do: HL7.segment_id(segment)
+        [{index, segment_ids} | acc]
+      end
+
+      [{0, ["PR1", "AUT"]}, {1, ["PR1", "AUT"]}]
+
+  """
+  @spec reduce_paired_segments(message, [segment_id], repetition, acc :: term,
+                               (([HL7.Segment.t], HL7.Type.Repetition, acc :: term) -> acc :: term)) :: acc :: term
+  defdelegate reduce_paired_segments(message, segment_ids, repetition, acc, fun), to: HL7.Message
+
+  @doc """
   Return the number of segments with a specified segment ID in an HL7 message.
 
   ## Examples
@@ -579,7 +631,7 @@ defmodule HL7 do
   ## Arguments
 
   * `buffer`: binary or iolist containing an MLLP-framed HL7 message as
-              returned by `HL7.to_mllp/1`.
+    returned by `HL7.to_mllp/1`.
 
   ## Return value
 
