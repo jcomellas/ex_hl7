@@ -41,8 +41,8 @@ defmodule HL7.Codec do
   and deal with it accordingly when performing lookups or comparisons.
   """
 
-  @separators "|^&~"
-  @null_value "\"\""
+  @separators          {?|, ?^, ?&, ?~}
+  @null_value          "\"\""
 
   @doc """
   Return the default separators used to encode HL7 messages in their compiled
@@ -67,25 +67,29 @@ defmodule HL7.Codec do
     # Based on the frequency at which each separator usually appears in a
     # message, the optimal layout to make comparisons more efficient is
     # field (59.2%), component (26.3%), subcomponent (3.5%), segment (8.9%), repetition (2.1%)
-    <<field, component, subcomponent, repetition>>
+    {field, component, subcomponent, repetition}
   end
+
+  @compile {:inline, separator: 2}
 
   @doc "Return the separator corresponding to an item type."
   @spec separator(HL7.Type.item_type, binary) :: byte
   def separator(item_type, separators \\ @separators)
 
-  def separator(:field,        <<char, _, _, _>>), do: char
-  def separator(:component,    <<_, char, _, _>>), do: char
-  def separator(:subcomponent, <<_, _, char, _>>), do: char
-  def separator(:repetition,   <<_, _, _, char>>), do: char
+  def separator(:field,        {char, _, _, _}), do: char
+  def separator(:component,    {_, char, _, _}), do: char
+  def separator(:subcomponent, {_, _, char, _}), do: char
+  def separator(:repetition,   {_, _, _, char}), do: char
 
-  def match_separator(char, <<char, _, _, _>>), do:
+  @compile {:inline, match_separator: 2}
+
+  def match_separator(char, {char, _, _, _}), do:
     {:match, :field}
-  def match_separator(char, <<_, char, _, _>>), do:
+  def match_separator(char, {_, char, _, _}), do:
     {:match, :component}
-  def match_separator(char, <<_, _, char, _>>), do:
+  def match_separator(char, {_, _, char, _}), do:
     {:match, :subcomponent}
-  def match_separator(char, <<_, _, _, char>>), do:
+  def match_separator(char, {_, _, _, char}), do:
     {:match, :repetition}
   def match_separator(_char, _separators), do:
     :nomatch
@@ -296,7 +300,7 @@ defmodule HL7.Codec do
 
   @spec encode_value(HL7.Type.value | nil, type :: atom) :: binary | :nomatch
   def encode_value(value, type \\ :string)
-  
+
   def encode_value(nil, _type), do:
     @null_value
   def encode_value(value, type)
@@ -379,7 +383,7 @@ defmodule HL7.Codec do
 
   """
   def escape(value, separators \\ @separators, escape_char \\ ?\\)
-   when is_binary(value) and is_binary(separators) and is_integer(escape_char) do
+   when is_binary(value) and is_tuple(separators) and is_integer(escape_char) do
     escape_no_copy(value, separators, escape_char, byte_size(value), 0)
   end
 
@@ -420,6 +424,8 @@ defmodule HL7.Codec do
     <<acc :: binary, escape_char, char, escape_char>>
   end
 
+  @compile {:inline, escape_delimiter_type: 1}
+
   defp escape_delimiter_type(:field),        do: ?F
   defp escape_delimiter_type(:component),    do: ?S
   defp escape_delimiter_type(:subcomponent), do: ?T
@@ -442,7 +448,7 @@ defmodule HL7.Codec do
 
   """
   def unescape(value, separators \\ @separators, escape_char \\ ?\\)
-   when is_binary(value) and is_binary(separators) and is_integer(escape_char) do
+   when is_binary(value) and is_tuple(separators) and is_integer(escape_char) do
     unescape_no_copy(value, separators, escape_char, byte_size(value), 0)
   end
 
