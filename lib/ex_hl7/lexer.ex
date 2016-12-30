@@ -168,6 +168,8 @@ defmodule HL7.Lexer do
     end
   end
 
+  @compile {:inline, printable?: 1}
+
   @doc """
   Checks that the characters in the string are printable ASCII and ISO-8859-1
   (Latin 1) characters.
@@ -198,6 +200,8 @@ defmodule HL7.Lexer do
   defp _valid_segment_id?(<<>>), do:
     true
 
+  @compile {:inline, alphanumeric?: 1}
+
   @doc """
   Checks that the characters in the string are only alphanumeric ASCII
   characters.
@@ -205,6 +209,8 @@ defmodule HL7.Lexer do
   @spec alphanumeric?(binary) :: boolean
   def alphanumeric?(""), do: false
   def alphanumeric?(str), do: _alphanumeric?(str)
+
+  @compile {:inline, _alphanumeric?: 1}
 
   def _alphanumeric?(<<char, rest :: binary>>)
    when (char >= ?A and char <= ?Z) or (char >= ?a and char <= ?z) or (char >= ?0 and char <= ?9), do:
