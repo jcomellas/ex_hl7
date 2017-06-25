@@ -309,7 +309,7 @@ defmodule HL7.Codec do
   def encode_value(value, :integer) when is_integer(value), do:
     :erlang.integer_to_binary(value)
   def encode_value(value, :float) when is_float(value), do:
-    Float.to_string(value, decimals: 4, compact: true)
+    Float.to_string(value)
   def encode_value(value, :date), do:
     format_date(value)
   def encode_value(value, :datetime), do:
