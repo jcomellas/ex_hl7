@@ -8,8 +8,8 @@ defmodule HL7.Mixfile do
      description: "HL7 Parser for Elixir",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
-     deps: deps,
-     package: package,
+     deps: deps(),
+     package: package(),
      consolidate_protocols: Mix.env != :test]
   end
 
