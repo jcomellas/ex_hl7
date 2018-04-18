@@ -10,6 +10,6 @@ defmodule HL7.Type do
   @type component      :: binary | tuple
   @type field          :: binary | component | [binary] | [component]
   @type value_type     :: :string | :integer | :float | :date | :datetime
-  @type value          :: binary | integer | float | :calendar.date | :calendar.datetime
-  @type repetition     :: non_neg_integer
+  @type value          :: binary | integer | float | Date.t | NaiveDateTime.t
+@type repetition     :: non_neg_integer
 end

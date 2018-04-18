@@ -14,7 +14,7 @@ defmodule HL7.Message.Test do
       sending_facility: %HD{namespace_id: "CLI01020304"},
       receiving_app: %HD{namespace_id: "SERVHL7"},
       receiving_facility: %HD{namespace_id: "PREPAGA", universal_id: "112233", universal_id_type: "IIN"},
-      message_datetime: {{2012, 2, 1}, {10, 11, 55}},
+      message_datetime: ~N[2012-02-01 10:11:55],
       message_type: %CM_MSH_9{id: "ZQA", trigger_event: "Z02", structure: "ZQA_Z02"},
       message_control_id: "00XX20120201101155",
       processing_id: "P",
@@ -329,9 +329,9 @@ defmodule HL7.Message.Test do
     msg = HL7.delete(msg, "OBX", 1)
     msg = HL7.delete(msg, "OBX", 0)
     assert HL7.segment(msg, "OBX") === nil
-    msg = HL7.insert_after(msg, "PR1", 0, %OBX{set_id: 1, observation_status: "F"})    
+    msg = HL7.insert_after(msg, "PR1", 0, %OBX{set_id: 1, observation_status: "F"})
     assert HL7.segment(msg, "OBX", 0) !== nil
-    msg = HL7.insert_before(msg, "AUT", 2, %OBX{set_id: 2, observation_status: "F"})    
+    msg = HL7.insert_before(msg, "AUT", 2, %OBX{set_id: 2, observation_status: "F"})
     assert HL7.segment(msg, "OBX", 1) !== nil
     assert length(HL7.paired_segments(msg, ["PR1", "OBX"], 0)) === 2
     assert length(HL7.paired_segments(msg, ["PR1", "OBX"], 1)) === 2
