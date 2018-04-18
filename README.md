@@ -86,10 +86,8 @@ HL7 supports many types of single value (scalar, non-composite) fields. This par
   * `:string`: text value with no conversion performed on it. If the text contains characters that may overlap any message delimiter, it should be modified following the HL7 escaping rules (see `HL7.escape/2` and `HL7.unescape/2`).
   * `:integer`: integer number
   * `:float`: floating-point number with a dot (`.`) as decimal point; its text representation can be that of an integer (i.e. with no decimal point).
-  * `:date`: date in the `YYYYMMDD` format that is represented as a `:calendar.date` tuple.
-  * `:datetime`: date/time in the `YYYYMMDD[hhmm[ss]]` format represented as a `:calendar.datetime` tuple. If the time is not present, it will be represented by a `{0, 0, 0}` tuple.
-
-*Note*: there is no support for the full HL7 date/time format yet, as there is no standard way to represent times with subsecond precision and timezones in Elixir.
+  * `:date`: date in the `YYYYMMDD` format that is represented as a `Date` struct.
+  * `:datetime`: date/time in the `YYYYMMDD[hhmm[ss]]` format represented as a `NaiveDateTime` struct. If the time is not present, the hour, minutes and seconds will be set to `0`.
 
 ## Composite Fields
 
@@ -226,8 +224,8 @@ alias HL7.Composite.EI
 
 pr1 = HL7.segment(message, "PR1")
 aut = %AUT{plan: %CE{id: "PPO"}, company: %CE{id: "WA02"},
-           effective_date: {1994, 1, 10},
-           expiration_date: {1994, 05, 10},
+           effective_date: ~D[1994-01-10],
+           expiration_date: ~D[1994-05-10],
            authorization: %EI{id: "123456789"}}
 message = HL7.insert_before(message, "PR1", 0, [pr1, aut])
 message = HL7.insert_after(message, "PR1", 1, aut)
@@ -294,7 +292,7 @@ defmodule Authorizer do
             sending_facility: msh.receiving_facility,
             receiving_app: msh.sending_app,
             receiving_facility: msh.sending_facility,
-            message_datetime: :calendar.universal_time(),
+            message_datetime: NaiveDateTime.utc_now(),
             # RPA^I08
             message_type: %CM_MSH_9{msh.message_type | id: "RPA"},
             # Kids, don't try this at home
@@ -306,8 +304,8 @@ defmodule Authorizer do
             plan: %CE{id: "PPO"},
             company: %CE{id: "WA02"},
             company_name: "WSIC (WA State Code)",
-            effective_date: {1994, 1, 10},
-            expiration_date: {1994, 05, 10},
+            effective_date: ~D[1994-01-10],
+            expiration_date: ~D[1994-05-10],
             authorization: %EI{id: "123456789"},
             reimbursement_limit: %CP{price: %MO{quantity: 175.0, denomination: "USD"}},
             requested_treatments: 1
