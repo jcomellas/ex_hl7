@@ -4,7 +4,7 @@ defmodule HL7.Mixfile do
   def project do
     [app: :ex_hl7,
      version: "0.4.2",
-     elixir: "~> 1.0",
+     elixir: "~> 1.5",
      description: "HL7 Parser for Elixir",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
