@@ -53,19 +53,16 @@ defmodule HL7.Codec do
     * `&`: subcomponent separator
     * `~`: repetition separator
 
-  To use custom separators in a message use `HL7.Codec.compile_separators/1`
+  To use custom separators in a message use `HL7.Codec.set_separators/1`
   and pass the returned value as argument to the encoding functions.
   """
   def separators(), do: @separators
 
-  def compile_separators(args) do
+  def set_separators(args) do
     field = Keyword.get(args, :field, ?|)
     component = Keyword.get(args, :component, ?^)
     subcomponent = Keyword.get(args, :subcomponent, ?&)
     repetition = Keyword.get(args, :repetition, ?~)
-    # Based on the frequency at which each separator usually appears in a
-    # message, the optimal layout to make comparisons more efficient is
-    # field (59.2%), component (26.3%), subcomponent (3.5%), segment (8.9%), repetition (2.1%)
     {field, component, subcomponent, repetition}
   end
 
@@ -361,8 +358,8 @@ defmodule HL7.Codec do
   * `value`: a string to escape; it may or may not contain separator
     characters.
 
-  * `separators`: a binary containing the item separators to be used when
-    generating the message as returned by `HL7.Codec.compile_separators/1`.
+  * `separators`: a tuple containing the item separators to be used when
+    generating the message as returned by `HL7.Codec.set_separators/1`.
     Defaults to `HL7.Codec.separators`.
 
   * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\ `.

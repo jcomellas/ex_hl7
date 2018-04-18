@@ -5,7 +5,7 @@ defmodule HL7.Reader do
       r HL7.Lexer
       r HL7.Reader
       reader = HL7.Reader.new
-      buffer = 
+      buffer =
       "MSH|^~\\&|SERV|223344^^II|POSM|CARRIER^CL9999^IP|20030127202538||RPA^I08|5307938|P|2.3|||NE|NE\r" <>
       "MSA|AA|CL999920030127203647||||B006^\r" <>
       "AUT|TESTPLAN|223344^^II||||5307938||0|0\r" <>
@@ -29,9 +29,10 @@ defmodule HL7.Reader do
       NTE|1||SIN CARGO
       NTE|2||IVA: SI
 
-      {:ok, {reader, token, rest}} = HL7.Reader.read(reader, buffer)
+      {:token, {reader, token, rest}} = HL7.Reader.read(reader, buffer)
       token
-      {:ok, {reader, token, rest}} = HL7.Reader.read(reader, rest); {reader.segment_id, reader.sequence, token}
+      {:token, {reader, token, rest}} = HL7.Reader.read(reader, rest)
+      {reader.segment_id, reader.sequence, token}
 
       {:ok, msg} = HL7.read(buffer)
       buf2 = HL7.write(msg, input_format: :text)
@@ -85,7 +86,7 @@ defmodule HL7.Reader do
     segment_creator.(segment_id)
 
   @doc "Return the separators that were used in the message that was read by the `Reader`."
-  @spec separators(t) :: binary
+  @spec separators(t) :: tuple
   def separators(%Reader{lexer: lexer}), do: lexer.separators
 
   @doc "Read a token from the reader."

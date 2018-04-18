@@ -137,8 +137,8 @@ defmodule HL7 do
       segment terminators or `:text` for a format that replaces segment
       terminators with line feeds to easily output messages to a console or
       text file. Defaults to `:wire`.
-    * `separators`: a binary containing the item separators to be used when
-      generating the message as returned by `HL7.Codec.compile_separators/1`.
+    * `separators`: a tuple containing the item separators to be used when
+      generating the message as returned by `HL7.Codec.set_separators/1`.
       Defaults to `HL7.Codec.separators`.
     * `trim`: boolean that when set to `true` causes the fields to be
       shortened to their optimal layout, removing trailing empty items (see
@@ -554,8 +554,8 @@ defmodule HL7 do
     characters.
 
   * `options`: keyword list with the escape options; these are:
-    * `separators`: a binary containing the item separators to be used when
-      generating the message as returned by `HL7.Codec.compile_separators/1`.
+    * `separators`: a tuple containing the item separators to be used when
+      generating the message as returned by `HL7.Codec.set_separators/1`.
       Defaults to `HL7.Codec.separators`.
     * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\ `
       (backlash).
@@ -581,8 +581,8 @@ defmodule HL7 do
   * `value`: a string to unescape; it may or may not contain escaped characters.
 
   * `options`: keyword list with the escape options; these are:
-    * `separators`: a binary containing the item separators to be used when
-      generating the message as returned by `HL7.Codec.compile_separators/1`.
+    * `separators`: a tuple containing the item separators to be used when
+      generating the message as returned by `HL7.Codec.set_separators/1`.
       Defaults to `HL7.Codec.separators`.
     * `escape_char`: character to be used as escape delimiter. Defaults to `?\\\\ `
       (backlash).

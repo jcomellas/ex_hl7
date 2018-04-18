@@ -2,21 +2,24 @@ defmodule HL7.Lexer do
   @moduledoc """
   Lexer used by the HL7 parser to retrieve tokens from a buffer.
   """
-
   @segment_id_length 3
 
-  defstruct state: :read_segment_id, separators: nil, escape_char: ?\\, terminator: ?\r, next_tokens: []
+  defstruct state: :read_segment_id, separators: nil, escape_char: ?\\,
+    terminator: ?\r, next_tokens: []
 
   alias HL7.Lexer
 
   @type option     :: {:input_format, :text | :wire}
-  @type state      :: :read_segment_id | :read_delimiters | :read_separator | :read_characters
+  @type state      :: :read_segment_id
+                    | :read_delimiters
+                    | :read_separator
+                    | :read_characters
   @type token      :: {:separator, HL7.Type.item_type | :segment} |
                       {:literal, binary} |
                       {:value, binary}
   @type t          :: %Lexer{
                         state: state,
-                        separators: binary,
+                        separators: tuple,
                         escape_char: byte,
                         terminator: byte,
                         next_tokens: [token]
@@ -38,7 +41,7 @@ defmodule HL7.Lexer do
   @spec read(t, binary) :: {:token, {t, token, binary}}
                          | {:incomplete, {t, binary}}
                          | {:error, any}
-  def read(%Lexer{state: state, next_tokens: []} = lexer, buffer) do
+  def read(lexer = %Lexer{state: state, next_tokens: []}, buffer) do
     # case state do
     #   :read_segment_id -> read_segment_id(lexer, buffer)
     #   :read_delimiters -> read_delimiters(lexer, buffer)
@@ -47,7 +50,7 @@ defmodule HL7.Lexer do
     # end
     apply(__MODULE__, state, [lexer, buffer])
   end
-  def read(%Lexer{next_tokens: [token | tail]} = lexer, buffer) do
+  def read(lexer = %Lexer{next_tokens: [token | tail]}, buffer) do
     lexer = %Lexer{lexer | next_tokens: tail}
     {:token, {lexer, token, buffer}}
   end
@@ -57,7 +60,7 @@ defmodule HL7.Lexer do
   in the next call to `Lexer.read/2`
   """
   @spec unread(t, token) :: t
-  def unread(%Lexer{next_tokens: next_tokens} = lexer, token), do:
+  def unread(lexer = %Lexer{next_tokens: next_tokens}, token), do:
     %Lexer{lexer | next_tokens: [token | next_tokens]}
 
   def read_segment_id(lexer, <<"MSH", rest :: binary>>) do
@@ -79,16 +82,16 @@ defmodule HL7.Lexer do
   end
 
   def read_delimiters(lexer, <<delimiters :: binary-size(5), rest :: binary>>) do
-    if printable?(delimiters) and not alphanumeric?(delimiters) do
+    if valid_delimiters?(delimiters) do
       # The MSH segment must be handled as a special case because the 5
       # characters after the segment ID act both as separators and elements.
       # These 5 characters determine what separators will be used for the rest
       # of the message.
-      <<field_sep, comp_sep, rep_sep, escape_char, subcomp_sep>> = delimiters
+      <<field_sep, encoding_chars :: binary>> = delimiters
+      <<comp_sep, rep_sep, escape_char, subcomp_sep>> = encoding_chars
       # Build a binary with the order required by the matching functions.
-      separators = HL7.Codec.compile_separators(field: field_sep, component: comp_sep,
-                                                subcomponent: subcomp_sep, repetition: rep_sep)
-      encoding_chars = <<comp_sep, rep_sep, escape_char, subcomp_sep>>
+      separators = HL7.Codec.set_separators(field: field_sep, component: comp_sep,
+                                            subcomponent: subcomp_sep, repetition: rep_sep)
       token = {:separator, :field}
       next_tokens = [{:literal, <<field_sep>>}, token, {:literal, encoding_chars}]
       # Set the lexer to the state to be used once all the buffered tokens are
@@ -104,7 +107,7 @@ defmodule HL7.Lexer do
     {:incomplete, {lexer, buffer}}
   end
 
-  def read_separator(%Lexer{separators: separators, terminator: terminator} = lexer,
+  def read_separator(lexer = %Lexer{separators: separators, terminator: terminator},
                      <<char, rest :: binary>>) do
     case HL7.Codec.match_separator(char, separators) do
       {:match, :field} ->
@@ -123,7 +126,7 @@ defmodule HL7.Lexer do
     {:incomplete, {lexer, buffer}}
   end
 
-  def read_characters(%Lexer{separators: separators, terminator: terminator} = lexer, buffer)
+  def read_characters(lexer = %Lexer{separators: separators, terminator: terminator}, buffer)
    when buffer !== <<>> do
     case find_characters(buffer, HL7.Codec.separator(:field, separators), terminator, <<>>) do
       {:ok, {value, item_type, rest}} ->
@@ -178,45 +181,63 @@ defmodule HL7.Lexer do
   def printable?(<<char, rest :: binary>>)
    when (char >= 0x20 and char <= 0x7e) or (char >= 0xa0 and char <= 0xff), do:
     printable?(rest)
-  def printable?(<<_char, _rest :: binary>>), do:
-    false
-  def printable?(<<>>), do:
-    true
+  def printable?(<<_char, _rest :: binary>>), do: false
+  def printable?(<<>>), do: true
 
   @doc """
   Checks that the string is a valid segment ID.
   """
   @spec valid_segment_id?(binary) :: boolean
-  def valid_segment_id?(str) when is_binary(str) and byte_size(str) === 3, do:
-    _valid_segment_id?(str)
-  def valid_segment_id?(_str), do:
+  def valid_segment_id?(<<s1, s2, s3>>) do
+    uppercase_ascii_char?(s1) and
+    (uppercase_ascii_char?(s2) or numeric_char?(s2)) and
+    (uppercase_ascii_char?(s3) or numeric_char?(s3))
+  end
+  def valid_segment_id?(_str) do
     false
+  end
 
-  defp _valid_segment_id?(<<char, rest :: binary>>)
-   when (char >= ?A and char <= ?Z) or (char >= ?0 and char <= ?9), do:
-    _valid_segment_id?(rest)
-  defp _valid_segment_id?(<<_char, _rest :: binary>>), do:
-    false
-  defp _valid_segment_id?(<<>>), do:
-    true
+  @compile {:inline, numeric_char?: 1}
+  # Check if a character is a numeric digit.
+  for char <- ?0..?9 do
+    defp numeric_char?(unquote(char)), do: true
+  end
+  defp numeric_char?(_char), do: false
 
-  @compile {:inline, alphanumeric?: 1}
+  @compile {:inline, uppercase_ascii_char?: 1}
+  # Check if a character is an uppercase letter.
+  for char <- ?A..?Z do
+    defp uppercase_ascii_char?(unquote(char)), do: true
+  end
+  defp uppercase_ascii_char?(_char), do: false
 
-  @doc """
-  Checks that the characters in the string are only alphanumeric ASCII
-  characters.
-  """
-  @spec alphanumeric?(binary) :: boolean
-  def alphanumeric?(""), do: false
-  def alphanumeric?(str), do: _alphanumeric?(str)
+  @compile {:inline, valid_delimiters?: 1}
+  # Checks that the binary contains valid HL7 delimiters, as passed in the
+  # MSH segment.
+  @spec valid_delimiters?(binary) :: boolean
+  defp valid_delimiters?(<<field_sep, comp_sep, rep_sep, escape_char, subcomp_sep>>) do
+    delimiter_char?(field_sep) and
+    delimiter_char?(comp_sep) and
+    delimiter_char?(rep_sep) and
+    delimiter_char?(escape_char) and
+    delimiter_char?(subcomp_sep)
+  end
+  defp valid_delimiters?(_str), do: false
 
-  @compile {:inline, _alphanumeric?: 1}
-
-  def _alphanumeric?(<<char, rest :: binary>>)
-   when (char >= ?A and char <= ?Z) or (char >= ?a and char <= ?z) or (char >= ?0 and char <= ?9), do:
-    _alphanumeric?(rest)
-  def _alphanumeric?(<<_char, _rest :: binary>>), do:
-    false
-  def _alphanumeric?(<<>>), do:
-    true
+  @compile {:inline, delimiter_char?: 1}
+  # Checks that the character is a valid HL7 delimiter.
+  defp delimiter_char?(?|), do: true
+  defp delimiter_char?(?^), do: true
+  defp delimiter_char?(?&), do: true
+  defp delimiter_char?(?~), do: true
+  defp delimiter_char?(?\\), do: true
+  defp delimiter_char?(?!), do: true
+  defp delimiter_char?(?#), do: true
+  defp delimiter_char?(?$), do: true
+  defp delimiter_char?(?%), do: true
+  defp delimiter_char?(?{), do: true
+  defp delimiter_char?(?}), do: true
+  defp delimiter_char?(?[), do: true
+  defp delimiter_char?(?]), do: true
+  defp delimiter_char?(_char), do: false
 end

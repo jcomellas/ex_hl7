@@ -6,8 +6,9 @@ defmodule HL7.Writer do
 
   alias HL7.Writer
 
-  @type option         :: {:separators, binary} | {:trim, boolean} | {:output_format, :wire | :text}
-
+  @type option         :: {:separators, tuple}
+                        | {:trim, boolean}
+                        | {:output_format, :wire | :text}
   @opaque state        :: :normal | :field_separator | :encoding_chars
   @opaque t            :: %Writer{state: state, separators: binary, trim: boolean, buffer: iodata}
 
