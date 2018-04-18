@@ -1,4 +1,10 @@
 /_build
+/c_src
 /deps
+/doc
+/.elixir_ls
+.vscode/
 erl_crash.dump
 *.ez
+*.sublime-*
+*.code-*
