@@ -4,6 +4,7 @@ defmodule HL7.Type do
   """
   @type segment_id     :: binary
   @type sequence       :: pos_integer
+  @type repetition     :: pos_integer
   @type composite_id   :: binary
   @type item_type      :: :field | :component | :repetition | :subcomponent
   @type subcomponent   :: binary | tuple
@@ -11,5 +12,4 @@ defmodule HL7.Type do
   @type field          :: binary | component | [binary] | [component]
   @type value_type     :: :string | :integer | :float | :date | :datetime
   @type value          :: binary | integer | float | Date.t | NaiveDateTime.t
-@type repetition     :: non_neg_integer
 end

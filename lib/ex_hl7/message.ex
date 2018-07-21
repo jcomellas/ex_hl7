@@ -7,8 +7,10 @@ defmodule HL7.Message do
   """
   alias HL7.Reader
   alias HL7.Writer
+  alias HL7.Segment
+  alias HL7.Type
 
-  @type t          :: [HL7.Segment.t]
+  @type t          :: [Segment.t]
   @type read_ret   :: {:ok, t} |
                       {:incomplete, {(binary -> read_ret), binary}} |
                       {:error, reason :: any}
@@ -31,7 +33,7 @@ defmodule HL7.Message do
   iex> 2 = pr1.set_id
 
   """
-  @spec segment(t, HL7.Type.segment_id, HL7.Type.repetition) :: HL7.Segment.t
+  @spec segment(t, Type.segment_id, Type.repetition) :: Segment.t
   def segment(message, segment_id, repetition \\ 0)
 
   def segment(message, segment_id, repetition) do
@@ -68,7 +70,7 @@ defmodule HL7.Message do
       iex> [aut] = HL7.Message.paired_segments(message, ["PR1", "OBX"], 1)
 
   """
-  @spec paired_segments(t, [HL7.Type.segment_id], HL7.Type.repetition) :: [HL7.Segment.t]
+  @spec paired_segments(t, [Type.segment_id], Type.repetition) :: [Segment.t]
   def paired_segments(message, segment_ids, repetition \\ 0)
 
   def paired_segments(message, [segment_id | _tail] = segment_ids, repetition) do
@@ -109,8 +111,8 @@ defmodule HL7.Message do
       [{0, ["PR1", "AUT"]}, {1, ["PR1", "AUT"]}]
 
   """
-  @spec reduce_paired_segments(t, [HL7.Type.segment_id], HL7.Type.repetition, acc :: term,
-                               ([HL7.Segment.t], HL7.Type.Repetition, acc :: term -> acc :: term)) :: acc :: term
+  @spec reduce_paired_segments(t, [Type.segment_id], Type.repetition, acc :: term,
+                               ([Segment.t], Type.repetition, acc :: term -> acc :: term)) :: acc :: term
   def reduce_paired_segments(message, [segment_id | _segment_id_tail] = segment_ids,
                              initial_repetition, acc, fun) do
     # Skip all the segments before the segment ID that starts the group we're
@@ -140,7 +142,7 @@ defmodule HL7.Message do
     # deals with scenarios where we're looking for the `["PR1", "OBX", "AUT"]`
     # group and the message only contains the `["PR1", "AUT"]` one because the
     # `OBX` segment is optional.
-    case HL7.Segment.id(segment) do
+    case Segment.id(segment) do
       ^segment_id -> segment_group(message_tail, segment_id_tail, [segment | acc])
       _           -> segment_group(message, segment_id_tail, acc)
     end
@@ -152,7 +154,7 @@ defmodule HL7.Message do
   defp drop_until_segment(segments, segment_id, repetition \\ 0)
 
   defp drop_until_segment([segment | tail] = segments, segment_id, repetition) do
-    case HL7.Segment.id(segment) do
+    case Segment.id(segment) do
       ^segment_id ->
         if repetition === 0 do
           segments
@@ -176,13 +178,13 @@ defmodule HL7.Message do
   iex> 0 = HL7.Message.segment_count(message, "OBX")
 
   """
-  @spec segment_count(t, HL7.Type.segment_id) :: non_neg_integer
+  @spec segment_count(t, Type.segment_id) :: non_neg_integer
   def segment_count(segments, segment_id)
    when is_list(segments) and is_binary(segment_id), do:
     segment_count(segments, segment_id, 0)
 
   defp segment_count([segment | tail], segment_id, count) do
-    count = case HL7.Segment.id(segment) do
+    count = case Segment.id(segment) do
               ^segment_id -> count + 1
               _           -> count
             end
@@ -200,7 +202,7 @@ defmodule HL7.Message do
   iex> HL7.delete(message, "NTE", 0)
 
   """
-  @spec delete(t, HL7.Type.segment_id, HL7.Type.repetition) :: t
+  @spec delete(t, Type.segment_id, Type.repetition) :: t
   def delete(message, segment_id, repetition \\ 0) do
     case split_at_segment(message, segment_id, repetition, []) do
       {_segment, tail, acc} ->
@@ -236,7 +238,7 @@ defmodule HL7.Message do
   iex> HL7.insert_before(message, "ERR", msa)
 
   """
-  @spec insert_before(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
+  @spec insert_before(t, Type.segment_id, Segment.t | [Segment.t]) :: t
   def insert_before(message, segment_id, segment), do:
     insert_before(message, segment_id, 0, segment)
 
@@ -268,8 +270,7 @@ defmodule HL7.Message do
   iex> HL7.Message.insert_before(message, "ERR", 0, msa)
 
   """
-  @spec insert_before(t, HL7.Type.segment_id, HL7.Type.repetition,
-                      HL7.Segment.t | [HL7.Segment.t]) :: t
+  @spec insert_before(t, Type.segment_id, Type.repetition, Segment.t | [Segment.t]) :: t
   def insert_before(message, segment_id, repetition, new_segments)
    when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
         is_list(new_segments) do
@@ -311,7 +312,7 @@ defmodule HL7.Message do
   iex> HL7.Message.insert_after(message, "MSH", msa)
 
   """
-  @spec insert_after(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
+  @spec insert_after(t, Type.segment_id, Segment.t | [Segment.t]) :: t
   def insert_after(message, segment_id, segment), do:
     insert_after(message, segment_id, 0, segment)
 
@@ -343,8 +344,7 @@ defmodule HL7.Message do
   iex> HL7.Message.insert_after(message, "MSH", 0, msa)
 
   """
-  @spec insert_after(t, HL7.Type.segment_id, HL7.Type.repetition,
-                     HL7.Segment.t | [HL7.Segment.t]) :: t
+  @spec insert_after(t, Type.segment_id, Type.repetition, Segment.t | [Segment.t]) :: t
   def insert_after(message, segment_id, repetition, new_segments)
    when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
         is_list(new_segments) do
@@ -386,7 +386,7 @@ defmodule HL7.Message do
   iex> HL7.Message.replace(message, "MSA", msa)
 
   """
-  @spec replace(t, HL7.Type.segment_id, HL7.Segment.t | [HL7.Segment.t]) :: t
+  @spec replace(t, Type.segment_id, Segment.t | [Segment.t]) :: t
   def replace(message, segment_id, segment), do:
     replace(message, segment_id, 0, segment)
 
@@ -418,8 +418,7 @@ defmodule HL7.Message do
   iex> HL7.Message.replace(message, "MSA", 0, msa)
 
   """
-  @spec replace(t, HL7.Type.segment_id, HL7.Type.repetition,
-                HL7.Segment.t | [HL7.Segment.t]) :: t
+  @spec replace(t, Type.segment_id, Type.repetition, Segment.t | [Segment.t]) :: t
   def replace(message, segment_id, repetition, new_segments)
    when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
         is_list(new_segments) do
@@ -436,7 +435,7 @@ defmodule HL7.Message do
   end
 
   defp split_at_segment([segment | tail], segment_id, repetition, acc) do
-    case HL7.Segment.id(segment) do
+    case Segment.id(segment) do
       ^segment_id ->
         if repetition === 0 do
           {segment, tail, acc}
@@ -484,7 +483,7 @@ defmodule HL7.Message do
       iex> message = HL7.Message.read!(reader, buffer)
 
   """
-  @spec read!(HL7.Reader.t, buffer :: binary) :: t
+  @spec read!(Reader.t, buffer :: binary) :: t
   def read!(reader, buffer) do
     case read(reader, buffer) do
       {:ok, message}           -> message
@@ -538,7 +537,7 @@ defmodule HL7.Message do
       iex> {:ok, message} = HL7.Message.read(reader, buffer)
 
   """
-  @spec read(HL7.Reader.t, buffer :: binary) :: read_ret
+  @spec read(Reader.t, buffer :: binary) :: read_ret
   def read(reader, buffer), do:
     read(reader, buffer, [])
 
@@ -614,13 +613,13 @@ defmodule HL7.Message do
       AUT||112233||||||1|0
 
   """
-  @spec write(HL7.Writer.t, t) :: iodata
+  @spec write(Writer.t, t) :: iodata
   def write(writer, message) do
     writer
     |> Writer.start_message()
     |> write_segments(message)
     |> Writer.end_message()
-    |> Writer.buffer
+    |> Writer.buffer()
   end
 
   defp write_segments(writer, [segment | tail]) do
