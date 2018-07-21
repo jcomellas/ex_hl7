@@ -93,6 +93,17 @@ defmodule HL7.Codec do
     :nomatch
 
   @doc """
+  Checks if a value is empty. This function is implemented as a macro so that
+  it can be used in guards.
+  """
+  @spec empty?(HL7.Type.value | any) :: boolean
+  defmacro empty?(value) do
+    quote do
+      unquote(value) === "" or unquote(value) === nil
+    end
+  end
+
+  @doc """
   Decode a binary holding an HL7 field into its canonical representation.
 
   ## Examples
