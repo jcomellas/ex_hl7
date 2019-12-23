@@ -18,7 +18,7 @@ defmodule HL7.Mixfile do
   end
 
   defp deps do
-    [{:ex_doc, "~> 0.18", only: :dev}]
+    [{:ex_doc, "~> 0.21", only: :dev}]
   end
 
   defp package do
