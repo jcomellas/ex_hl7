@@ -1,21 +1,22 @@
-Code.require_file "test_helper.exs", __DIR__
+defmodule HL7.Test.MessageTest do
+  use ExUnit.Case, async: true
 
-defmodule HL7.Message.Test do
-  use ExUnit.Case
-
-  test "Manually generate HL7 message" do
-    alias HL7.Segment.{MSH,PID,PR1,PRD}
-    alias HL7.Composite.{CE,CM_MSH_9,CM_PRD_7,CX,HD,FN,XAD,XPN}
+  test "manually generate HL7 message" do
+    alias HL7.Segment.Default.{MSH,PID,PR1,PRD}
 
     msh = %MSH{
       field_separator: "|",
       encoding_chars: "^~\\&",
-      sending_app: %HD{namespace_id: "CLIENTHL7"},
-      sending_facility: %HD{namespace_id: "CLI01020304"},
-      receiving_app: %HD{namespace_id: "SERVHL7"},
-      receiving_facility: %HD{namespace_id: "PREPAGA", universal_id: "112233", universal_id_type: "IIN"},
+      sending_app_id: "CLIENTHL7",
+      sending_facility_id: "CLI01020304",
+      receiving_app_id: "SERVHL7",
+      receiving_facility_id: "PREPAGA",
+      receiving_facility_universal_id: "112233",
+      receiving_facility_universal_id_type: "IIN",
       message_datetime: ~N[2012-02-01 10:11:55],
-      message_type: %CM_MSH_9{id: "ZQA", trigger_event: "Z02", structure: "ZQA_Z02"},
+      message_type: "ZQA",
+      trigger_event: "Z02",
+      message_structure: "ZQA_Z02",
       message_control_id: "00XX20120201101155",
       processing_id: "P",
       version: "2.4",
@@ -24,22 +25,25 @@ defmodule HL7.Message.Test do
       country_code: "ARG"
     }
     prd = %PRD{
-      role: [%CE{id: "PS"}, %CE{id: "4600", coding_system: "HL70454"}],
-      address: %XAD{state: "B"},
-      id: %CM_PRD_7{id: "30123456789", id_type: "CU"}
+      role_id: "PS",
+      specialty_id: "4600",
+      specialty_coding_system: "HL70454",
+      state: "B",
+      provider_id: "30123456789",
+      provider_id_type: "CU"
     }
     pid = %PID{
       set_id: 0,
-      patient_id: %CX{
-        id: "1234567890ABC",
-        assigning_authority: %HD{universal_id: "112233", universal_id_type: "IIN"},
-        id_type: "HC"
-      },
-      patient_name: %XPN{family_name: %FN{surname: "unknown"}}
+      patient_id: "1234567890ABC",
+      assigning_authority_universal_id: "112233",
+      assigning_authority_universal_id_type: "IIN",
+      id_type: "HC",
+      last_name: "unknown"
     }
     pr1 = %PR1{
       set_id: 1,
-      procedure: %CE{id: "903401", coding_system: "99DH"}
+      procedure_id: "903401",
+      coding_system: "99DH"
     }
     trim =
       "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
@@ -50,7 +54,7 @@ defmodule HL7.Message.Test do
     assert trim === IO.iodata_to_binary(gen)
   end
 
-  test "Read/write complete trimmed request in wire format" do
+  test "read/write complete trimmed request in wire format" do
     orig =
       "MSH|^~\\&|CLIENTHL7|CLI01020304^|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
       "PRD|PS^^~4600^^HL70454||^^^B^||||30123456789^CU^\r" <>
@@ -72,7 +76,7 @@ defmodule HL7.Message.Test do
     assert trim === IO.iodata_to_binary(gen)
   end
 
-  test "Read/write complete trimmed request in stdio format" do
+  test "read/write complete trimmed request in stdio format" do
     orig =
       """
       MSH|^~\\&|CLIENTHL7|CLI01020304^|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG
@@ -122,7 +126,7 @@ defmodule HL7.Message.Test do
   #   assert full === IO.iodata_to_binary(gen)
   # end
 
-  test "Read/write complete trimmed response in wire format" do
+  test "read/write complete trimmed response in wire format" do
     orig =
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
@@ -158,7 +162,7 @@ defmodule HL7.Message.Test do
     assert trim === IO.iodata_to_binary(gen)
   end
 
-  test "Read/write complete trimmed response in stdio format" do
+  test "read/write complete trimmed response in stdio format" do
     orig =
       """
       MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG
@@ -198,7 +202,7 @@ defmodule HL7.Message.Test do
     assert trim === IO.iodata_to_binary(gen)
   end
 
-  test "Read partial response in wire format" do
+  test "read partial response in wire format" do
     part1 =
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
@@ -222,7 +226,7 @@ defmodule HL7.Message.Test do
     assert HL7.segment(msg, "MSH") !== nil
   end
 
-  test "Retrieve segments from message" do
+  test "retrieve segments from message" do
     buf =
       "MSH|^~\\&|SERVHL7|^112233^IIN|CLIENTHL7|CLI01020304|20120201094257||ZPA^Z02^ZPA_Z02|7745168|P|2.4|||AL|NE|ARG\r" <>
       "MSA|AA|00XX20120201101155\r" <>
@@ -248,20 +252,20 @@ defmodule HL7.Message.Test do
     # Retrieve segment from message with implicit position
     aut = HL7.Message.segment(msg, "AUT")
     assert aut !== nil
-    assert aut.plan.id === "4"
-    assert aut.plan.text === "Cart. 4"
-    assert aut.authorization.id === "4928307"
+    assert aut.plan_id === "4"
+    assert aut.plan_name === "Cart. 4"
+    assert aut.authorization_id === "4928307"
     # Retrieve segment from message with explicit position
     pr1 = HL7.Message.segment(msg, "PR1", 0)
     assert pr1 !== nil
     assert pr1.set_id === 1
-    assert pr1.procedure.id === "90.34.01"
-    assert pr1.procedure.text === "RESONANCIA MAGNETICA NUCLEAR"
+    assert pr1.procedure_id === "90.34.01"
+    assert pr1.procedure_name === "RESONANCIA MAGNETICA NUCLEAR"
     pr1 = HL7.Message.segment(msg, "PR1", 1)
     assert pr1 !== nil
     assert pr1.set_id === 2
-    assert pr1.procedure.id === "90.46.20"
-    assert pr1.procedure.text === "GADOLINEO EN AMBULATORIO."
+    assert pr1.procedure_id === "90.46.20"
+    assert pr1.procedure_name === "GADOLINEO EN AMBULATORIO."
     # Retrieve paired segments from message with explicit position
     segments = HL7.Message.paired_segments(msg, ["PR1", "OBX", "AUT"], 0)
     assert length(segments) === 3
@@ -294,7 +298,7 @@ defmodule HL7.Message.Test do
       value =
         for segment <- paired_segments do
           case HL7.segment_id(segment) do
-            "PR1" -> {index, "PR1", segment.set_id, segment.procedure.id}
+            "PR1" -> {index, "PR1", segment.set_id, segment.procedure_id}
             "OBX" -> {index, "OBX", segment.set_id}
             "AUT" -> {index, "AUT"}
           end
@@ -305,7 +309,7 @@ defmodule HL7.Message.Test do
             [{1, "PR1", 2, "90.46.20"}, {1, "OBX", 2}, {1, "AUT"}]] === Enum.reverse(acc)
   end
 
-  test "Delete/Insert/Replace segments into a message" do
+  test "delete/insert/replace segments into a message" do
     alias HL7.Segment.OBX
     alias HL7.Segment.NTE
     buf =
@@ -345,7 +349,7 @@ defmodule HL7.Message.Test do
   @file_separator 0x1c
   @carriage_return 0x0d
 
-  test "Add/remove MLLP framing to encoded HL7 message" do
+  test "add/remove MLLP framing to encoded HL7 message" do
     buf =
       "MSH|^~\\&|CLIENTHL7|CLI01020304|SERVHL7|PREPAGA^112233^IIN|20120201101155||ZQA^Z02^ZQA_Z02|00XX20120201101155|P|2.4|||ER|SU|ARG\r" <>
       "PRD|PS~4600^^HL70454||^^^B||||30123456789^CU\r" <>

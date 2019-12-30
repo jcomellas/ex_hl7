@@ -10,11 +10,11 @@ defmodule HL7.Message do
   alias HL7.Segment
   alias HL7.Type
 
-  @type t          :: [Segment.t]
-  @type read_ret   :: {:ok, t} |
-                      {:incomplete, {(binary -> read_ret), binary}} |
-                      {:error, reason :: any}
-
+  @type t :: [Segment.t()]
+  @type read_ret ::
+          {:ok, t}
+          | {:incomplete, {(binary -> read_ret), binary}}
+          | {:error, reason :: any}
 
   @doc """
   Return the nth repetition (0-based) of a segment within a message.
@@ -33,13 +33,13 @@ defmodule HL7.Message do
   iex> 2 = pr1.set_id
 
   """
-  @spec segment(t, Type.segment_id, Type.repetition) :: Segment.t
+  @spec segment(t, Type.segment_id(), Type.repetition()) :: Segment.t() | no_return
   def segment(message, segment_id, repetition \\ 0)
 
   def segment(message, segment_id, repetition) do
     case drop_until_segment(message, segment_id, repetition) do
       [segment | _tail] -> segment
-      []                -> nil
+      [] -> nil
     end
   end
 
@@ -70,13 +70,15 @@ defmodule HL7.Message do
       iex> [aut] = HL7.Message.paired_segments(message, ["PR1", "OBX"], 1)
 
   """
-  @spec paired_segments(t, [Type.segment_id], Type.repetition) :: [Segment.t]
+  @spec paired_segments(t, [Type.segment_id()], Type.repetition()) :: [Segment.t()]
   def paired_segments(message, segment_ids, repetition \\ 0)
 
   def paired_segments(message, [segment_id | _tail] = segment_ids, repetition) do
-    {group, _message_tail} = message
-    |> drop_until_segment(segment_id, repetition)
-    |> segment_group(segment_ids, [])
+    {group, _message_tail} =
+      message
+      |> drop_until_segment(segment_id, repetition)
+      |> segment_group(segment_ids, [])
+
     group
   end
 
@@ -111,10 +113,20 @@ defmodule HL7.Message do
       [{0, ["PR1", "AUT"]}, {1, ["PR1", "AUT"]}]
 
   """
-  @spec reduce_paired_segments(t, [Type.segment_id], Type.repetition, acc :: term,
-                               ([Segment.t], Type.repetition, acc :: term -> acc :: term)) :: acc :: term
-  def reduce_paired_segments(message, [segment_id | _segment_id_tail] = segment_ids,
-                             initial_repetition, acc, fun) do
+  @spec reduce_paired_segments(
+          t,
+          [Type.segment_id()],
+          Type.repetition(),
+          acc :: term,
+          ([Segment.t()], Type.repetition(), acc :: term -> acc :: term)
+        ) :: acc :: term
+  def reduce_paired_segments(
+        message,
+        [segment_id | _segment_id_tail] = segment_ids,
+        initial_repetition,
+        acc,
+        fun
+      ) do
     # Skip all the segments before the segment ID that starts the group we're
     # interested in.
     message
@@ -122,16 +134,25 @@ defmodule HL7.Message do
     |> reduce_segment_groups(segment_ids, 0, acc, fun)
   end
 
-  defp reduce_segment_groups([_ | _] = message, [segment_id | _] = segment_ids, repetition, acc, fun) do
+  defp reduce_segment_groups(
+         [_ | _] = message,
+         [segment_id | _] = segment_ids,
+         repetition,
+         acc,
+         fun
+       ) do
     message = drop_until_segment(message, segment_id)
+
     case segment_group(message, segment_ids, []) do
       {[_ | _] = group, message_tail} ->
         acc = fun.(group, repetition, acc)
         reduce_segment_groups(message_tail, segment_ids, repetition + 1, acc, fun)
+
       {[], _message_tail} ->
         acc
     end
   end
+
   defp reduce_segment_groups([], _segment_ids, _repetition, acc, _fun) do
     acc
   end
@@ -144,9 +165,10 @@ defmodule HL7.Message do
     # `OBX` segment is optional.
     case Segment.id(segment) do
       ^segment_id -> segment_group(message_tail, segment_id_tail, [segment | acc])
-      _           -> segment_group(message, segment_id_tail, acc)
+      _ -> segment_group(message, segment_id_tail, acc)
     end
   end
+
   defp segment_group(message, _segment_ids, acc) do
     {Enum.reverse(acc), message}
   end
@@ -161,10 +183,12 @@ defmodule HL7.Message do
         else
           drop_until_segment(tail, segment_id, repetition - 1)
         end
+
       _ ->
         drop_until_segment(tail, segment_id, repetition)
     end
   end
+
   defp drop_until_segment([] = segments, _segment_id, _repetition) do
     segments
   end
@@ -178,18 +202,21 @@ defmodule HL7.Message do
   iex> 0 = HL7.Message.segment_count(message, "OBX")
 
   """
-  @spec segment_count(t, Type.segment_id) :: non_neg_integer
+  @spec segment_count(t, Type.segment_id()) :: non_neg_integer
   def segment_count(segments, segment_id)
-   when is_list(segments) and is_binary(segment_id), do:
-    segment_count(segments, segment_id, 0)
+      when is_list(segments) and is_binary(segment_id),
+      do: segment_count(segments, segment_id, 0)
 
   defp segment_count([segment | tail], segment_id, count) do
-    count = case Segment.id(segment) do
-              ^segment_id -> count + 1
-              _           -> count
-            end
+    count =
+      case Segment.id(segment) do
+        ^segment_id -> count + 1
+        _ -> count
+      end
+
     segment_count(tail, segment_id, count)
   end
+
   defp segment_count([], _segment_id, count) do
     count
   end
@@ -202,11 +229,12 @@ defmodule HL7.Message do
   iex> HL7.delete(message, "NTE", 0)
 
   """
-  @spec delete(t, Type.segment_id, Type.repetition) :: t
+  @spec delete(t, Type.segment_id(), Type.repetition()) :: t
   def delete(message, segment_id, repetition \\ 0) do
     case split_at_segment(message, segment_id, repetition, []) do
       {_segment, tail, acc} ->
         Enum.reverse(acc, tail)
+
       _acc ->
         message
     end
@@ -238,9 +266,9 @@ defmodule HL7.Message do
   iex> HL7.insert_before(message, "ERR", msa)
 
   """
-  @spec insert_before(t, Type.segment_id, Segment.t | [Segment.t]) :: t
-  def insert_before(message, segment_id, segment), do:
-    insert_before(message, segment_id, 0, segment)
+  @spec insert_before(t, Type.segment_id(), Segment.t() | [Segment.t()]) :: t
+  def insert_before(message, segment_id, segment),
+    do: insert_before(message, segment_id, 0, segment)
 
   @doc """
   Inserts a segment or group of segments before the given repetition of an
@@ -270,19 +298,21 @@ defmodule HL7.Message do
   iex> HL7.Message.insert_before(message, "ERR", 0, msa)
 
   """
-  @spec insert_before(t, Type.segment_id, Type.repetition, Segment.t | [Segment.t]) :: t
+  @spec insert_before(t, Type.segment_id(), Type.repetition(), Segment.t() | [Segment.t()]) :: t
   def insert_before(message, segment_id, repetition, new_segments)
-   when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
-        is_list(new_segments) do
+      when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
+             is_list(new_segments) do
     case split_at_segment(message, segment_id, repetition, []) do
       {segment, tail, acc} ->
         Enum.reverse(acc, new_segments ++ [segment | tail])
+
       _acc ->
         message
     end
   end
+
   def insert_before(message, segment_id, repetition, new_segment)
-   when is_map(new_segment) do
+      when is_map(new_segment) do
     insert_before(message, segment_id, repetition, [new_segment])
   end
 
@@ -312,9 +342,9 @@ defmodule HL7.Message do
   iex> HL7.Message.insert_after(message, "MSH", msa)
 
   """
-  @spec insert_after(t, Type.segment_id, Segment.t | [Segment.t]) :: t
-  def insert_after(message, segment_id, segment), do:
-    insert_after(message, segment_id, 0, segment)
+  @spec insert_after(t, Type.segment_id(), Segment.t() | [Segment.t()]) :: t
+  def insert_after(message, segment_id, segment),
+    do: insert_after(message, segment_id, 0, segment)
 
   @doc """
   Inserts a segment or group of segments after the given repetition of an
@@ -344,19 +374,21 @@ defmodule HL7.Message do
   iex> HL7.Message.insert_after(message, "MSH", 0, msa)
 
   """
-  @spec insert_after(t, Type.segment_id, Type.repetition, Segment.t | [Segment.t]) :: t
+  @spec insert_after(t, Type.segment_id(), Type.repetition(), Segment.t() | [Segment.t()]) :: t
   def insert_after(message, segment_id, repetition, new_segments)
-   when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
-        is_list(new_segments) do
+      when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
+             is_list(new_segments) do
     case split_at_segment(message, segment_id, repetition, []) do
       {segment, tail, acc} ->
-        Enum.reverse(acc, [segment | (new_segments ++ tail)])
+        Enum.reverse(acc, [segment | new_segments ++ tail])
+
       _acc ->
         message
     end
   end
+
   def insert_after(message, segment_id, repetition, new_segment)
-   when is_map(new_segment) do
+      when is_map(new_segment) do
     insert_after(message, segment_id, repetition, [new_segment])
   end
 
@@ -386,9 +418,8 @@ defmodule HL7.Message do
   iex> HL7.Message.replace(message, "MSA", msa)
 
   """
-  @spec replace(t, Type.segment_id, Segment.t | [Segment.t]) :: t
-  def replace(message, segment_id, segment), do:
-    replace(message, segment_id, 0, segment)
+  @spec replace(t, Type.segment_id(), Segment.t() | [Segment.t()]) :: t
+  def replace(message, segment_id, segment), do: replace(message, segment_id, 0, segment)
 
   @doc """
   Replaces the given repetition of an existing segment in a message.
@@ -418,19 +449,21 @@ defmodule HL7.Message do
   iex> HL7.Message.replace(message, "MSA", 0, msa)
 
   """
-  @spec replace(t, Type.segment_id, Type.repetition, Segment.t | [Segment.t]) :: t
+  @spec replace(t, Type.segment_id(), Type.repetition(), Segment.t() | [Segment.t()]) :: t
   def replace(message, segment_id, repetition, new_segments)
-   when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
-        is_list(new_segments) do
+      when is_list(message) and is_binary(segment_id) and is_integer(repetition) and
+             is_list(new_segments) do
     case split_at_segment(message, segment_id, repetition, []) do
       {_segment, tail, acc} ->
         Enum.reverse(acc, new_segments ++ tail)
+
       _acc ->
         message
     end
   end
+
   def replace(message, segment_id, repetition, new_segment)
-   when is_map(new_segment) do
+      when is_map(new_segment) do
     replace(message, segment_id, repetition, [new_segment])
   end
 
@@ -442,10 +475,12 @@ defmodule HL7.Message do
         else
           split_at_segment(tail, segment_id, repetition - 1, [segment | acc])
         end
+
       _ ->
         split_at_segment(tail, segment_id, repetition, [segment | acc])
     end
   end
+
   defp split_at_segment([], _segment_id, _repetition, acc) do
     acc
   end
@@ -483,12 +518,12 @@ defmodule HL7.Message do
       iex> message = HL7.Message.read!(reader, buffer)
 
   """
-  @spec read!(Reader.t, buffer :: binary) :: t
+  @spec read!(Reader.t(), buffer :: binary) :: t
   def read!(reader, buffer) do
     case read(reader, buffer) do
-      {:ok, message}           -> message
+      {:ok, message} -> message
       {:incomplete, _function} -> raise HL7.ReadError, :incomplete
-      {:error, reason}         -> raise HL7.ReadError, reason
+      {:error, reason} -> raise HL7.ReadError, reason
     end
   end
 
@@ -537,49 +572,69 @@ defmodule HL7.Message do
       iex> {:ok, message} = HL7.Message.read(reader, buffer)
 
   """
-  @spec read(Reader.t, buffer :: binary) :: read_ret
-  def read(reader, buffer), do:
-    read(reader, buffer, [])
+  @spec read(Reader.t(), buffer :: binary) :: read_ret
+  def read(reader, buffer), do: read(reader, buffer, [])
 
   def read(reader, buffer, acc) do
     case Reader.read(reader, buffer) do
       {:token, {reader, {:start_segment, segment_id}, buffer}} ->
-        {module, segment} = HL7.Reader.create_segment(reader, segment_id)
-        case read_segment(reader, segment, module, buffer) do
-          {:ok, {reader, segment, buffer}} ->
-            read(reader, buffer, [segment | acc])
-          {:incomplete, {reader, segment, module, buffer}} ->
-            {:incomplete, {&complete_read(reader, segment, module, &1, acc), buffer}}
-          {:error, _reason} = error ->
+        case Reader.create_segment(reader, segment_id) do
+          {:ok, {segment, segment_spec}} ->
+            case read_segment(reader, segment, segment_spec, buffer) do
+              {:ok, {reader, segment, buffer}} ->
+                read(reader, buffer, [segment | acc])
+
+              {:incomplete, {reader, segment, segment_spec, buffer}} ->
+                {:incomplete, {&complete_read(reader, segment, segment_spec, &1, acc), buffer}}
+
+              error = {:error, _reason} ->
+                error
+            end
+
+          error = {:error, _reason} ->
             error
         end
+
       {:complete, _reader} ->
         {:ok, Enum.reverse(acc)}
     end
   end
 
-  def complete_read(reader, segment, module, buffer, acc) do
-    case read_segment(reader, segment, module, buffer) do
+  def complete_read(reader, segment, segment_spec, buffer, acc) do
+    case read_segment(reader, segment, segment_spec, buffer) do
       {:ok, {reader, segment, buffer}} ->
         read(reader, buffer, [segment | acc])
+
       result ->
         result
     end
   end
 
-  def read_segment(reader, segment, module, buffer) do
+  def read_segment(reader, segment, segment_spec, buffer) do
     case Reader.read(reader, buffer) do
       {:token, {reader, {:field, field}, buffer}} ->
-        segment = module.put_field(segment, Reader.sequence(reader), field)
-        read_segment(reader, segment, module, buffer)
+        segment = read_field(reader, segment, segment_spec, field)
+        read_segment(reader, segment, segment_spec, buffer)
+
       {:token, {reader, {:end_segment, _segment_id}, buffer}} ->
         {:ok, {reader, segment, buffer}}
+
       {:incomplete, {reader, buffer}} ->
-        {:incomplete, {reader, segment, module, buffer}}
-      {:error, _reason} = error ->
+        {:incomplete, {reader, segment, segment_spec, buffer}}
+
+      error = {:error, _reason} ->
         # raise HL7.Error, reason: reason, segment: HL7.Reader.segment_id(reader),
         #       sequence: HL7.Reader.sequence(reader)
         error
+    end
+  end
+
+  defp read_field(reader, segment, segment_spec, field) do
+    seq = Reader.sequence(reader)
+
+    case Map.get(segment_spec, seq) do
+      nil -> segment
+      field_spec -> Segment.put_field_ir(segment, field_spec, field)
     end
   end
 
@@ -613,7 +668,7 @@ defmodule HL7.Message do
       AUT||112233||||||1|0
 
   """
-  @spec write(Writer.t, t) :: iodata
+  @spec write(Writer.t(), t) :: iodata
   def write(writer, message) do
     writer
     |> Writer.start_message()
@@ -623,28 +678,50 @@ defmodule HL7.Message do
   end
 
   defp write_segments(writer, [segment | tail]) do
-    segment_id = HL7.Segment.id(segment)
-    module = HL7.Segment.module(segment_id)
-    field_count = apply(module, :field_count, [])
+    segment_id = Segment.id(segment)
 
-    writer = writer
-             |> Writer.start_segment(segment_id)
-             |> write_fields(segment, module, field_count, 1)
-             |> Writer.end_segment(segment_id)
-
-    write_segments(writer, tail)
+    writer
+    |> Writer.start_segment(segment_id)
+    |> write_segment(segment, segment_id)
+    |> Writer.end_segment(segment_id)
+    |> write_segments(tail)
   end
+
   defp write_segments(writer, []) do
     writer
   end
 
-  defp write_fields(writer, segment, module, field_count, seq)
-   when seq <= field_count do
-    field = apply(module, :get_field, [segment, seq])
-    writer = Writer.put_field(writer, field)
-    write_fields(writer, segment, module, field_count, seq + 1)
+  defp write_segment(writer, segment, segment_id) do
+    case Writer.builder(writer).segment_spec(segment_id) do
+      {:ok, segment_spec} ->
+        {writer, _last_seq} =
+          Enum.reduce(segment_spec, {writer, 1}, fn {seq, field_spec}, {writer1, prev_seq} ->
+            # Get the intermediate representation corresponding to the field.
+            field = Segment.get_field_ir(segment, field_spec)
+            # If there are empty fields between the previous sequence and the current
+            # one, write them before writing the field.
+            writer1 =
+              writer1
+              |> write_empty_fields(prev_seq, seq - 1)
+              |> Writer.put_field(field)
+
+            {writer1, seq}
+          end)
+
+        writer
+
+      :error ->
+        raise ArgumentError, "invalid segment ID: #{inspect(segment_id)}"
+    end
   end
-  defp write_fields(writer, _segment, _module, _field_count, _seq) do
-    writer
+
+  defp write_empty_fields(writer, prev_seq, seq) do
+    if prev_seq < seq do
+      writer
+      |> Writer.put_field("")
+      |> write_empty_fields(prev_seq + 1, seq)
+    else
+      writer
+    end
   end
 end

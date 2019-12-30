@@ -2,21 +2,22 @@ defmodule HL7 do
   @moduledoc """
   Main module of the **ex_hl7** library.
   """
-  @type message        :: HL7.Message.t
-  @type segment        :: HL7.Segment.t
-  @type segment_id     :: HL7.Type.segment_id
-  @type sequence       :: HL7.Type.sequence
-  @type composite_id   :: HL7.Type.composite_id
-  @type field          :: HL7.Type.field
-  @type item_type      :: HL7.Type.item_type
-  @type value_type     :: HL7.Type.value_type
-  @type value          :: HL7.Type.value
-  @type repetition     :: HL7.Type.repetition
-  @type read_option    :: HL7.Reader.option
-  @type write_option   :: HL7.Writer.option
-  @type read_ret       :: {:ok, HL7.Message.t} |
-                          {:incomplete, {(binary -> read_ret), rest :: binary}} |
-                          {:error, reason :: any}
+  @type message :: HL7.Message.t()
+  @type segment :: HL7.Segment.t()
+  @type segment_id :: HL7.Type.segment_id()
+  @type sequence :: HL7.Type.sequence()
+  @type composite_id :: HL7.Type.composite_id()
+  @type field :: HL7.Type.field()
+  @type item_type :: HL7.Type.item_type()
+  @type value_type :: HL7.Type.value_type()
+  @type value :: HL7.Type.value()
+  @type repetition :: HL7.Type.repetition()
+  @type read_option :: HL7.Reader.option()
+  @type write_option :: HL7.Writer.option()
+  @type read_ret ::
+          {:ok, HL7.Message.t()}
+          | {:incomplete, {(binary -> read_ret), rest :: binary}}
+          | {:error, reason :: any}
 
   @doc """
   Reads a binary containing an HL7 message converting it to a list of segments.
@@ -61,9 +62,8 @@ defmodule HL7 do
       iex> message = HL7.read!(buffer, input_format: :wire, trim: true)
 
   """
-  @spec read!(buffer :: binary, [HL7.read_option]) :: HL7.message
-  def read!(buffer, options \\ []), do:
-    HL7.Message.read!(HL7.Reader.new(options), buffer)
+  @spec read!(buffer :: binary, [HL7.read_option()]) :: HL7.message()
+  def read!(buffer, options \\ []), do: HL7.Message.read!(HL7.Reader.new(options), buffer)
 
   @doc """
   Reads a binary containing an HL7 message converting it to a list of segments.
@@ -120,9 +120,8 @@ defmodule HL7 do
       iex> {:ok, message} = HL7.read(buffer, input_format: :wire, trim: true)
 
   """
-  @spec read(buffer :: binary, [HL7.read_option]) :: HL7.read_ret
-  def read(buffer, options \\ []), do:
-    HL7.Message.read(HL7.Reader.new(options), buffer)
+  @spec read(buffer :: binary, [HL7.read_option()]) :: HL7.read_ret()
+  def read(buffer, options \\ []), do: HL7.Message.read(HL7.Reader.new(options), buffer)
 
   @doc """
   Writes a list of HL7 segments into an iolist.
@@ -164,9 +163,8 @@ defmodule HL7 do
       AUT||112233||||||1|0
 
   """
-  @spec write(message, [HL7.write_option]) :: iodata
-  def write(message, options \\ []), do:
-    HL7.Message.write(HL7.Writer.new(options), message)
+  @spec write(message, [HL7.write_option()]) :: iodata
+  def write(message, options \\ []), do: HL7.Message.write(HL7.Writer.new(options), message)
 
   @doc """
   Retrieve the segment ID from a segment.
@@ -327,8 +325,13 @@ defmodule HL7 do
       [{0, ["PR1", "AUT"]}, {1, ["PR1", "AUT"]}]
 
   """
-  @spec reduce_paired_segments(message, [segment_id], repetition, acc :: term,
-                               (([HL7.Segment.t], HL7.Type.Repetition, acc :: term) -> acc :: term)) :: acc :: term
+  @spec reduce_paired_segments(
+          message,
+          [segment_id],
+          repetition,
+          acc :: term,
+          ([HL7.Segment.t()], HL7.Type.Repetition, acc :: term -> acc :: term)
+        ) :: acc :: term
   defdelegate reduce_paired_segments(message, segment_ids, repetition, acc, fun), to: HL7.Message
 
   @doc """
@@ -566,7 +569,7 @@ defmodule HL7 do
       iex> "ABC\\\\F\\\\DEF\\\\F\\\\GHI" = HL7.escape("ABC|DEF|GHI", separators: HL7.Codec.separators())
 
   """
-  @spec escape(binary, options :: Keyword.t) :: binary
+  @spec escape(binary, options :: Keyword.t()) :: binary
   def escape(value, options \\ []) do
     separators = Keyword.get(options, :separators, HL7.Codec.separators())
     escape_char = Keyword.get(options, :escape_char, ?\\)
@@ -593,16 +596,16 @@ defmodule HL7 do
       iex> "ABC|DEF|GHI" = HL7.unescape("ABC\\\\F\\\\DEF\\\\F\\\\GHI", escape_char: ?\\)
 
   """
-  @spec unescape(binary, options :: Keyword.t) :: binary
+  @spec unescape(binary, options :: Keyword.t()) :: binary
   def unescape(value, options \\ []) do
     separators = Keyword.get(options, :separators, HL7.Codec.separators())
     escape_char = Keyword.get(options, :escape_char, ?\\)
     HL7.Codec.unescape(value, separators, escape_char)
   end
 
-  @vertical_tab 0x0b
-  @file_separator 0x1c
-  @carriage_return 0x0d
+  @vertical_tab 0x0B
+  @file_separator 0x1C
+  @carriage_return 0x0D
 
   @doc """
   Add MLLP framing to an already encoded HL7 message.
@@ -638,25 +641,33 @@ defmodule HL7 do
   Returns the encoded message with the MLLP framing removed.
 
   """
-  @spec from_mllp(buffer :: iodata) :: {:ok, msg_buffer :: iodata} | :incomplete | {:error, reason :: term}
+  @spec from_mllp(buffer :: iodata) ::
+          {:ok, msg_buffer :: iodata} | :incomplete | {:error, reason :: term}
   def from_mllp([@vertical_tab, msg_buffer, @file_separator, @carriage_return]) do
     {:ok, msg_buffer}
   end
+
   def from_mllp([@vertical_tab | tail]) do
     case Enum.reverse(tail) do
       [@carriage_return, @file_separator | msg_iolist] ->
         {:ok, Enum.reverse(msg_iolist)}
+
       _ ->
         :incomplete
     end
   end
+
   def from_mllp(buffer) when is_binary(buffer) do
     msg_len = byte_size(buffer) - 3
+
     case buffer do
-      <<@vertical_tab, msg_buffer :: binary-size(msg_len), @file_separator, @carriage_return>> when msg_len > 0 ->
+      <<@vertical_tab, msg_buffer::binary-size(msg_len), @file_separator, @carriage_return>>
+      when msg_len > 0 ->
         {:ok, msg_buffer}
-      <<@vertical_tab, _tail :: binary>> ->
+
+      <<@vertical_tab, _tail::binary>> ->
         :incomplete
+
       _ ->
         {:error, :bad_mllp_framing}
     end
@@ -683,9 +694,9 @@ defmodule HL7 do
   @spec from_mllp!(buffer :: iodata) :: msg_buffer :: iodata
   def from_mllp!(buffer) do
     case from_mllp(buffer) do
-      {:ok, msg_buffer}  -> msg_buffer
-      :incomplete        -> raise HL7.ReadError, :incomplete
-      {:error, reason}   -> raise HL7.ReadError, reason
+      {:ok, msg_buffer} -> msg_buffer
+      :incomplete -> raise HL7.ReadError, :incomplete
+      {:error, reason} -> raise HL7.ReadError, reason
     end
   end
 end

@@ -1,7 +1,6 @@
-Code.require_file "test_helper.exs", __DIR__
+defmodule HL7.Test.CodecTest do
+  use ExUnit.Case, async: true
 
-defmodule HL7.Codec.Test do
-  use ExUnit.Case
   import HL7.Codec, only: [decode_field: 2, decode_field: 3,
                            decode_components: 2, decode_components: 3,
                            decode_subcomponents: 2, decode_subcomponents: 3,
