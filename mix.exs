@@ -3,8 +3,8 @@ defmodule HL7.Mixfile do
 
   def project do
     [app: :ex_hl7,
-     version: "0.4.2",
-     elixir: "~> 1.6",
+     version: "1.0.0",
+     elixir: ">= 1.6.0",
      description: "HL7 Parser for Elixir",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
@@ -18,7 +18,10 @@ defmodule HL7.Mixfile do
   end
 
   defp deps do
-    [{:ex_doc, "~> 0.21", only: :dev}]
+    [
+      {:rexbug, "~> 1.0.3", only: :dev},
+      {:ex_doc, "~> 0.21", only: :dev}
+    ]
   end
 
   defp package do
