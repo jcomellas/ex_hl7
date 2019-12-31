@@ -19,8 +19,9 @@ defmodule HL7.Mixfile do
 
   defp deps do
     [
-      {:rexbug, "~> 1.0.3", only: :dev},
-      {:ex_doc, "~> 0.21", only: :dev}
+      {:dialyxir, "~> 1.0.0-rc.7", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.21", only: :dev},
+      {:rexbug, "~> 1.0.3", only: :dev}
     ]
   end
 
