@@ -122,8 +122,6 @@ defmodule HL7.Segment.Spec do
 
     struct_type_spec = quote_struct_type_spec(segment_mod, fields)
 
-    # IO.puts("Generating spec for segment #{inspect(segment_id)}: #{inspect(spec)}\n")
-
     quote do
       defstruct unquote(Macro.escape([{:__segment__, segment_id} | struct_fields]))
 
@@ -147,7 +145,7 @@ defmodule HL7.Segment.Spec do
       def valid?(_), do: false
 
       @doc "Create a new segment of this type"
-      @spec new() :: t
+      @spec new() :: %unquote(segment_mod){}
       def new(), do: %unquote(segment_mod){}
     end
   end
