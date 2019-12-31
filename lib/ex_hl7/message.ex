@@ -518,7 +518,7 @@ defmodule HL7.Message do
       iex> message = HL7.Message.read!(reader, buffer)
 
   """
-  @spec read!(Reader.t(), buffer :: binary) :: t
+  @spec read!(Reader.t(), buffer :: binary) :: t | no_return
   def read!(reader, buffer) do
     case read(reader, buffer) do
       {:ok, message} -> message
@@ -634,7 +634,7 @@ defmodule HL7.Message do
 
     case Map.get(segment_spec, seq) do
       nil -> segment
-      field_spec -> Segment.put_field_ir(segment, field_spec, field)
+      field_spec -> Segment.put_field_ir!(segment, field_spec, field)
     end
   end
 
@@ -697,7 +697,7 @@ defmodule HL7.Message do
         {writer, _last_seq} =
           Enum.reduce(segment_spec, {writer, 1}, fn {seq, field_spec}, {writer1, prev_seq} ->
             # Get the intermediate representation corresponding to the field.
-            field = Segment.get_field_ir(segment, field_spec)
+            field = Segment.get_field_ir!(segment, field_spec)
             # If there are empty fields between the previous sequence and the current
             # one, write them before writing the field.
             writer1 =

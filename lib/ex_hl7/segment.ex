@@ -98,22 +98,23 @@ defmodule HL7.Segment do
         patient_document_id: "12345678",
         patient_document_id_type: "DNI"
       }
-      ...> get_field_ir(segment, field_spec)
+      ...> get_field_ir!(segment, field_spec)
       [
         {"Juan Perez", "", "", {"XYZ123", "808818", "IIN"}, "CU"},
         {"12345678", "", "", "DNI"}
       ]
 
   """
-  def get_field_ir(segment, [{_name, _coord, _type, _len} | _spec_tail] = field_spec) do
+  @spec get_field_ir!(t(), [Type.field_spec()]) :: Type.field() | no_return
+  def get_field_ir!(segment, [{_name, _coord, _type, _len} | _spec_tail] = field_spec) do
     # If there is only a single repetition, there's no need to expose it.
-    case build_item_ir(segment, field_spec, 1, {}, 1, []) do
+    case build_item_ir!(segment, field_spec, 1, {}, 1, []) do
       [item] -> item
       item -> item
     end
   end
 
-  defp build_item_ir(
+  defp build_item_ir!(
          segment,
          [{name, coord, type, _len} | spec_tail] = spec,
          cur_depth,
@@ -134,9 +135,9 @@ defmodule HL7.Segment do
           child_depth = cur_depth + 1
           child_index = coord_index(coord, child_depth)
 
-          {value, spec_tail} = build_item_ir(segment, spec, child_depth, coord, child_index, [])
+          {value, spec_tail} = build_item_ir!(segment, spec, child_depth, coord, child_index, [])
 
-          build_item_ir(segment, spec_tail, cur_depth, parent_coord, cur_index, [value | acc])
+          build_item_ir!(segment, spec_tail, cur_depth, parent_coord, cur_index, [value | acc])
 
         true ->
           value =
@@ -145,7 +146,7 @@ defmodule HL7.Segment do
               value_1 -> Codec.encode_value!(value_1, type)
             end
 
-          build_item_ir(segment, spec_tail, cur_depth, parent_coord, cur_index, [
+          build_item_ir!(segment, spec_tail, cur_depth, parent_coord, cur_index, [
             value | acc
           ])
       end
@@ -154,7 +155,7 @@ defmodule HL7.Segment do
     end
   end
 
-  defp build_item_ir(
+  defp build_item_ir!(
          _segment,
          [] = spec,
          cur_depth,
@@ -210,7 +211,8 @@ defmodule HL7.Segment do
     end
   end
 
-  def put_field_ir(segment, [{name, coord, type, _len} | spec_tail], value) do
+  @spec put_field_ir!(t(), [Type.field_spec()], Type.value()) :: t() | no_return
+  def put_field_ir!(segment, [{name, coord, type, _len} | spec_tail], value) do
     encoded_value =
       value
       |> get_item_from_ir(coord)
@@ -218,10 +220,10 @@ defmodule HL7.Segment do
 
     segment
     |> Map.put(name, encoded_value)
-    |> put_field_ir(spec_tail, value)
+    |> put_field_ir!(spec_tail, value)
   end
 
-  def put_field_ir(segment, [], _value) do
+  def put_field_ir!(segment, [], _value) do
     segment
   end
 

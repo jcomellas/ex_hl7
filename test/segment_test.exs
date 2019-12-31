@@ -7,37 +7,37 @@ defmodule HL7.Test.SegmentTest do
     test "single missing field" do
       segment = %{}
       field_spec = [{:field_name, {1}, :string, 20}]
-      assert "" === Segment.get_field_ir(segment, field_spec)
+      assert "" === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "single string field" do
       segment = %{field_name: "ABCDEF"}
       field_spec = [{:field_name, {1}, :string, 20}]
-      assert "ABCDEF" === Segment.get_field_ir(segment, field_spec)
+      assert "ABCDEF" === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "single integer field" do
       segment = %{field_name: 123_456}
       field_spec = [{:field_name, {1}, :integer, 20}]
-      assert "123456" === Segment.get_field_ir(segment, field_spec)
+      assert "123456" === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "single float field" do
       segment = %{field_name: 123.456}
       field_spec = [{:field_name, {1}, :float, 20}]
-      assert "123.456" === Segment.get_field_ir(segment, field_spec)
+      assert "123.456" === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "single date field" do
       segment = %{field_name: ~D[2020-01-01]}
       field_spec = [{:field_name, {1}, :date, 8}]
-      assert "20200101" === Segment.get_field_ir(segment, field_spec)
+      assert "20200101" === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "single datetime field" do
       segment = %{field_name: ~N[2020-01-01 12:01:02]}
       field_spec = [{:field_name, {1}, :datetime, 14}]
-      assert "20200101120102" === Segment.get_field_ir(segment, field_spec)
+      assert "20200101120102" === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two contiguous repetitions" do
@@ -48,7 +48,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1}, :string, 20}
       ]
 
-      assert ["ABCDEF", "123456"] === Segment.get_field_ir(segment, field_spec)
+      assert ["ABCDEF", "123456"] === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two non-contiguous repetitions" do
@@ -59,7 +59,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1}, :string, 20}
       ]
 
-      assert ["ABCDEF", "", "123456"] === Segment.get_field_ir(segment, field_spec)
+      assert ["ABCDEF", "", "123456"] === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with three contiguous repetitions" do
@@ -71,7 +71,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1}, :string, 20}
       ]
 
-      assert ["ABCDEF", "123456", "20200101"] === Segment.get_field_ir(segment, field_spec)
+      assert ["ABCDEF", "123456", "20200101"] === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with three non-contiguous repetitions" do
@@ -84,7 +84,7 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert ["", "ABCDEF", "", "123456", "", "20200101"] ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with multiple empty repetitions" do
@@ -97,13 +97,13 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert ["", "", "", "ABCDEF", "", "", "123456", "", "", ""] ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with single component" do
       segment = %{field_name: "ABCDEF"}
       field_spec = [{:field_name, {1, 1}, :string, 20}]
-      assert {"ABCDEF"} === Segment.get_field_ir(segment, field_spec)
+      assert {"ABCDEF"} === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two components in a repetition each" do
@@ -114,7 +114,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1, 1}, :string, 20}
       ]
 
-      assert [{"ABCDEF"}, {"123456"}] === Segment.get_field_ir(segment, field_spec)
+      assert [{"ABCDEF"}, {"123456"}] === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two contiguous components" do
@@ -125,7 +125,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1, 1}, :string, 20}
       ]
 
-      assert {"ABCDEF", "123456"} === Segment.get_field_ir(segment, field_spec)
+      assert {"ABCDEF", "123456"} === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with three contiguous components" do
@@ -137,7 +137,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1, 1}, :string, 20}
       ]
 
-      assert {"ABCDEF", "123456", "20200101"} === Segment.get_field_ir(segment, field_spec)
+      assert {"ABCDEF", "123456", "20200101"} === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with three non-contiguous components" do
@@ -150,7 +150,7 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert {"", "ABCDEF", "", "123456", "", "20200101"} ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with multiple empty components" do
@@ -163,13 +163,13 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert {"", "", "", "ABCDEF", "", "", "123456", "", "", ""} ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with single subcomponent" do
       segment = %{field_name: "ABCDEF"}
       field_spec = [{:field_name, {1, 1, 1}, :string, 20}]
-      assert {{"ABCDEF"}} === Segment.get_field_ir(segment, field_spec)
+      assert {{"ABCDEF"}} === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two subcomponents in a repetition each" do
@@ -180,7 +180,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1, 1, 1}, :string, 20}
       ]
 
-      assert [{{"ABCDEF"}}, {{"123456"}}] === Segment.get_field_ir(segment, field_spec)
+      assert [{{"ABCDEF"}}, {{"123456"}}] === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two contiguous subcomponents" do
@@ -191,7 +191,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1, 1, 1}, :string, 20}
       ]
 
-      assert {{"ABCDEF", "123456"}} === Segment.get_field_ir(segment, field_spec)
+      assert {{"ABCDEF", "123456"}} === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with two subcomponents in a component in a repetition each" do
@@ -210,7 +210,7 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert [{{"ABCDEF", "123456"}}, {{"GHIJKL", "789012"}}] ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with three contiguous subcomponents" do
@@ -222,7 +222,7 @@ defmodule HL7.Test.SegmentTest do
         {:field_name_1, {1, 1, 1}, :string, 20}
       ]
 
-      assert {{"ABCDEF", "123456", "20200101"}} === Segment.get_field_ir(segment, field_spec)
+      assert {{"ABCDEF", "123456", "20200101"}} === Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with three non-contiguous subcomponents" do
@@ -235,7 +235,7 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert {{"", "ABCDEF", "", "123456", "", "20200101"}} ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with multiple empty subcomponents" do
@@ -248,7 +248,7 @@ defmodule HL7.Test.SegmentTest do
       ]
 
       assert {{"", "", "", "ABCDEF", "", "", "123456", "", "", ""}} ===
-               Segment.get_field_ir(segment, field_spec)
+               Segment.get_field_ir!(segment, field_spec)
     end
 
     test "field with combined repetitions, components and subcomponents" do
@@ -275,7 +275,7 @@ defmodule HL7.Test.SegmentTest do
       assert [
                {"Juan Perez", "", "", {"MYHMO", "808818", "IIN"}, "CU"},
                {"12345678", "", "", "DNI"}
-             ] == Segment.get_field_ir(segment, field_spec)
+             ] == Segment.get_field_ir!(segment, field_spec)
     end
   end
 end
