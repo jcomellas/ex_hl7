@@ -10,9 +10,7 @@ defmodule HL7.Lexer do
             terminator: ?\r,
             next_tokens: []
 
-  alias HL7.Codec
-  alias HL7.Lexer
-  alias HL7.Type
+  alias HL7.{Codec, Lexer, Type}
 
   @type option :: {:input_format, :text | :wire}
   @type state ::

@@ -2,20 +2,20 @@ defmodule HL7 do
   @moduledoc """
   Main module of the **ex_hl7** library.
   """
-  @type message :: HL7.Message.t()
-  @type segment :: HL7.Segment.t()
-  @type segment_id :: HL7.Type.segment_id()
-  @type sequence :: HL7.Type.sequence()
-  @type composite_id :: HL7.Type.composite_id()
-  @type field :: HL7.Type.field()
-  @type item_type :: HL7.Type.item_type()
-  @type value_type :: HL7.Type.value_type()
-  @type value :: HL7.Type.value()
-  @type repetition :: HL7.Type.repetition()
-  @type read_option :: HL7.Reader.option()
-  @type write_option :: HL7.Writer.option()
+  alias HL7.{Codec, Message, Reader, Segment, Type, Writer}
+
+  @type segment_id :: Type.segment_id()
+  @type sequence :: Type.sequence()
+  @type composite_id :: Type.composite_id()
+  @type field :: Type.field()
+  @type item_type :: Type.item_type()
+  @type value_type :: Type.value_type()
+  @type value :: Type.value()
+  @type repetition :: Type.repetition()
+  @type read_option :: Reader.option()
+  @type write_option :: Writer.option()
   @type read_ret ::
-          {:ok, HL7.Message.t()}
+          {:ok, Message.t()}
           | {:incomplete, {(binary -> read_ret), rest :: binary}}
           | {:error, reason :: any}
 
@@ -62,8 +62,8 @@ defmodule HL7 do
       iex> message = HL7.read!(buffer, input_format: :wire, trim: true)
 
   """
-  @spec read!(buffer :: binary, [HL7.read_option()]) :: HL7.message()
-  def read!(buffer, options \\ []), do: HL7.Message.read!(HL7.Reader.new(options), buffer)
+  @spec read!(buffer :: binary, [read_option()]) :: Message.t() | no_return
+  def read!(buffer, options \\ []), do: Message.read!(Reader.new(options), buffer)
 
   @doc """
   Reads a binary containing an HL7 message converting it to a list of segments.
@@ -120,8 +120,8 @@ defmodule HL7 do
       iex> {:ok, message} = HL7.read(buffer, input_format: :wire, trim: true)
 
   """
-  @spec read(buffer :: binary, [HL7.read_option()]) :: HL7.read_ret()
-  def read(buffer, options \\ []), do: HL7.Message.read(HL7.Reader.new(options), buffer)
+  @spec read(buffer :: binary, [read_option()]) :: read_ret()
+  def read(buffer, options \\ []), do: Message.read(Reader.new(options), buffer)
 
   @doc """
   Writes a list of HL7 segments into an iolist.
@@ -163,8 +163,8 @@ defmodule HL7 do
       AUT||112233||||||1|0
 
   """
-  @spec write(message, [HL7.write_option()]) :: iodata
-  def write(message, options \\ []), do: HL7.Message.write(HL7.Writer.new(options), message)
+  @spec write(Message.t(), [write_option()]) :: iodata
+  def write(message, options \\ []), do: Message.write(Writer.new(options), message)
 
   @doc """
   Retrieve the segment ID from a segment.
@@ -180,8 +180,8 @@ defmodule HL7 do
       iex> "AUT" = HL7.segment_id(aut)
 
   """
-  @spec segment_id(segment) :: segment_id
-  defdelegate segment_id(segment), to: HL7.Segment, as: :id
+  @spec segment_id(Segment.t()) :: segment_id()
+  defdelegate segment_id(segment), to: Segment, as: :id
 
   @doc """
   Return the first repetition of a segment within a message.
@@ -197,8 +197,8 @@ defmodule HL7 do
       iex> 1 = pr1.set_id
 
   """
-  @spec segment(message, segment_id) :: segment | nil
-  defdelegate segment(message, segment_id), to: HL7.Message
+  @spec segment(Message.t(), segment_id()) :: Segment.t() | nil
+  defdelegate segment(message, segment_id), to: Message
 
   @doc """
   Return the nth repetition (0-based) of a segment within a message.
@@ -217,8 +217,8 @@ defmodule HL7 do
       iex> 2 = pr1.set_id
 
   """
-  @spec segment(message, segment_id, repetition) :: segment | nil
-  defdelegate segment(message, segment_id, repetition), to: HL7.Message
+  @spec segment(Message.t(), segment_id(), repetition()) :: Segment.t() | nil
+  defdelegate segment(message, segment_id, repetition), to: Message
 
   @doc """
   Return the first grouping of segments with the specified segment IDs.
@@ -244,8 +244,8 @@ defmodule HL7 do
       iex> [pr1, aut] = HL7.paired_segments(message, ["PR1", "AUT"])
 
   """
-  @spec paired_segments(message, [segment_id]) :: [segment]
-  defdelegate paired_segments(message, segment_ids), to: HL7.Message
+  @spec paired_segments(Message.t(), [segment_id()]) :: [Segment.t()]
+  defdelegate paired_segments(message, segment_ids), to: Message
 
   @doc """
   Return the nth (0-based) grouping of segments with the specified segment IDs.
@@ -274,8 +274,8 @@ defmodule HL7 do
       iex> [aut] = HL7.paired_segments(message, ["PR1", "OBX"], 1)
 
   """
-  @spec paired_segments(message, [segment_id], repetition) :: [segment]
-  defdelegate paired_segments(message, segment_ids, repetition), to: HL7.Message
+  @spec paired_segments(Message.t(), [segment_id()], repetition()) :: [Segment.t()]
+  defdelegate paired_segments(message, segment_ids, repetition), to: Message
 
   @doc """
   It skips over the first `repetition` groups of paired segment and invokes
@@ -326,13 +326,13 @@ defmodule HL7 do
 
   """
   @spec reduce_paired_segments(
-          message,
-          [segment_id],
-          repetition,
+          Message.t(),
+          [segment_id()],
+          repetition(),
           acc :: term,
-          ([HL7.Segment.t()], HL7.Type.Repetition, acc :: term -> acc :: term)
+          ([Segment.t()], repetition(), acc :: term -> acc :: term)
         ) :: acc :: term
-  defdelegate reduce_paired_segments(message, segment_ids, repetition, acc, fun), to: HL7.Message
+  defdelegate reduce_paired_segments(message, segment_ids, repetition, acc, fun), to: Message
 
   @doc """
   Return the number of segments with a specified segment ID in an HL7 message.
@@ -343,8 +343,8 @@ defmodule HL7 do
       iex> 0 = HL7.segment_count(message, "OBX")
 
   """
-  @spec segment_count(message, segment_id) :: non_neg_integer
-  defdelegate segment_count(message, segment_id), to: HL7.Message
+  @spec segment_count(Message.t(), segment_id()) :: non_neg_integer
+  defdelegate segment_count(message, segment_id), to: Message
 
   @doc """
   Deletes the first repetition of a segment in a message
@@ -354,8 +354,8 @@ defmodule HL7 do
       iex> HL7.delete(message, "NTE")
 
   """
-  @spec delete(message, segment_id) :: message
-  defdelegate delete(message, segment_id), to: HL7.Message
+  @spec delete(Message.t(), segment_id()) :: Message.t()
+  defdelegate delete(message, segment_id), to: Message
 
   @doc """
   Deletes the given repetition (0-based) of a segment in a message
@@ -365,8 +365,8 @@ defmodule HL7 do
       iex> HL7.delete(message, "NTE", 0)
 
   """
-  @spec delete(message, segment_id, repetition) :: message
-  defdelegate delete(message, segment_id, repetition), to: HL7.Message
+  @spec delete(Message.t(), segment_id(), repetition()) :: Message.t()
+  defdelegate delete(message, segment_id, repetition), to: Message
 
   @doc """
   Inserts a segment or group of segments before the first repetition of an
@@ -394,8 +394,8 @@ defmodule HL7 do
       iex> HL7.insert_before(message, "ERR", msa)
 
   """
-  @spec insert_before(message, segment_id, segment | [segment]) :: message
-  defdelegate insert_before(message, segment_id, segment), to: HL7.Message
+  @spec insert_before(Message.t(), segment_id(), Segment.t() | [Segment.t()]) :: Message.t()
+  defdelegate insert_before(message, segment_id, segment), to: Message
 
   @doc """
   Inserts a segment or group of segments before the given repetition of an
@@ -425,8 +425,9 @@ defmodule HL7 do
       iex> HL7.insert_before(message, "ERR", 0, msa)
 
   """
-  @spec insert_before(message, segment_id, repetition, segment | [segment]) :: message
-  defdelegate insert_before(message, segment_id, repetition, segment), to: HL7.Message
+  @spec insert_before(Message.t(), segment_id(), repetition(), Segment.t() | [Segment.t()]) ::
+          Message.t()
+  defdelegate insert_before(message, segment_id, repetition, segment), to: Message
 
   @doc """
   Inserts a segment or group of segments after the first repetition of an
@@ -454,8 +455,8 @@ defmodule HL7 do
       iex> HL7.insert_after(message, "MSH", msa)
 
   """
-  @spec insert_after(message, segment_id, segment | [segment]) :: message
-  defdelegate insert_after(message, segment_id, segment), to: HL7.Message
+  @spec insert_after(Message.t(), segment_id(), Segment.t() | [Segment.t()]) :: Message.t()
+  defdelegate insert_after(message, segment_id, segment), to: Message
 
   @doc """
   Inserts a segment or group of segments after the given repetition of an
@@ -485,8 +486,8 @@ defmodule HL7 do
       iex> HL7.insert_after(message, "MSH", 0, msa)
 
   """
-  @spec insert_after(message, segment_id, repetition, segment | [segment]) :: message
-  defdelegate insert_after(message, segment_id, repetition, segment), to: HL7.Message
+  @spec insert_after(Message.t(), segment_id(), repetition(), Segment.t() | [Segment.t()]) :: Message.t()
+  defdelegate insert_after(message, segment_id, repetition, segment), to: Message
 
   @doc """
   Replaces the first repetition of an existing segment in a message.
@@ -514,8 +515,8 @@ defmodule HL7 do
       iex> HL7.replace(message, "MSA", msa)
 
   """
-  @spec replace(message, segment_id, segment) :: message
-  defdelegate replace(message, segment_id, segment), to: HL7.Message
+  @spec replace(Message.t(), segment_id(), Segment.t()) :: Message.t()
+  defdelegate replace(message, segment_id, segment), to: Message
 
   @doc """
   Replaces the given repetition of an existing segment in a message.
@@ -545,8 +546,8 @@ defmodule HL7 do
       iex> HL7.replace(message, "MSA", 0, msa)
 
   """
-  @spec replace(message, segment_id, repetition, segment) :: message
-  defdelegate replace(message, segment_id, repetition, segment), to: HL7.Message
+  @spec replace(Message.t(), segment_id(), repetition(), Segment.t()) :: Message.t()
+  defdelegate replace(message, segment_id, repetition, segment), to: Message
 
   @doc """
   Escape a string that may contain separators using the HL7 escaping rules.
@@ -571,9 +572,9 @@ defmodule HL7 do
   """
   @spec escape(binary, options :: Keyword.t()) :: binary
   def escape(value, options \\ []) do
-    separators = Keyword.get(options, :separators, HL7.Codec.separators())
+    separators = Keyword.get(options, :separators, Codec.separators())
     escape_char = Keyword.get(options, :escape_char, ?\\)
-    HL7.Codec.escape(value, separators, escape_char)
+    Codec.escape(value, separators, escape_char)
   end
 
   @doc """
@@ -598,14 +599,14 @@ defmodule HL7 do
   """
   @spec unescape(binary, options :: Keyword.t()) :: binary
   def unescape(value, options \\ []) do
-    separators = Keyword.get(options, :separators, HL7.Codec.separators())
+    separators = Keyword.get(options, :separators, Codec.separators())
     escape_char = Keyword.get(options, :escape_char, ?\\)
-    HL7.Codec.unescape(value, separators, escape_char)
+    Codec.unescape(value, separators, escape_char)
   end
 
-  @vertical_tab 0x0B
-  @file_separator 0x1C
-  @carriage_return 0x0D
+  @vertical_tab 0x0b
+  @file_separator 0x1c
+  @carriage_return 0x0d
 
   @doc """
   Add MLLP framing to an already encoded HL7 message.
@@ -691,7 +692,7 @@ defmodule HL7 do
   `HL7.ReadError` exception in case of error.
 
   """
-  @spec from_mllp!(buffer :: iodata) :: msg_buffer :: iodata
+  @spec from_mllp!(buffer :: iodata) :: msg_buffer :: iodata | no_return
   def from_mllp!(buffer) do
     case from_mllp(buffer) do
       {:ok, msg_buffer} -> msg_buffer

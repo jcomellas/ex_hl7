@@ -11,18 +11,19 @@ defmodule HL7.Writer do
 
   alias HL7.{Codec, Segment, Type, Writer}
 
+  @type output_format :: :wire | :text
   @type option ::
           {:separators, tuple}
           | {:trim, boolean}
-          | {:output_format, :wire | :text}
+          | {:output_format, output_format()}
   @opaque state :: :normal | :field_separator | :encoding_chars
   @opaque t :: %Writer{
             state: state,
-            separators: binary,
+            separators: tuple,
             trim: boolean,
-            output_format: atom,
+            output_format: output_format(),
             buffer: iolist,
-            builder: atom
+            builder: module
           }
 
   @spec new([option]) :: t

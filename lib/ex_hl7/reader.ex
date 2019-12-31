@@ -46,7 +46,10 @@ defmodule HL7.Reader do
             trim: true,
             segment_builder: nil
 
-  @type option :: Lexer.option()
+  @type option ::
+          {:segment_builder, module}
+          | {:trim, boolean}
+          | Lexer.option()
   @type token ::
           {:start_segment, Type.segment_id()}
           | {:end_segment, Type.segment_id()}
@@ -55,7 +58,7 @@ defmodule HL7.Reader do
           lexer: Lexer.t(),
           segment_id: Type.segment_id(),
           sequence: non_neg_integer,
-          item_type: Type.item_type(),
+          item_type: :segment | Type.item_type(),
           trim: boolean,
           segment_builder: module
         }

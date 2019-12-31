@@ -2,6 +2,8 @@ defmodule HL7.Segment.Spec do
   @moduledoc "Macros and functions used to define HL7 segments"
   require HL7.Composite, as: Composite
 
+  alias HL7.Type
+
   @doc false
   defmacro __using__(_) do
     quote do
@@ -128,11 +130,11 @@ defmodule HL7.Segment.Spec do
       unquote(struct_type_spec)
 
       @doc "Return the segment's ID"
-      @spec id() :: HL7.Type.segment_id()
+      @spec id() :: Type.segment_id()
       def id(), do: unquote(segment_id)
 
       @doc "Return the segment's specification"
-      @spec spec() :: tuple
+      @spec spec() :: %{Type.seq() => Type.field_spec()}
       def spec(), do: unquote(Macro.escape(spec))
 
       @doc false
