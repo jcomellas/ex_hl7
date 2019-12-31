@@ -7,15 +7,16 @@ defmodule HL7.Writer do
             trim: true,
             output_format: :wire,
             buffer: [],
-            builder: nil
+            segment_builder: nil
 
   alias HL7.{Codec, Segment, Type, Writer}
 
   @type output_format :: :wire | :text
   @type option ::
-          {:separators, tuple}
+          {:output_format, output_format()}
+          | {:segment_builder, module}
+          | {:separators, Type.separators()}
           | {:trim, boolean}
-          | {:output_format, output_format()}
   @opaque state :: :normal | :field_separator | :encoding_chars
   @opaque t :: %Writer{
             state: state,
@@ -23,7 +24,7 @@ defmodule HL7.Writer do
             trim: boolean,
             output_format: output_format(),
             buffer: iolist,
-            builder: module
+            segment_builder: module
           }
 
   @spec new([option]) :: t
@@ -34,7 +35,7 @@ defmodule HL7.Writer do
       trim: Keyword.get(options, :trim, true),
       output_format: Keyword.get(options, :output_format, :wire),
       buffer: [],
-      builder: Keyword.get(options, :builder, Segment.Default.Builder)
+      segment_builder: Keyword.get(options, :segment_builder, Segment.Default.Builder)
     }
   end
 
@@ -42,7 +43,7 @@ defmodule HL7.Writer do
   def buffer(%Writer{buffer: buffer}), do: Enum.reverse(buffer)
 
   @spec builder(t) :: atom
-  def builder(%Writer{builder: builder}), do: builder
+  def builder(%Writer{segment_builder: segment_builder}), do: segment_builder
 
   @spec start_message(t) :: t
   def start_message(writer), do: %Writer{writer | state: :normal, buffer: []}
