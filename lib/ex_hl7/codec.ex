@@ -8,9 +8,9 @@ defmodule HL7.Codec do
   following example:
 
       iex> text = "504599^223344&&IIN&^~"
-      ...> decode_field(text, separators(), trim: true)
+      ...> decode_field!(text, separators(), trim: true)
       {"504599", {"223344", "", "IIN"}}
-      ...> decode_field(text, separators(), trim: false)
+      ...> decode_field!(text, separators(), trim: false)
       [{"504599", {"223344", "", "IIN", ""}, ""}, ""]
 
   Both representations are correct, given that HL7 allows trailing items that are empty to be
@@ -49,8 +49,10 @@ defmodule HL7.Codec do
   To use custom separators in a message use `HL7.Codec.set_separators/1` and pass the returned
   value as argument to the encoding functions.
   """
+  @spec separators() :: Type.separators()
   def separators(), do: @separators
 
+  @spec set_separators(Keyword.t()) :: Type.separators()
   def set_separators(args) do
     field = Keyword.get(args, :field, ?|)
     component = Keyword.get(args, :component, ?^)
@@ -62,7 +64,7 @@ defmodule HL7.Codec do
   @compile {:inline, separator: 2}
 
   @doc "Return the separator corresponding to an item type."
-  @spec separator(Type.item_type(), tuple) :: byte
+  @spec separator(Type.item_type(), Type.separators()) :: byte
   def separator(item_type, separators \\ @separators)
 
   def separator(:field, {char, _, _, _}), do: char
@@ -72,6 +74,7 @@ defmodule HL7.Codec do
 
   @compile {:inline, match_separator: 2}
 
+  @spec match_separator(byte, Type.separators()) :: {:match, Type.item_type()} | :nomatch
   def match_separator(char, separators \\ @separators)
 
   def match_separator(char, {char, _, _, _}), do: {:match, :field}
@@ -81,10 +84,8 @@ defmodule HL7.Codec do
   def match_separator(_char, _separators), do: :nomatch
 
   @doc """
-  Checks if a value is empty. This function is implemented as a macro so that it can be used in
-  guards.
+  Checks if a value is empty. A value is considered empty when it is `nil` or an empty string.
   """
-  @spec empty?(Type.value() | any) :: boolean
   defmacro empty?(value) do
     quote do
       unquote(value) === "" or unquote(value) === nil
@@ -96,32 +97,32 @@ defmodule HL7.Codec do
 
   ## Examples
 
-      iex> decode_field("PREPAGA^112233^IIN")
+      iex> decode_field!("PREPAGA^112233^IIN")
       {"PREPAGA", "112233", "IIN"}
-      ...> decode_field("112233~IIN")
+      ...> decode_field!("112233~IIN")
       ["112233", "IIN"]
-      ...> decode_field("\"\"")
+      ...> decode_field!("\"\"")
       nil
-      ...> decode_field("")
+      ...> decode_field!("")
       ""
 
   """
-  @spec decode_field(binary, separators :: tuple, trim :: boolean) :: Type.field()
-  def decode_field(field, separators \\ @separators, trim \\ true)
+  @spec decode_field!(binary, Type.separators(), trim :: boolean) :: Type.field() | no_return
+  def decode_field!(field, separators \\ @separators, trim \\ true)
 
-  def decode_field("", _separators, _trim), do: ""
-  def decode_field(@null_value, _separators, _trim), do: nil
+  def decode_field!("", _separators, _trim), do: ""
+  def decode_field!(@null_value, _separators, _trim), do: nil
 
-  def decode_field(value, separators, trim) when is_binary(value) do
+  def decode_field!(value, separators, trim) when is_binary(value) do
     rep_sep = separator(:repetition, separators)
 
     case :binary.split(value, <<rep_sep>>, split_options(trim)) do
       [field] ->
-        decode_components(field, separators, trim)
+        decode_components!(field, separators, trim)
 
       repetitions ->
         for repetition <- repetitions do
-          decode_components(repetition, separators, trim)
+          decode_components!(repetition, separators, trim)
         end
     end
   end
@@ -129,17 +130,19 @@ defmodule HL7.Codec do
   @doc """
   Decode a binary holding one or more HL7 components into its intermediate representation.
   """
-  def decode_components(components, separators \\ @separators, trim \\ true)
+  @spec decode_components!(binary, Type.separators(), trim :: boolean) ::
+          Type.component() | no_return
+  def decode_components!(components, separators \\ @separators, trim \\ true)
 
-  def decode_components("", _separators, _trim), do: ""
-  def decode_components(@null_value, _separators, _trim), do: nil
+  def decode_components!("", _separators, _trim), do: ""
+  def decode_components!(@null_value, _separators, _trim), do: nil
 
-  def decode_components(field, separators, trim) do
+  def decode_components!(field, separators, trim) do
     comp_sep = separator(:component, separators)
 
     case :binary.split(field, <<comp_sep>>, split_options(trim)) do
       [component] ->
-        case decode_subcomponents(component, separators, trim) do
+        case decode_subcomponents!(component, separators, trim) do
           components when is_tuple(components) ->
             {components}
 
@@ -149,7 +152,7 @@ defmodule HL7.Codec do
 
       components ->
         for component <- components do
-          decode_subcomponents(component, separators, trim)
+          decode_subcomponents!(component, separators, trim)
         end
         |> case do
           [] -> ""
@@ -161,12 +164,14 @@ defmodule HL7.Codec do
   @doc """
   Decode a binary holding one or more HL7 subcomponents into its intermediate representation.
   """
-  def decode_subcomponents(component, separators \\ @separators, trim \\ true)
+  @spec decode_subcomponents!(binary, Type.separators(), trim :: boolean) ::
+          Type.subcomponent() | no_return
+  def decode_subcomponents!(component, separators \\ @separators, trim \\ true)
 
-  def decode_subcomponents("", _separators, _trim), do: ""
-  def decode_subcomponents(@null_value, _separators, _trim), do: nil
+  def decode_subcomponents!("", _separators, _trim), do: ""
+  def decode_subcomponents!(@null_value, _separators, _trim), do: nil
 
-  def decode_subcomponents(component, separators, trim) do
+  def decode_subcomponents!(component, separators, trim) do
     subcomp_sep = separator(:subcomponent, separators)
 
     case :binary.split(component, <<subcomp_sep>>, split_options(trim)) do
@@ -175,7 +180,7 @@ defmodule HL7.Codec do
 
       subcomponents ->
         subcomponents
-        |> Enum.map(&decode_value(&1))
+        |> Enum.map(&decode_value!(&1))
         |> case do
           [] -> ""
           subcomponents -> List.to_tuple(subcomponents)
@@ -183,12 +188,12 @@ defmodule HL7.Codec do
     end
   end
 
-  @spec decode_value(Type.field(), type :: atom) :: Type.value() | no_return
-  def decode_value(value, type \\ :string)
+  @spec decode_value!(Type.field(), Type.value_type()) :: Type.value() | nil | no_return
+  def decode_value!(value, type \\ :string)
 
-  def decode_value(@null_value, _type), do: nil
+  def decode_value!(@null_value, _type), do: nil
 
-  def decode_value(value, type)
+  def decode_value!(value, type)
       when type === :string or
              (value === "" and
                 (type === :integer or type === :float or type === :date or type === :datetime)) do
@@ -197,12 +202,12 @@ defmodule HL7.Codec do
     value
   end
 
-  def decode_value(value, :integer), do: :erlang.binary_to_integer(value)
-  def decode_value(value, :float), do: binary_to_float!(value)
-  def decode_value(value, :date), do: binary_to_date!(value)
-  def decode_value(value, :datetime), do: binary_to_datetime!(value)
+  def decode_value!(value, :integer), do: :erlang.binary_to_integer(value)
+  def decode_value!(value, :float), do: binary_to_float!(value)
+  def decode_value!(value, :date), do: binary_to_date!(value)
+  def decode_value!(value, :datetime), do: binary_to_datetime!(value)
 
-  def decode_value(value, type) do
+  def decode_value!(value, type) do
     raise ArgumentError, "cannot decode value #{inspect(value)} with type #{inspect(type)}"
   end
 
@@ -257,20 +262,21 @@ defmodule HL7.Codec do
     end
   end
 
-  def encode_field(field, separators \\ @separators, trim \\ true)
+  @spec encode_field!(Type.field(), Type.separators(), trim :: boolean) :: iodata | no_return
+  def encode_field!(field, separators \\ @separators, trim \\ true)
 
-  def encode_field(field, _separators, _trim) when is_binary(field), do: field
-  def encode_field(nil, _separators, _trim), do: @null_value
+  def encode_field!(field, _separators, _trim) when is_binary(field), do: field
+  def encode_field!(nil, _separators, _trim), do: @null_value
 
-  def encode_field(repetitions, separators, trim) when is_list(repetitions),
-    do: encode_repetitions(repetitions, separators, trim, [])
+  def encode_field!(repetitions, separators, trim) when is_list(repetitions),
+    do: encode_repetitions!(repetitions, separators, trim, [])
 
-  def encode_field(components, separators, trim) when is_tuple(components),
-    do: encode_components(components, separators, trim)
+  def encode_field!(components, separators, trim) when is_tuple(components),
+    do: encode_components!(components, separators, trim)
 
-  defp encode_repetitions([repetition | tail], separators, trim, acc)
+  defp encode_repetitions!([repetition | tail], separators, trim, acc)
        when not is_list(repetition) do
-    value = encode_field(repetition, separators, trim)
+    value = encode_field!(repetition, separators, trim)
 
     acc =
       case acc do
@@ -278,22 +284,26 @@ defmodule HL7.Codec do
         [_ | _] -> [value, separator(:repetition, separators) | acc]
       end
 
-    encode_repetitions(tail, separators, trim, acc)
+    encode_repetitions!(tail, separators, trim, acc)
   end
 
-  defp encode_repetitions([], separators, trim, acc) do
+  defp encode_repetitions!([], separators, trim, acc) do
     acc
     |> maybe_trim_item(separator(:repetition, separators), trim)
     |> Enum.reverse()
   end
 
-  def encode_components(components, separators \\ @separators, trim \\ true) do
-    subencoder = &encode_subcomponents(&1, separators, trim)
+  @spec encode_components!(Type.component(), Type.separators(), trim :: boolean) ::
+          iodata | no_return
+  def encode_components!(components, separators \\ @separators, trim \\ true) do
+    subencoder = &encode_subcomponents!(&1, separators, trim)
     encode_subitems(components, subencoder, separator(:component, separators), trim)
   end
 
-  def encode_subcomponents(subcomponents, separators \\ @separators, trim \\ true) do
-    encode_subitems(subcomponents, &encode_value/1, separator(:subcomponent, separators), trim)
+  @spec encode_subcomponents!(Type.subcomponent(), Type.separators(), trim :: boolean) ::
+          iodata | no_return
+  def encode_subcomponents!(subcomponents, separators \\ @separators, trim \\ true) do
+    encode_subitems(subcomponents, &encode_value!/1, separator(:subcomponent, separators), trim)
   end
 
   defp encode_subitems(item, _subencoder, _separator, _trim) when is_binary(item), do: item
@@ -329,17 +339,17 @@ defmodule HL7.Codec do
     |> Enum.reverse()
   end
 
-  @spec encode_value(Type.value() | nil, type :: atom) :: binary | no_return
-  def encode_value(value, type \\ :string)
+  @spec encode_value!(Type.value() | nil, Type.value_type() | nil) :: binary | no_return
+  def encode_value!(value, type \\ :string)
 
-  def encode_value(nil, _type), do: @null_value
-  def encode_value(value, type) when type === :string or value === "", do: value
-  def encode_value(value, :integer) when is_integer(value), do: :erlang.integer_to_binary(value)
-  def encode_value(value, :float) when is_float(value), do: Float.to_string(value)
-  def encode_value(value, :date) when is_map(value), do: format_date!(value)
-  def encode_value(value, :datetime) when is_map(value), do: format_datetime(value)
+  def encode_value!(nil, _type), do: @null_value
+  def encode_value!(value, type) when type === :string or value === "", do: value
+  def encode_value!(value, :integer) when is_integer(value), do: :erlang.integer_to_binary(value)
+  def encode_value!(value, :float) when is_float(value), do: Float.to_string(value)
+  def encode_value!(value, :date) when is_map(value), do: format_date!(value)
+  def encode_value!(value, :datetime) when is_map(value), do: format_datetime(value)
 
-  def encode_value(value, type) do
+  def encode_value!(value, type) do
     raise ArgumentError, "cannot encode value #{inspect(value)} with type #{inspect(type)}"
   end
 
@@ -424,6 +434,7 @@ defmodule HL7.Codec do
       "ABC\\\\F\\\\DEF\\\\S\\\\GHI"
 
   """
+  @spec escape(binary, Type.separators(), escape_char :: byte) :: binary
   def escape(value, separators \\ @separators, escape_char \\ ?\\)
       when is_binary(value) and is_tuple(separators) and is_integer(escape_char) do
     escape_no_copy(value, separators, escape_char, byte_size(value), 0)
@@ -495,6 +506,7 @@ defmodule HL7.Codec do
       iex> "ABC|DEF|GHI" = HL7.Codec.unescape("ABC\\\\F\\\\DEF\\\\F\\\\GHI", ?\\\\)
 
   """
+  @spec unescape(binary, Type.separators(), escape_char :: byte) :: binary
   def unescape(value, separators \\ @separators, escape_char \\ ?\\)
       when is_binary(value) and is_tuple(separators) and is_integer(escape_char) do
     unescape_no_copy(value, separators, escape_char, byte_size(value), 0)

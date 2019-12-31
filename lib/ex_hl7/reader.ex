@@ -144,7 +144,7 @@ defmodule HL7.Reader do
     field =
       case token_type do
         :literal -> value
-        :value -> Codec.decode_field(value, lexer.separators, trim)
+        :value -> Codec.decode_field!(value, lexer.separators, trim)
       end
 
     {:token, {reader, {:field, field}, buffer}}

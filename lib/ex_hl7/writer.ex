@@ -74,7 +74,7 @@ defmodule HL7.Writer do
         # Avoid adding unnecessary empty fields
         [separator | buffer]
       else
-        case Codec.encode_field(field, separators, writer.trim) do
+        case Codec.encode_field!(field, separators, writer.trim) do
           [] -> [separator | buffer]
           value -> [value, separator | buffer]
         end

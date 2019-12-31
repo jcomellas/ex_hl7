@@ -142,7 +142,7 @@ defmodule HL7.Segment do
           value =
             case Map.get(segment, name) do
               nil -> @default_value
-              value_1 -> Codec.encode_value(value_1, type)
+              value_1 -> Codec.encode_value!(value_1, type)
             end
 
           build_item_ir(segment, spec_tail, cur_depth, parent_coord, cur_index, [
@@ -214,7 +214,7 @@ defmodule HL7.Segment do
     encoded_value =
       value
       |> get_item_from_ir(coord)
-      |> Codec.decode_value(type)
+      |> Codec.decode_value!(type)
 
     segment
     |> Map.put(name, encoded_value)
