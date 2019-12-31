@@ -3,8 +3,8 @@ defmodule HL7.Segment.Default.EVN do
   use HL7.Segment.Spec
 
   segment "EVN" do
-    field :recorded_datetime,      seq:  2, type: :datetime, length: 14
-    field :planned_event_datetime, seq:  3, type: :datetime, length: 14
-    field :event_reason_code,      seq:  4, type: :string, length: 3
+    field :recorded_datetime,      seq:  2, type: :datetime, len: 14
+    field :planned_event_datetime, seq:  3, type: :datetime, len: 14
+    field :event_reason_code,      seq:  4, type: :string, len: 3
   end
 end

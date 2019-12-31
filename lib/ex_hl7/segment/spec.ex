@@ -19,13 +19,13 @@ defmodule HL7.Segment.Spec do
         require HL7.Composite.Default.CE, as: CE
 
         segment "DG1" do
-          field :set_id,             seq:  1, type: :integer, length: 4
-          field :coding_method,      seq:  2, type: :string, length: 2
-          field :diagnosis_id,       seq:  3, type: {CE, :id}, length: 20
-          field :description,        seq:  4, type: :string, length: 40
-          field :diagnosis_datetime, seq:  5, type: :datetime, length: 40
-          field :diagnosis_type,     seq:  6, type: :string, length: 2
-          field :approval_indicator, seq:  9, type: :string, length: 1
+          field :set_id,             seq:  1, type: :integer, len: 4
+          field :coding_method,      seq:  2, type: :string, len: 2
+          field :diagnosis_id,       seq:  3, type: {CE, :id}, len: 20
+          field :description,        seq:  4, type: :string, len: 40
+          field :diagnosis_datetime, seq:  5, type: :datetime, len: 40
+          field :diagnosis_type,     seq:  6, type: :string, len: 2
+          field :approval_indicator, seq:  9, type: :string, len: 1
         end
       end
 
@@ -250,11 +250,11 @@ defmodule HL7.Segment.Spec do
 
       require HL7.Composite.Default.CM_ERR_1, as: CM_ERR_1
 
-      field :ack_code,           seq: 1, type: :string, length:  2
-      field :message_control_id, seq: 2, type: :string, length: 20
-      field :text_message,       seq: 3, type: :string, length: 80
-      field :error_code,         seq: 6, type: {CM_ERR_1, :error, :id}, length: 10
-      field :error_text,         seq: 6, type: {CM_ERR_1, :error, :text}, length: 61
+      field :ack_code,           seq: 1, type: :string, len:  2
+      field :message_control_id, seq: 2, type: :string, len: 20
+      field :text_message,       seq: 3, type: :string, len: 80
+      field :error_code,         seq: 6, type: {CM_ERR_1, :error, :id}, len: 10
+      field :error_text,         seq: 6, type: {CM_ERR_1, :error, :text}, len: 61
 
   This function will end up generating the following segment specification map:
 

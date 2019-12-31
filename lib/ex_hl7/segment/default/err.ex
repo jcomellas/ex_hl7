@@ -5,10 +5,10 @@ defmodule HL7.Segment.Default.ERR do
   require HL7.Composite.Default.CM_ERR_1, as: CM_ERR_1
 
   segment "ERR" do
-    field :segment_id, seq:  1, type: {CM_ERR_1, :segment_id}, length: 3
-    field :sequence,   seq:  1, type: {CM_ERR_1, :sequence}, length: 3
-    field :field_pos,  seq:  1, type: {CM_ERR_1, :field_pos}, length: 3
-    field :error_code, seq:  1, type: {CM_ERR_1, :error, :id}, length: 9
-    field :error_text, seq:  1, type: {CM_ERR_1, :error, :text}, length: 61
+    field :segment_id, seq:  1, type: {CM_ERR_1, :segment_id}, len: 3
+    field :sequence,   seq:  1, type: {CM_ERR_1, :sequence}, len: 3
+    field :field_pos,  seq:  1, type: {CM_ERR_1, :field_pos}, len: 3
+    field :error_code, seq:  1, type: {CM_ERR_1, :error, :id}, len: 9
+    field :error_text, seq:  1, type: {CM_ERR_1, :error, :text}, len: 61
   end
 end
