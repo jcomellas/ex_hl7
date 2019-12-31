@@ -24,7 +24,7 @@ defmodule HL7.Segment do
 
   """
   @spec id(t) :: Type.segment_id()
-  def id(segment) when is_map(segment), do: Map.get(segment, :__segment__)
+  def id(%{__segment__: segment_id}), do: segment_id
   def id(_segment), do: nil
 
   @doc """
