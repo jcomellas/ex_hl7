@@ -56,7 +56,7 @@ defmodule HL7.Reader do
           | {:field, Type.field()}
   @type t :: %Reader{
           lexer: Lexer.t(),
-          segment_id: Type.segment_id(),
+          segment_id: Type.segment_id() | nil,
           sequence: non_neg_integer,
           item_type: :segment | Type.item_type(),
           trim: boolean,
